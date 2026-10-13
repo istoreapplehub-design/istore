@@ -82,8 +82,8 @@ export default function AccountScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Text style={styles.profileName}>{name}</Text>
                 {isAdmin && (
-                  <View style={{ backgroundColor: colors.accent, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>ADMIN</Text>
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>ADMIN</Text>
                   </View>
                 )}
               </View>
@@ -111,6 +111,45 @@ export default function AccountScreen() {
         )}
 
         {/* 3. Menu Groups */}
+
+        {/* ADMIN GROUP (Shown only if role === 'admin') */}
+        {isAdmin && (
+          <>
+            <Text style={[styles.groupLabel, { color: colors.accent }]}>ADMIN</Text>
+            <View style={styles.groupContainer}>
+              <Pressable
+                style={({ pressed }) => [styles.menuRow, pressed && styles.adminRowPressed]}
+                onPress={() => handleRowPress(() => router.push("/(admin)"))}
+              >
+                <Ionicons name="shield-checkmark-outline" size={22} color={colors.accent} />
+                <Text style={styles.menuLabel}>Admin Dashboard</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              </Pressable>
+
+              <View style={styles.divider} />
+
+              <Pressable
+                style={({ pressed }) => [styles.menuRow, pressed && styles.adminRowPressed]}
+                onPress={() => handleRowPress(() => router.push("/(admin)/products"))}
+              >
+                <Ionicons name="cube-outline" size={22} color={colors.accent} />
+                <Text style={styles.menuLabel}>Manage Products</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              </Pressable>
+
+              <View style={styles.divider} />
+
+              <Pressable
+                style={({ pressed }) => [styles.menuRow, pressed && styles.adminRowPressed]}
+                onPress={() => handleRowPress(() => router.push("/(admin)/orders"))}
+              >
+                <Ionicons name="list-outline" size={22} color={colors.accent} />
+                <Text style={styles.menuLabel}>Manage Orders</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+          </>
+        )}
 
         {/* GROUP 1: SHOPPING */}
         <Text style={styles.groupLabel}>SHOPPING</Text>
@@ -485,5 +524,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: 4
+  },
+  adminBadge: {
+    backgroundColor: "rgba(0, 113, 227, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 980
+  },
+  adminBadgeText: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5
+  },
+  adminRowPressed: {
+    backgroundColor: "rgba(0, 113, 227, 0.04)"
   }
 });

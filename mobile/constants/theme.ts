@@ -148,3 +148,11 @@ export function formatGHS(amount: number): string {
     maximumFractionDigits: 2
   })}`;
 }
+
+export const theme = {
+  colors,
+  spacing,
+  radius,
+  typography,
+  shadow
+};

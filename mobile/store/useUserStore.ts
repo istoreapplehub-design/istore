@@ -32,6 +32,7 @@ export interface UserState {
   signOut: () => Promise<void>;
   addAddress: (address: ShippingAddress) => void;
   removeAddress: (index: number) => void;
+  isAdmin: () => boolean;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -43,6 +44,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   phone: "",
   email: "",
   addresses: [],
+  isAdmin: () => get().user?.role === "admin",
 
   hydrate: async () => {
     try {
