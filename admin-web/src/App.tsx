@@ -9,6 +9,8 @@ import { ProductForm } from "./pages/ProductForm";
 import { Orders } from "./pages/Orders";
 import { OrderDetail } from "./pages/OrderDetail";
 import { Admins } from "./pages/Admins";
+import { Analytics } from "./pages/Analytics";
+import { Support } from "./pages/Support";
 import { Settings } from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
 
@@ -29,12 +31,14 @@ export function App() {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="analytics" element={<Analytics />} />
         <Route path="products" element={<Products />} />
         <Route path="products/new" element={<ProductForm />} />
         <Route path="products/:id/edit" element={<ProductForm />} />
         <Route path="orders" element={<Orders />} />
         <Route path="orders/:id" element={<OrderDetail />} />
         <Route path="admins" element={<Admins />} />
+        <Route path="support" element={<Support />} />
         <Route path="settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Route>

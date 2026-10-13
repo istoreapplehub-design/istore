@@ -90,9 +90,9 @@ export function Orders() {
 
         <button
           onClick={handleExport}
-          className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-full px-5 py-2.5 border border-gray-300 shadow-sm transition self-start sm:self-auto"
+          className="inline-flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-full px-5 py-2.5 shadow-sm transition self-start sm:self-auto"
         >
-          <Download className="w-4 h-4 text-blue-600" />
+          <Download className="w-4 h-4 text-white" />
           <span>Export CSV</span>
         </button>
       </div>
@@ -119,28 +119,28 @@ export function Orders() {
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
               Pending
             </span>
-            <span className="text-lg font-bold text-amber-600 mt-1 block">
+            <span className="text-lg font-bold text-gray-900 mt-1 block">
               {summary.byStatus?.pending || 0}
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-neutral-900 uppercase tracking-wider block">
               Paid
             </span>
-            <span className="text-lg font-bold text-blue-600 mt-1 block">
+            <span className="text-lg font-bold text-neutral-900 mt-1 block">
               {summary.byStatus?.paid || 0}
             </span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block">
               Shipped
             </span>
-            <span className="text-lg font-bold text-amber-600 mt-1 block">
+            <span className="text-lg font-bold text-gray-900 mt-1 block">
               {summary.byStatus?.shipped || 0}
             </span>
           </div>
@@ -171,7 +171,7 @@ export function Orders() {
                 }}
                 className={`px-4 py-2 text-xs font-semibold rounded-full transition whitespace-nowrap ${
                   isSelected
-                    ? "bg-blue-600 text-white shadow-sm"
+                    ? "bg-neutral-900 text-white shadow-sm"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -193,7 +193,7 @@ export function Orders() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+              className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 outline-none transition"
             />
           </div>
 
@@ -263,7 +263,7 @@ export function Orders() {
                       onClick={() => navigate(`/orders/${ord.id}`)}
                       className="hover:bg-gray-50/80 transition cursor-pointer"
                     >
-                      <td className="px-6 py-4 font-mono font-bold text-xs text-blue-600">
+                      <td className="px-6 py-4 font-mono font-bold text-xs text-neutral-900">
                         {shortId}
                       </td>
 
@@ -305,7 +305,7 @@ export function Orders() {
                         <Link
                           to={`/orders/${ord.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg inline-block transition"
+                          className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg inline-block transition"
                         >
                           <Eye className="w-4 h-4" />
                         </Link>

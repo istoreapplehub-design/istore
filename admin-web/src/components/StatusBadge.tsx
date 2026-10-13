@@ -2,30 +2,35 @@ import React from "react";
 
 export type OrderStatus = "pending" | "paid" | "shipped" | "delivered" | "cancelled";
 
-const STATUS_STYLES: Record<OrderStatus, { bg: string; text: string; label: string }> = {
+const STATUS_STYLES: Record<OrderStatus, { bg: string; text: string; label: string; dot: string }> = {
   pending: {
-    bg: "bg-gray-100 border-gray-200",
-    text: "text-gray-700",
+    bg: "bg-neutral-100 border-neutral-200",
+    text: "text-neutral-700",
+    dot: "bg-neutral-400",
     label: "Pending"
   },
   paid: {
-    bg: "bg-blue-50 border-blue-200",
-    text: "text-blue-700",
+    bg: "bg-neutral-900 border-neutral-900",
+    text: "text-white",
+    dot: "bg-white",
     label: "Paid"
   },
   shipped: {
-    bg: "bg-amber-50 border-amber-200",
-    text: "text-amber-700",
+    bg: "bg-neutral-100 border-neutral-300",
+    text: "text-neutral-900",
+    dot: "bg-neutral-700",
     label: "Shipped"
   },
   delivered: {
-    bg: "bg-emerald-50 border-emerald-200",
-    text: "text-emerald-700",
+    bg: "bg-white border-neutral-900",
+    text: "text-neutral-900",
+    dot: "bg-neutral-900",
     label: "Delivered"
   },
   cancelled: {
-    bg: "bg-rose-50 border-rose-200",
-    text: "text-rose-700",
+    bg: "bg-neutral-50 border-neutral-200",
+    text: "text-neutral-400",
+    dot: "bg-neutral-300",
     label: "Cancelled"
   }
 };
@@ -36,11 +41,12 @@ export function StatusBadge({ status, size = "md" }: { status: OrderStatus; size
 
   return (
     <span
-      className={`inline-flex items-center font-semibold rounded-full border ${config.bg} ${config.text} ${
-        isSm ? "px-2 py-0.5 text-xs" : "px-3 py-1 text-xs"
+      className={`inline-flex items-center gap-1.5 font-bold rounded-full border ${config.bg} ${config.text} ${
+        isSm ? "px-2.5 py-0.5 text-[11px]" : "px-3 py-1 text-xs"
       }`}
     >
-      {config.label}
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+      <span>{config.label}</span>
     </span>
   );
 }

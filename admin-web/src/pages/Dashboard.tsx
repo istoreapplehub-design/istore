@@ -7,7 +7,6 @@ import {
   Calendar,
   ChevronDown,
   ArrowUpRight,
-  ArrowDownRight,
   Clock,
   ExternalLink,
   CircleAlert
@@ -47,7 +46,7 @@ export function Dashboard() {
     year: "numeric"
   }).format(new Date());
 
-  // Top products mock/real hybrid
+  // Top products
   const topProducts = [
     {
       id: "1",
@@ -81,7 +80,7 @@ export function Dashboard() {
     }
   ];
 
-  // Bar chart daily data for Sales Trend
+  // Bar chart daily data for Sales Trend (Monochrome)
   const barChartData = [
     { day: "Mon", lastWeek: 28, thisWeek: 42 },
     { day: "Tue", lastWeek: 35, thisWeek: 58 },
@@ -101,28 +100,28 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* ─── 1. WELCOME GREETING ROW (IMAGE 1 HEADER) ────────────────────── */}
+      {/* ─── 1. WELCOME GREETING ROW (MONOCHROME LUXURY) ──────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
-            Welcome back, {user?.name?.split(" ")[0] || "Sarah"}!
+            Welcome back, {user?.name?.split(" ")[0] || "Admin"}!
           </h1>
           <p className="mt-1 text-sm text-gray-500 font-medium">
-            {todayDateFormatted}. Get weekend summary!
+            {todayDateFormatted}. Operations summary ready.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Online Customers Indicator */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#ebebe9] shadow-xs text-xs font-semibold text-gray-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#ebebe9] shadow-xs text-xs font-semibold text-gray-800">
+            <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
             <span>2 online customers</span>
           </div>
 
           {/* Today Filter Button */}
           <button
             type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#ebebe9] shadow-xs text-xs font-semibold text-gray-800 hover:bg-gray-50 transition"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#ebebe9] shadow-xs text-xs font-semibold text-gray-900 hover:bg-gray-50 transition"
           >
             <Calendar className="w-3.5 h-3.5 text-gray-500" />
             <span>Today</span>
@@ -130,18 +129,18 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* ─── 2. TOP 4 METRIC CARDS WITH SPARK LINES (IMAGE 1) ───────────── */}
+      {/* ─── 2. TOP 4 METRIC CARDS (BLACK & WHITE MONOCHROME) ─────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card 1: Revenue today */}
         <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-500">Revenue today</span>
-            {/* Green Sparkline SVG */}
+            {/* Black Sparkline SVG */}
             <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
               <path
                 d="M2 18 C 15 20, 25 10, 40 14 C 55 18, 65 4, 78 6"
-                stroke="#4ade80"
+                stroke="#171717"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
@@ -150,7 +149,7 @@ export function Dashboard() {
           <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
             ₵5,234
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50/80 px-2 py-0.5 rounded-full w-fit">
+          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
             <span>↑ 12.3%</span>
             <span className="text-gray-400 font-normal">vs yesterday</span>
           </div>
@@ -160,11 +159,11 @@ export function Dashboard() {
         <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-500">Orders today</span>
-            {/* Green Sparkline SVG */}
+            {/* Black Sparkline SVG */}
             <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
               <path
                 d="M2 16 C 15 14, 25 20, 40 12 C 55 5, 65 14, 78 8"
-                stroke="#4ade80"
+                stroke="#171717"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
@@ -173,7 +172,7 @@ export function Dashboard() {
           <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
             42
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50/80 px-2 py-0.5 rounded-full w-fit">
+          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
             <span>↑ 5%</span>
             <span className="text-gray-400 font-normal">vs yesterday</span>
           </div>
@@ -183,11 +182,11 @@ export function Dashboard() {
         <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-500">Average order</span>
-            {/* Green Sparkline SVG */}
+            {/* Black Sparkline SVG */}
             <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
               <path
                 d="M2 19 C 15 12, 25 16, 40 8 C 55 12, 65 6, 78 4"
-                stroke="#4ade80"
+                stroke="#171717"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
@@ -196,7 +195,7 @@ export function Dashboard() {
           <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
             ₵124.62
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50/80 px-2 py-0.5 rounded-full w-fit">
+          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
             <span>↑ 7.1%</span>
             <span className="text-gray-400 font-normal">vs yesterday</span>
           </div>
@@ -206,11 +205,11 @@ export function Dashboard() {
         <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-500">Conversion rate</span>
-            {/* Red / Pink Sparkline SVG */}
+            {/* Black Sparkline SVG */}
             <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
               <path
                 d="M2 6 C 15 8, 25 18, 40 14 C 55 12, 65 20, 78 18"
-                stroke="#f87171"
+                stroke="#171717"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
@@ -219,28 +218,28 @@ export function Dashboard() {
           <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
             3.2%
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-rose-600 bg-rose-50/80 px-2 py-0.5 rounded-full w-fit">
+          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
             <span>↑ 0.3%</span>
             <span className="text-gray-400 font-normal">vs yesterday</span>
           </div>
         </div>
       </div>
 
-      {/* ─── 3. MIDDLE SECTION: SALES TREND & TOP PRODUCT (IMAGE 1) ──────── */}
+      {/* ─── 3. MIDDLE SECTION: SALES TREND & TOP PRODUCT ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        {/* Left Column: Sales Trend (Dual Bar Chart) */}
+        {/* Left Column: Sales Trend (Monochrome Dual Bar Chart) */}
         <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Sales trend
               </span>
               <div className="mt-1 flex items-center gap-3">
                 <span className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
                   ₵39,190
                 </span>
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200">
                   ↑ 8.4%
                 </span>
               </div>
@@ -249,11 +248,11 @@ export function Dashboard() {
             {/* Legends & Period Dropdown */}
             <div className="flex items-center gap-4 text-xs font-semibold text-gray-600">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#b6e49e]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-neutral-300" />
                 <span>Last week</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#1b564c]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-neutral-900" />
                 <span>This week</span>
               </div>
 
@@ -279,16 +278,16 @@ export function Dashboard() {
                 <div key={item.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
                   {/* Paired Bars */}
                   <div className="w-full flex items-end justify-center gap-1.5 sm:gap-2.5 h-full">
-                    {/* Last Week Bar (Lime) */}
+                    {/* Last Week Bar (Light Gray) */}
                     <div
                       style={{ height: `${item.lastWeek}%` }}
-                      className="w-3 sm:w-5 bg-[#b6e49e] rounded-t-md transition-all duration-300 hover:opacity-90"
+                      className="w-3 sm:w-5 bg-neutral-300 rounded-t-md transition-all duration-300 hover:opacity-90"
                       title={`Last Week: ${item.lastWeek}%`}
                     />
-                    {/* This Week Bar (Dark Teal) */}
+                    {/* This Week Bar (Dark Charcoal / Black) */}
                     <div
                       style={{ height: `${item.thisWeek}%` }}
-                      className="w-3 sm:w-5 bg-[#1b564c] rounded-t-md transition-all duration-300 hover:opacity-90"
+                      className="w-3 sm:w-5 bg-neutral-900 rounded-t-md transition-all duration-300 hover:opacity-90"
                       title={`This Week: ${item.thisWeek}%`}
                     />
                   </div>
@@ -343,9 +342,9 @@ export function Dashboard() {
                     {p.name}
                   </div>
                   <div className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
-                    <span className="font-bold text-gray-800">₵{p.price.toLocaleString()}</span>
+                    <span className="font-bold text-gray-900">₵{p.price.toLocaleString()}</span>
                     <span>•</span>
-                    <span className="text-emerald-700 font-semibold">{p.sold}/{p.total} Sold</span>
+                    <span className="text-neutral-700 font-semibold">{p.sold}/{p.total} Sold</span>
                   </div>
                   <div className="text-[10px] text-gray-400 mt-0.5">
                     Stock: {p.stock} units
@@ -356,7 +355,7 @@ export function Dashboard() {
                     <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div
                         style={{ width: `${p.pct}%` }}
-                        className="h-full bg-gray-900 rounded-full"
+                        className="h-full bg-neutral-900 rounded-full"
                       />
                     </div>
                     <span className="text-[10px] font-bold text-gray-700">{p.pct}%</span>
@@ -369,7 +368,7 @@ export function Dashboard() {
 
       </div>
 
-      {/* ─── 4. BOTTOM SECTION (3 COLUMNS: ALERTS, TRAFFIC, ORDERS) ──────── */}
+      {/* ─── 4. BOTTOM SECTION: INVENTORY, TRAFFIC, ORDERS ────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         {/* Column 1: Inventory alerts */}
@@ -390,13 +389,13 @@ export function Dashboard() {
 
             <div className="mt-5 space-y-4">
               {/* Item 1: Critical */}
-              <div className="p-3 bg-gray-50/70 rounded-xl">
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100">
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-rose-600">
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <div className="flex items-center gap-1.5 font-bold text-neutral-900">
+                    <span className="w-2 h-2 rounded-full bg-neutral-900" />
                     <span>Critical</span>
                   </div>
-                  <span className="font-bold text-gray-700 text-[11px]">5 units left</span>
+                  <span className="font-bold text-neutral-900 text-[11px]">5 units left</span>
                 </div>
                 <div className="mt-1.5 font-bold text-xs text-gray-900 truncate">
                   iPhone 15 Pro 128GB
@@ -405,22 +404,22 @@ export function Dashboard() {
 
                 {/* Segmented bar */}
                 <div className="mt-2 flex items-center gap-1">
-                  <div className="flex-1 h-1 bg-rose-500 rounded-full" />
-                  <div className="flex-1 h-1 bg-rose-500 rounded-full" />
-                  <div className="flex-1 h-1 bg-rose-500 rounded-full" />
+                  <div className="flex-1 h-1 bg-neutral-900 rounded-full" />
+                  <div className="flex-1 h-1 bg-neutral-900 rounded-full" />
+                  <div className="flex-1 h-1 bg-neutral-900 rounded-full" />
                   <div className="flex-1 h-1 bg-gray-200 rounded-full" />
                   <div className="flex-1 h-1 bg-gray-200 rounded-full" />
                 </div>
               </div>
 
               {/* Item 2: Low */}
-              <div className="p-3 bg-gray-50/70 rounded-xl">
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100">
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-600">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Low</span>
+                  <div className="flex items-center gap-1.5 font-bold text-neutral-700">
+                    <span className="w-2 h-2 rounded-full bg-neutral-400" />
+                    <span>Low Stock</span>
                   </div>
-                  <span className="font-bold text-gray-700 text-[11px]">8 units left</span>
+                  <span className="font-bold text-neutral-800 text-[11px]">8 units left</span>
                 </div>
                 <div className="mt-1.5 font-bold text-xs text-gray-900 truncate">
                   Apple Watch Ultra 2
@@ -429,8 +428,8 @@ export function Dashboard() {
 
                 {/* Segmented bar */}
                 <div className="mt-2 flex items-center gap-1">
-                  <div className="flex-1 h-1 bg-amber-500 rounded-full" />
-                  <div className="flex-1 h-1 bg-amber-500 rounded-full" />
+                  <div className="flex-1 h-1 bg-neutral-600 rounded-full" />
+                  <div className="flex-1 h-1 bg-neutral-600 rounded-full" />
                   <div className="flex-1 h-1 bg-gray-200 rounded-full" />
                   <div className="flex-1 h-1 bg-gray-200 rounded-full" />
                 </div>
@@ -439,7 +438,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Column 2: Traffic sources (Donut Chart) */}
+        {/* Column 2: Traffic sources (Monochrome Donut Chart) */}
         <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
@@ -454,36 +453,36 @@ export function Dashboard() {
               <div className="relative w-40 h-40 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90">
                   <circle cx="80" cy="80" r="60" stroke="#f3f4f6" strokeWidth="18" fill="transparent" />
-                  {/* Segment 1: Mobile (Dark Teal) */}
+                  {/* Segment 1: Mobile App (Solid Black) */}
                   <circle
                     cx="80"
                     cy="80"
                     r="60"
-                    stroke="#1b564c"
+                    stroke="#171717"
                     strokeWidth="18"
                     strokeDasharray="376"
                     strokeDashoffset="140"
                     strokeLinecap="round"
                     fill="transparent"
                   />
-                  {/* Segment 2: Web (Lime) */}
+                  {/* Segment 2: Web Store (Medium Charcoal) */}
                   <circle
                     cx="80"
                     cy="80"
                     r="60"
-                    stroke="#b6e49e"
+                    stroke="#737373"
                     strokeWidth="18"
                     strokeDasharray="376"
                     strokeDashoffset="260"
                     strokeLinecap="round"
                     fill="transparent"
                   />
-                  {/* Segment 3: Referrals (Peach) */}
+                  {/* Segment 3: Referrals (Light Gray) */}
                   <circle
                     cx="80"
                     cy="80"
                     r="60"
-                    stroke="#fed7aa"
+                    stroke="#d4d4d4"
                     strokeWidth="18"
                     strokeDasharray="376"
                     strokeDashoffset="330"
@@ -505,13 +504,13 @@ export function Dashboard() {
             {/* Donut Legend */}
             <div className="flex items-center justify-center gap-4 text-xs font-semibold text-gray-500">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#1b564c]" /> Mobile App
+                <span className="w-2 h-2 rounded-full bg-neutral-900" /> Mobile
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#b6e49e]" /> Web Store
+                <span className="w-2 h-2 rounded-full bg-neutral-500" /> Web
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-200" /> Direct
+                <span className="w-2 h-2 rounded-full bg-neutral-300" /> Direct
               </span>
             </div>
           </div>
@@ -545,10 +544,10 @@ export function Dashboard() {
                   {recentOrders.map((ord: any) => {
                     const statusClass =
                       ord.status === "shipped"
-                        ? "bg-[#eaf5e9] text-[#24613b]"
+                        ? "bg-neutral-900 text-white"
                         : ord.status === "pending"
-                        ? "bg-[#ffedd5] text-[#9a3412]"
-                        : "bg-[#eff6ff] text-[#1d4ed8]";
+                        ? "bg-neutral-200 text-neutral-800"
+                        : "bg-neutral-100 text-neutral-900 border border-neutral-300";
 
                     const statusLabel =
                       ord.status === "shipped"
