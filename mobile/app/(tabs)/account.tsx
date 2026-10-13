@@ -24,13 +24,17 @@ import { useWishlistStore } from "../../store/useWishlistStore";
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { name, phone, email, addresses, logout } = useUserStore();
+  const { user, session, addresses, signOut } = useUserStore();
   const { clearCart } = useCartStore();
   const { clear: clearWishlist } = useWishlistStore();
 
   const [addressModalVisible, setAddressModalVisible] = useState(false);
 
-  const initialLetter = (name || "G").charAt(0).toUpperCase();
+  const name = user?.name || "Guest";
+  const email = user?.email || "";
+  const phone = user?.phone || "";
+  const isAdmin = user?.role === "admin";
+  const initialLetter = name.charAt(0).toUpperCase();
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -38,12 +42,11 @@ export default function AccountScreen() {
       {
         text: "Sign Out",
         style: "destructive",
-        onPress: () => {
+        onPress: async () => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          logout();
+          await signOut();
           clearCart();
           clearWishlist();
-          router.replace("/(tabs)");
         }
       }
     ]);
@@ -70,17 +73,42 @@ export default function AccountScreen() {
         </View>
 
         {/* 2. Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{initialLetter}</Text>
+        {session && user ? (
+          <View style={styles.profileCard}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>{initialLetter}</Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text style={styles.profileName}>{name}</Text>
+                {isAdmin && (
+                  <View style={{ backgroundColor: colors.accent, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>ADMIN</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.profileContact}>
+                {email || phone}
+              </Text>
+            </View>
           </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{name || "Guest User"}</Text>
-            <Text style={styles.profileContact}>
-              {phone || email || "guest@istore.com.gh"}
-            </Text>
-          </View>
-        </View>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.8 }]}
+            onPress={() => router.push("/(auth)/login")}
+          >
+            <View style={[styles.avatarCircle, { backgroundColor: colors.surface }]}>
+              <Ionicons name="person" size={24} color={colors.accent} />
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>Sign In / Register</Text>
+              <Text style={styles.profileContact}>
+                Sign in to manage orders, wishlist & account
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </Pressable>
+        )}
 
         {/* 3. Menu Groups */}
 
@@ -216,16 +244,29 @@ export default function AccountScreen() {
           </View>
         </View>
 
-        {/* 4. Sign Out Button */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.signOutBtn,
-            pressed && { opacity: 0.6 }
-          ]}
-          onPress={handleSignOut}
-        >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </Pressable>
+        {/* 4. Sign Out / Sign In Button */}
+        {session ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.signOutBtn,
+              pressed && { opacity: 0.6 }
+            ]}
+            onPress={handleSignOut}
+          >
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={({ pressed }) => [
+              styles.signOutBtn,
+              { backgroundColor: colors.accent, borderColor: colors.accent },
+              pressed && { opacity: 0.8 }
+            ]}
+            onPress={() => router.push("/(auth)/login")}
+          >
+            <Text style={[styles.signOutText, { color: "#FFFFFF" }]}>Sign In to Apple ID</Text>
+          </Pressable>
+        )}
       </ScrollView>
 
       {/* Address Management Modal Stub */}

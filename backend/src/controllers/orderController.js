@@ -43,7 +43,7 @@ const updateStatusSchema = z.object({
 async function createOrder(req, res, next) {
   try {
     const { items, shippingAddress, notes } = req.body;
-    const userId = req.user?.id || req.userId;
+    const userId = req.user.id;
 
     const createdOrder = await prisma.$transaction(async (tx) => {
       const productIds = items.map((i) => i.productId);
@@ -139,7 +139,7 @@ async function createOrder(req, res, next) {
 async function listMyOrders(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
-    const userId = req.user?.id || req.userId;
+    const userId = req.user.id;
 
     const where = { userId };
 
@@ -180,7 +180,7 @@ async function listMyOrders(req, res, next) {
 async function getOrder(req, res, next) {
   try {
     const { id } = req.params;
-    const userId = req.user?.id || req.userId;
+    const userId = req.user.id;
     const isAdmin = req.user?.role === "admin";
 
     const order = await prisma.order.findUnique({

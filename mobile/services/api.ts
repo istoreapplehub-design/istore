@@ -47,6 +47,8 @@ export interface CreateReviewPayload {
   authorName: string;
 }
 
+import { supabase } from "../lib/supabase";
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_URL}${path}`;
   const headers = new Headers(options.headers || {});
@@ -56,6 +58,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (token && !headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+
     const res = await fetch(url, {
       ...options,
       headers

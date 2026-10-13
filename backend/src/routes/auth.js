@@ -1,18 +1,27 @@
 const express = require("express");
-const { validate } = require("../middleware/validate");
-const { requireAuth } = require("../middleware/auth");
-const {
-  registerSchema,
-  loginSchema,
-  register,
-  login,
-  getMe
-} = require("../controllers/authController");
-
 const router = express.Router();
+const {
+  provisionUser,
+  getMe,
+  upgradeRole,
+  provisionSchema,
+  upgradeRoleSchema,
+} = require("../controllers/authController");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
+const { validate } = require("../middleware/validate");
 
-router.post("/register", validate({ body: registerSchema }), register);
-router.post("/login", validate({ body: loginSchema }), login);
+router.post(
+  "/provision",
+  validate({ body: provisionSchema }),
+  provisionUser
+);
 router.get("/me", requireAuth, getMe);
+router.post(
+  "/role/upgrade",
+  requireAuth,
+  requireAdmin,
+  validate({ body: upgradeRoleSchema }),
+  upgradeRole
+);
 
 module.exports = router;

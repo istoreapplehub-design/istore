@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -13,10 +13,11 @@ import {
 } from "@expo-google-fonts/inter";
 import { colors, typography } from "../constants/theme";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { useUserStore } from "../store/useUserStore";
 
 /**
  * Root Application Layout
- * Provides GestureHandler, SafeAreas, Inter typography, ErrorBoundary, and Expo Router stack configuration.
+ * Provides GestureHandler, SafeAreas, Inter typography, ErrorBoundary, Supabase session hydration, and Expo Router stack configuration.
  */
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -26,7 +27,18 @@ export default function RootLayout() {
     Inter_700Bold
   });
 
-  if (!fontsLoaded) {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    useUserStore
+      .getState()
+      .hydrate()
+      .finally(() => {
+        setHydrated(true);
+      });
+  }, []);
+
+  if (!fontsLoaded || !hydrated) {
     return (
       <View style={styles.splashContainer}>
         <Text style={styles.brandTitle}>I-Store</Text>
@@ -49,6 +61,7 @@ export default function RootLayout() {
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen
               name="product/[slug]"
               options={{
@@ -65,42 +78,42 @@ export default function RootLayout() {
                 headerShown: false
               }}
             />
-          <Stack.Screen
-            name="order-success"
-            options={{
-              animation: "fade",
-              gestureEnabled: false,
-              headerShown: false
-            }}
-          />
-          <Stack.Screen
-            name="orders/index"
-            options={{
-              headerShown: true,
-              title: "My Orders",
-              headerBackTitle: "Back"
-            }}
-          />
-          <Stack.Screen
-            name="orders/[id]"
-            options={{
-              headerShown: true,
-              title: "Order Details",
-              headerBackTitle: "Orders"
-            }}
-          />
-          <Stack.Screen
-            name="wishlist"
-            options={{
-              headerShown: true,
-              title: "Wishlist",
-              headerBackTitle: "Back"
-            }}
-          />
-        </Stack>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
-  </ErrorBoundary>
+            <Stack.Screen
+              name="order-success"
+              options={{
+                animation: "fade",
+                gestureEnabled: false,
+                headerShown: false
+              }}
+            />
+            <Stack.Screen
+              name="orders/index"
+              options={{
+                headerShown: true,
+                title: "My Orders",
+                headerBackTitle: "Back"
+              }}
+            />
+            <Stack.Screen
+              name="orders/[id]"
+              options={{
+                headerShown: true,
+                title: "Order Details",
+                headerBackTitle: "Orders"
+              }}
+            />
+            <Stack.Screen
+              name="wishlist"
+              options={{
+                headerShown: true,
+                title: "Wishlist",
+                headerBackTitle: "Back"
+              }}
+            />
+          </Stack>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

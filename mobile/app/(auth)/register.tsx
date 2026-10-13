@@ -1,0 +1,256 @@
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from "react-native";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, radius, spacing, typography } from "../../constants/theme";
+import { useUserStore } from "../../store/useUserStore";
+
+export default function RegisterScreen() {
+  const router = useRouter();
+  const signUp = useUserStore((state) => state.signUp);
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignUp = async () => {
+    if (!name.trim() || !phone.trim() || !email.trim() || !password) {
+      Alert.alert("Missing Fields", "Please fill in all registration fields.");
+      return;
+    }
+
+    if (password.length < 8) {
+      Alert.alert("Password Too Short", "Password must be at least 8 characters.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await signUp(name.trim(), phone.trim(), email.trim().toLowerCase(), password);
+      Alert.alert("Welcome!", "Your account has been created successfully.", [
+        {
+          text: "Continue",
+          onPress: () => router.replace("/(tabs)")
+        }
+      ]);
+    } catch (err: any) {
+      Alert.alert("Registration Failed", err.message || "Failed to create account.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.brandSubtitle}>I-Store Ghana</Text>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>
+              Sign up to track purchases, save your delivery addresses, and receive official Apple warranty support.
+            </Text>
+          </View>
+
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Kwame Mensah"
+                placeholderTextColor={colors.textTertiary}
+                autoCorrect={false}
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="024 123 4567"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email Address</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="name@example.com"
+                placeholderTextColor={colors.textTertiary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoCorrect={false}
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password (min. 8 characters)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="••••••••"
+                placeholderTextColor={colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+
+            {/* Blue Pill Sign Up Button */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed && styles.primaryButtonPressed,
+                loading && styles.buttonDisabled
+              ]}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.primaryButtonText}>Create Account</Text>
+              )}
+            </Pressable>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account?</Text>
+            <Pressable onPress={() => router.push("/(auth)/login")}>
+              <Text style={styles.footerLink}> Sign In</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  keyboardView: {
+    flex: 1
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl
+  },
+  header: {
+    marginBottom: spacing.xl
+  },
+  brandSubtitle: {
+    ...typography.subheadline,
+    color: colors.accent,
+    fontWeight: "600",
+    marginBottom: spacing.xs,
+    textTransform: "uppercase",
+    letterSpacing: 0.8
+  },
+  title: {
+    ...typography.largeTitle,
+    color: colors.text,
+    letterSpacing: -0.8,
+    marginBottom: spacing.xs
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
+    lineHeight: 22
+  },
+  form: {
+    gap: spacing.md
+  },
+  inputGroup: {
+    gap: spacing.xs
+  },
+  label: {
+    ...typography.subheadline,
+    fontWeight: "600",
+    color: colors.text
+  },
+  input: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    ...typography.body,
+    color: colors.text
+  },
+  primaryButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.sm,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4
+  },
+  primaryButtonPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.99 }]
+  },
+  buttonDisabled: {
+    opacity: 0.6
+  },
+  primaryButtonText: {
+    ...typography.headline,
+    color: "#FFFFFF",
+    fontWeight: "700"
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: spacing.xl
+  },
+  footerText: {
+    ...typography.subheadline,
+    color: colors.textSecondary
+  },
+  footerLink: {
+    ...typography.subheadline,
+    color: colors.accent,
+    fontWeight: "600"
+  }
+});

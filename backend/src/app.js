@@ -4,7 +4,6 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 const { notFound, errorHandler } = require("./middleware/errorHandler");
-const { attachUser } = require("./middleware/auth");
 
 const productsRouter = require("./routes/products");
 const categoriesRouter = require("./routes/categories");
@@ -20,9 +19,6 @@ app.use(morgan("dev"));
 
 // TODO: Restrict origin to your app domain before production
 app.use(cors());
-
-// Attach stub user header (x-user-id) before routing (deprecated)
-app.use(attachUser);
 
 // ─── 2. BODY PARSERS (APPROACH B) ───────────────────────────────────────────
 app.use(

@@ -1,7 +1,7 @@
 require("dotenv").config();
-const bcrypt = require("bcryptjs");
 const { PrismaClient } = require("@prisma/client");
 const { safeJsonStringify } = require("../src/utils/json");
+const { supabaseAdmin } = require("../src/utils/supabase");
 
 const prisma = new PrismaClient();
 
@@ -1132,26 +1132,53 @@ async function main() {
     }
   }
 
-  // Seed Default Admin User
-  const adminPasswordHash = await bcrypt.hash("ChangeMe123!", 10);
+  // Check if admin already exists in Supabase
+  const adminEmail = "admin@ghanaapps.shop";
+  const adminPassword = "ChangeMe123!";
+
+  let supabaseAdminUser;
+
+  // Try to create — if exists, fetch
+  const { data: existing } = await supabaseAdmin.auth.admin.listUsers();
+  const found = existing?.users?.find((u) => u.email === adminEmail);
+
+  if (found) {
+    supabaseAdminUser = found;
+  } else {
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email: adminEmail,
+      password: adminPassword,
+      email_confirm: true,
+      user_metadata: { name: "Admin", phone: "+233200000000" }
+    });
+    if (error) throw error;
+    supabaseAdminUser = data.user;
+  }
+
+  // Upsert Prisma user
   await prisma.user.upsert({
-    where: { email: "admin@ghanaapps.shop" },
+    where: { email: adminEmail },
     update: {
+      supabaseId: supabaseAdminUser.id,
       name: "Admin",
       phone: "+233200000000",
-      passwordHash: adminPasswordHash,
       role: "admin",
       isActive: true
     },
     create: {
+      supabaseId: supabaseAdminUser.id,
       name: "Admin",
-      email: "admin@ghanaapps.shop",
+      email: adminEmail,
       phone: "+233200000000",
-      passwordHash: adminPasswordHash,
       role: "admin",
       isActive: true
     }
   });
+
+  console.log("🔑 ADMIN LOGIN");
+  console.log("   Email:    " + adminEmail);
+  console.log("   Password: " + adminPassword);
+  console.log("   ⚠️  Change this password immediately after first login.");
 
   // Print Summary Table
   console.log("\n=======================================================");
