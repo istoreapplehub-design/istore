@@ -10,6 +10,8 @@ export interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  requireMatchText?: string;
+  inputPlaceholder?: string;
 }
 
 export function ConfirmDialog({
@@ -20,9 +22,21 @@ export function ConfirmDialog({
   confirmStyle = "primary",
   onConfirm,
   onCancel,
-  loading = false
+  loading = false,
+  requireMatchText,
+  inputPlaceholder = "Type here to confirm..."
 }: ConfirmDialogProps) {
+  const [typedValue, setTypedValue] = React.useState("");
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setTypedValue("");
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  const isConfirmDisabled = loading || (requireMatchText ? typedValue.trim() !== requireMatchText : false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in">
@@ -37,9 +51,24 @@ export function ConfirmDialog({
           >
             <AlertTriangle className="w-5 h-5" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <p className="mt-2 text-sm text-gray-500 leading-relaxed">{message}</p>
+            {requireMatchText && (
+              <div className="mt-4">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">
+                  Type <span className="font-mono text-rose-600 font-bold bg-rose-50 px-1 py-0.5 rounded">{requireMatchText}</span> to proceed:
+                </label>
+                <input
+                  type="text"
+                  value={typedValue}
+                  onChange={(e) => setTypedValue(e.target.value)}
+                  placeholder={inputPlaceholder}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono"
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -54,7 +83,7 @@ export function ConfirmDialog({
           </button>
           <button
             type="button"
-            disabled={loading}
+            disabled={isConfirmDisabled}
             onClick={onConfirm}
             className={`px-5 py-2 text-sm font-medium text-white rounded-full transition disabled:opacity-50 ${
               confirmStyle === "danger"

@@ -147,8 +147,15 @@ async function upgradeRole(req, res, next) {
       });
     }
 
-    // Safety check: Cannot demote the last remaining admin
+    // Safety check: Cannot demote yourself or the last remaining admin
     if (targetUser.role === "admin" && role === "customer") {
+      if (req.user && req.user.id === targetUser.id) {
+        return res.status(400).json({
+          error: true,
+          message: "You cannot demote yourself"
+        });
+      }
+
       const adminCount = await prisma.user.count({
         where: { role: "admin", isActive: true }
       });
@@ -165,7 +172,6 @@ async function upgradeRole(req, res, next) {
       data: { role },
       select: {
         id: true,
-        supabaseId: true,
         name: true,
         email: true,
         phone: true,
@@ -184,10 +190,94 @@ async function upgradeRole(req, res, next) {
   }
 }
 
+/**
+ * GET /api/auth/admins (requireAuth, requireAdmin)
+ */
+async function listAdmins(req, res, next) {
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: "admin" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: "asc" }
+    });
+
+    return res.json({ data: admins });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/auth/users (requireAuth, requireAdmin)
+ */
+async function listAllUsers(req, res, next) {
+  try {
+    const { search, role, page = 1, limit = 20 } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = {};
+    if (role && role !== "all") {
+      where.role = role;
+    }
+    if (search && search.trim()) {
+      const q = search.trim();
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { email: { contains: q, mode: "insensitive" } },
+        { phone: { contains: q, mode: "insensitive" } }
+      ];
+    }
+
+    const [total, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true
+        },
+        skip,
+        take: limitNum,
+        orderBy: { createdAt: "desc" }
+      })
+    ]);
+
+    return res.json({
+      data: users,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        hasNext: skip + users.length < total
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   provisionSchema,
   upgradeRoleSchema,
   provisionUser,
   getMe,
-  upgradeRole
+  upgradeRole,
+  listAdmins,
+  listAllUsers
 };

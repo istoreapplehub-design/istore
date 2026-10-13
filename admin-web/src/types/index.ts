@@ -152,3 +152,13 @@ export interface UserProfile {
   role: "admin" | "customer" | string;
   isActive: boolean;
 }
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+}

@@ -8,6 +8,7 @@ const {
   softDeleteProduct,
   restoreProduct,
   getAdminStats,
+  exportProducts,
 } = require("../controllers/adminProductController");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
@@ -21,6 +22,7 @@ router.use(requireAuth, requireAdmin);
 
 router.get("/", listAllProducts);
 router.get("/stats", getAdminStats);
+router.get("/export", exportProducts);
 router.get("/:id", getProductById);
 router.post("/", validate({ body: createProductSchema }), createProduct);
 router.patch("/:id", validate({ body: updateProductSchema }), updateProduct);

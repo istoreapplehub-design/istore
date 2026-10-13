@@ -4,6 +4,8 @@ const {
   provisionUser,
   getMe,
   upgradeRole,
+  listAdmins,
+  listAllUsers,
   provisionSchema,
   upgradeRoleSchema,
 } = require("../controllers/authController");
@@ -16,6 +18,8 @@ router.post(
   provisionUser
 );
 router.get("/me", requireAuth, getMe);
+router.get("/admins", requireAuth, requireAdmin, listAdmins);
+router.get("/users", requireAuth, requireAdmin, listAllUsers);
 router.post(
   "/role/upgrade",
   requireAuth,

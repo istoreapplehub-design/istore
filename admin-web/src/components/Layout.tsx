@@ -4,10 +4,11 @@ import {
   LayoutDashboard,
   Package,
   ShoppingBag,
+  Users,
+  Settings,
   LogOut,
   Menu,
   X,
-  ExternalLink,
   ShieldCheck
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +45,11 @@ export function Layout() {
       path: "/orders",
       icon: ShoppingBag,
       badge: pendingOrders > 0 ? pendingOrders : null
+    },
+    {
+      label: "Admins",
+      path: "/admins",
+      icon: Users
     }
   ];
 
@@ -112,6 +118,22 @@ export function Layout() {
             );
           })}
         </nav>
+
+        {/* Bottom section (above Sign Out) */}
+        <div className="px-4 py-2 border-t border-gray-100">
+          <NavLink
+            to="/settings"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
+              location.pathname.startsWith("/settings")
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100/80 hover:text-gray-900"
+            }`}
+          >
+            <Settings className={`w-5 h-5 ${location.pathname.startsWith("/settings") ? "text-blue-600" : "text-gray-400"}`} />
+            <span>Settings</span>
+          </NavLink>
+        </div>
 
         {/* User & Sign Out Footer */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">

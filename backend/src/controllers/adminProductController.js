@@ -496,6 +496,67 @@ async function getAdminStats(req, res, next) {
   }
 }
 
+/**
+ * 8. GET /api/admin/products/export
+ * Raw CSV export of all hardware inventory items
+ */
+async function exportProducts(req, res, next) {
+  try {
+    const products = await prisma.product.findMany({
+      orderBy: { createdAt: "desc" }
+    });
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const header = [
+      "Product ID",
+      "Name",
+      "Slug",
+      "Category",
+      "Model",
+      "Price (GHS)",
+      "Stock",
+      "Condition",
+      "Featured",
+      "Active",
+      "Created At"
+    ].join(",");
+
+    const rows = products.map((p) =>
+      [
+        escapeCsv(p.id),
+        escapeCsv(p.name),
+        escapeCsv(p.slug),
+        escapeCsv(p.category),
+        escapeCsv(p.model),
+        p.priceGHS,
+        p.stock,
+        escapeCsv(p.condition),
+        p.featured ? "Yes" : "No",
+        p.isActive ? "Yes" : "No",
+        escapeCsv(new Date(p.createdAt).toISOString())
+      ].join(",")
+    );
+
+    const csvString = [header, ...rows].join("\n");
+    const today = new Date().toISOString().slice(0, 10);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="products-${today}.csv"`
+    );
+
+    return res.send(csvString);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listAllProducts,
   getProductById,
@@ -503,5 +564,6 @@ module.exports = {
   updateProduct,
   softDeleteProduct,
   restoreProduct,
-  getAdminStats
+  getAdminStats,
+  exportProducts
 };

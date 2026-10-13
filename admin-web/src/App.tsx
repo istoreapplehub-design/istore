@@ -8,6 +8,8 @@ import { Products } from "./pages/Products";
 import { ProductForm } from "./pages/ProductForm";
 import { Orders } from "./pages/Orders";
 import { OrderDetail } from "./pages/OrderDetail";
+import { Admins } from "./pages/Admins";
+import { Settings } from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
 
 export function App() {
@@ -32,6 +34,8 @@ export function App() {
         <Route path="products/:id/edit" element={<ProductForm />} />
         <Route path="orders" element={<Orders />} />
         <Route path="orders/:id" element={<OrderDetail />} />
+        <Route path="admins" element={<Admins />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

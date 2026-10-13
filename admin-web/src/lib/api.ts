@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 import {
   AdminPendingCount,
   AdminStats,
+  AdminUser,
   Order,
   OrderTimelineEvent,
   PaginatedResponse,
@@ -10,7 +11,7 @@ import {
   UserProfile
 } from "../types";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
+export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 async function getToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -168,6 +169,72 @@ export function getOrdersExportUrl(filters: Record<string, string | number | boo
   return `${API_BASE}/api/admin/orders/export${qs ? `?${qs}` : ""}`;
 }
 
+export function getProductsExportUrl(): string {
+  return `${API_BASE}/api/admin/products/export`;
+}
+
+// ─────────────────────────────────────────
+// Admin User Management
+// ─────────────────────────────────────────
+export async function listAdmins(): Promise<AdminUser[]> {
+  const res = await request<{ data: AdminUser[] }>("/api/auth/admins");
+  return res.data;
+}
+
+export async function listAllUsers(
+  params: { search?: string; role?: string; page?: number; limit?: number } = {}
+): Promise<PaginatedResponse<AdminUser>> {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, String(value));
+    }
+  });
+  const qs = query.toString();
+  return request<PaginatedResponse<AdminUser>>(`/api/auth/users${qs ? `?${qs}` : ""}`);
+}
+
+export async function upgradeUserRole(
+  userId: string,
+  role: "admin" | "customer"
+): Promise<{ success: boolean; user: AdminUser }> {
+  return request<{ success: boolean; user: AdminUser }>("/api/auth/role/upgrade", {
+    method: "POST",
+    body: JSON.stringify({ userId, role })
+  });
+}
+
+// ─────────────────────────────────────────
+// Data Cleanup / Settings
+// ─────────────────────────────────────────
+export async function wipeDemoOrders(): Promise<{ success: boolean; deletedCount: number; message: string }> {
+  return request<{ success: boolean; deletedCount: number; message: string }>(
+    "/api/admin/settings/demo-orders",
+    {
+      method: "DELETE"
+    }
+  );
+}
+
+export async function resetAllData(): Promise<{
+  success: boolean;
+  ordersDeleted: number;
+  itemsDeleted: number;
+  reviewsDeleted: number;
+  message: string;
+}> {
+  return request<{
+    success: boolean;
+    ordersDeleted: number;
+    itemsDeleted: number;
+    reviewsDeleted: number;
+    message: string;
+  }>("/api/admin/settings/reset", {
+    method: "POST",
+    body: JSON.stringify({ confirm: "DELETE_ALL_DATA" })
+  });
+}
+
 // ─────────────────────────────────────────
 // Uploads
 // ─────────────────────────────────────────
@@ -202,3 +269,4 @@ export function formatGHS(amount: number): string {
     maximumFractionDigits: 2
   })}`;
 }
+

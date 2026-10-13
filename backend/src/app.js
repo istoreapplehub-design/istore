@@ -14,6 +14,7 @@ const authRouter = require("./routes/auth");
 const adminProductsRouter = require("./routes/adminProducts");
 const adminUploadsRouter = require("./routes/adminUploads");
 const adminOrdersRouter = require("./routes/adminOrders");
+const adminSettingsRouter = require("./routes/adminSettings");
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/admin/products", adminProductsRouter);
 app.use("/api/admin/orders", adminOrdersRouter);
 app.use("/api/admin/uploads", adminUploadsRouter);
+app.use("/api/admin/settings", adminSettingsRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/products", reviewsRouter); // Sub-routes mounted at /:slug/reviews
 app.use("/api/categories", categoriesRouter);
