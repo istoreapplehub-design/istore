@@ -12,6 +12,7 @@ const ordersRouter = require("./routes/orders");
 const paystackRouter = require("./routes/paystack");
 const authRouter = require("./routes/auth");
 const adminProductsRouter = require("./routes/adminProducts");
+const adminUploadsRouter = require("./routes/adminUploads");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 // ─── 3. MOUNT ROUTES ────────────────────────────────────────────────────────
 app.use("/api/auth", authRouter);
 app.use("/api/admin/products", adminProductsRouter);
+app.use("/api/admin/uploads", adminUploadsRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/products", reviewsRouter); // Sub-routes mounted at /:slug/reviews
 app.use("/api/categories", categoriesRouter);
