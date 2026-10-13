@@ -1,0 +1,21 @@
+{
+  "name": "apple-hub-ghana",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GhanaApps Store - Apple App Store inspired mobile marketplace localized for Ghana with Paystack MoMo integration",
+  "scripts": {
+    "start": "npm run start:all",
+    "start:backend": "cd backend && npm start",
+    "start:mobile": "cd mobile && npx expo start",
+    "start:web": "cd mobile && npx expo start --web"
+  },
+  "keywords": [
+    "react-native",
+    "expo",
+    "ghana",
+    "app-store",
+    "paystack",
+    "momo",
+    "apple-ui"
+  ]
+}
