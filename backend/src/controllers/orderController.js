@@ -43,7 +43,7 @@ const updateStatusSchema = z.object({
 async function createOrder(req, res, next) {
   try {
     const { items, shippingAddress, notes } = req.body;
-    const userId = req.userId;
+    const userId = req.user?.id || req.userId;
 
     const createdOrder = await prisma.$transaction(async (tx) => {
       const productIds = items.map((i) => i.productId);
@@ -139,7 +139,7 @@ async function createOrder(req, res, next) {
 async function listMyOrders(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
-    const userId = req.userId;
+    const userId = req.user?.id || req.userId;
 
     const where = { userId };
 
@@ -180,7 +180,8 @@ async function listMyOrders(req, res, next) {
 async function getOrder(req, res, next) {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const userId = req.user?.id || req.userId;
+    const isAdmin = req.user?.role === "admin";
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -195,7 +196,7 @@ async function getOrder(req, res, next) {
       return next(err);
     }
 
-    if (order.userId && order.userId !== userId) {
+    if (order.userId && order.userId !== userId && !isAdmin) {
       const err = new Error("Forbidden: You cannot access this order");
       err.status = 403;
       return next(err);

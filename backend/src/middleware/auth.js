@@ -1,14 +1,9 @@
-/**
- * STUB AUTH MIDDLEWARE
- * --------------------
- * For development only. Reads the "x-user-id" header and
- * attaches it to req.userId.
- * 
- * TODO: Replace with real JWT / Supabase auth before production.
- * Every route using requireAuth() must be revisited when we
- * switch to real auth.
- */
+const { verifyToken } = require("../utils/jwt");
 
+/**
+ * attachUser (DEPRECATED - keep for backward dev compatibility only)
+ * Reads x-user-id header if present. Remove before production.
+ */
 function attachUser(req, res, next) {
   const headerUserId = req.headers["x-user-id"];
   if (headerUserId && typeof headerUserId === "string") {
@@ -17,16 +12,59 @@ function attachUser(req, res, next) {
   next();
 }
 
+/**
+ * requireAuth middleware
+ * Expects Authorization: Bearer <token>
+ * Verifies JWT and attaches req.user = { id, role, phone, email }
+ */
 function requireAuth(req, res, next) {
-  if (!req.userId) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    // If x-user-id is present in development mode, allow fallback for backward compatibility
+    if (process.env.NODE_ENV === "development" && req.userId) {
+      req.user = { id: req.userId, role: "customer", phone: "", email: null };
+      return next();
+    }
     return res.status(401).json({
       error: true,
-      message: "Authentication required"
+      message: "Authentication required. Please provide a valid Bearer token."
     });
   }
 
-  if (process.env.NODE_ENV === "development" || !process.env.NODE_ENV) {
-    console.warn("[auth] STUB mode — userId:", req.userId);
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = verifyToken(token);
+    req.user = {
+      id: decoded.id,
+      role: decoded.role || "customer",
+      phone: decoded.phone,
+      email: decoded.email
+    };
+    // Keep req.userId for backward compatibility
+    req.userId = decoded.id;
+    next();
+  } catch (err) {
+    return res.status(401).json({
+      error: true,
+      message: err.name === "TokenExpiredError" ? "Token expired" : "Invalid token"
+    });
+  }
+}
+
+/**
+ * requireAdmin middleware
+ * Requires authenticated user with role === "admin"
+ */
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      error: true,
+      message: "Admin access required"
+    });
+  }
+
+  if (process.env.NODE_ENV !== "test") {
+    console.log(`[admin] Action authorized for admin: ${req.user.email || req.user.id} (${req.method} ${req.originalUrl})`);
   }
 
   next();
@@ -34,5 +72,6 @@ function requireAuth(req, res, next) {
 
 module.exports = {
   attachUser,
-  requireAuth
+  requireAuth,
+  requireAdmin
 };

@@ -11,6 +11,7 @@ const categoriesRouter = require("./routes/categories");
 const reviewsRouter = require("./routes/reviews");
 const ordersRouter = require("./routes/orders");
 const paystackRouter = require("./routes/paystack");
+const authRouter = require("./routes/auth");
 
 const app = express();
 
@@ -20,7 +21,7 @@ app.use(morgan("dev"));
 // TODO: Restrict origin to your app domain before production
 app.use(cors());
 
-// Attach stub user header (x-user-id) before routing
+// Attach stub user header (x-user-id) before routing (deprecated)
 app.use(attachUser);
 
 // ─── 2. BODY PARSERS (APPROACH B) ───────────────────────────────────────────
@@ -38,6 +39,7 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 
 // ─── 3. MOUNT ROUTES ────────────────────────────────────────────────────────
+app.use("/api/auth", authRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/products", reviewsRouter); // Sub-routes mounted at /:slug/reviews
 app.use("/api/categories", categoriesRouter);
@@ -45,7 +47,7 @@ app.use("/api/orders", ordersRouter);
 app.use("/api/paystack", paystackRouter);
 
 // ─── 4. HEALTH CHECK ────────────────────────────────────────────────────────
-app.get("/", (req, res) => {
+app.get(["/", "/api/health"], (req, res) => {
   res.json({
     status: "ok",
     service: "I-Store API",

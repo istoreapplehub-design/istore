@@ -75,7 +75,7 @@ async function applyPaymentSuccess(reference, channel) {
 async function initializePayment(req, res, next) {
   try {
     const { orderId } = req.body;
-    const userId = req.userId;
+    const userId = req.user?.id || req.userId;
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -132,7 +132,7 @@ async function initializePayment(req, res, next) {
           channels: ["mobile_money", "card", "bank"],
           metadata: {
             orderId: order.id,
-            userId: req.userId,
+            userId,
             custom_fields: [
               {
                 display_name: "Order ID",

@@ -118,12 +118,17 @@ model OrderItem {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  phone     String   @unique
-  email     String?  @unique
-  name      String
-  addresses String   @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
-  orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  phone        String   @unique
+  email        String?  @unique
+  name         String
+  role         String   @default("customer") // "customer" | "admin"
+  passwordHash String?
+  isActive     Boolean  @default(true)
+  addresses    String   @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([role])
 }

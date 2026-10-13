@@ -1,4 +1,5 @@
 require("dotenv").config();
+const bcrypt = require("bcryptjs");
 const { PrismaClient } = require("@prisma/client");
 const { safeJsonStringify } = require("../src/utils/json");
 
@@ -1131,12 +1132,34 @@ async function main() {
     }
   }
 
+  // Seed Default Admin User
+  const adminPasswordHash = await bcrypt.hash("ChangeMe123!", 10);
+  await prisma.user.upsert({
+    where: { email: "admin@ghanaapps.shop" },
+    update: {
+      name: "Admin",
+      phone: "+233200000000",
+      passwordHash: adminPasswordHash,
+      role: "admin",
+      isActive: true
+    },
+    create: {
+      name: "Admin",
+      email: "admin@ghanaapps.shop",
+      phone: "+233200000000",
+      passwordHash: adminPasswordHash,
+      role: "admin",
+      isActive: true
+    }
+  });
+
   // Print Summary Table
   console.log("\n=======================================================");
   console.log("✅ SEED COMPLETED SUCCESSFULLY");
   console.log("=======================================================");
   console.log(`📦 Total Products Seeded: ${productsCount}`);
   console.log(`💬 Total Reviews Seeded:  ${reviewsCount} (3 per product)`);
+  console.log("🔑 Admin login: admin@ghanaapps.shop / ChangeMe123!");
   console.log("\n📁 Category Breakdown:");
   for (const [cat, count] of Object.entries(categoryCounts)) {
     console.log(`   • ${cat.padEnd(14)}: ${count} products`);

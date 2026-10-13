@@ -96,7 +96,7 @@ async function createReview(req, res, next) {
   try {
     const { slug } = req.params;
     const { rating, title, body, authorName } = req.body;
-    const userId = req.userId;
+    const userId = req.user?.id || req.userId;
 
     // TODO: Rate-limit 1 review per user per product before production release
 
