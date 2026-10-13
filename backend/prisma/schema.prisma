@@ -87,6 +87,9 @@ model Order {
   paymentChannel   String?     // mobile_money | card | bank
   status           String      @default("pending") // pending | paid | shipped | delivered | cancelled
   notes            String?
+  trackingNumber   String?
+  courier          String?
+  adminNote        String?
   paidAt           DateTime?
   shippedAt        DateTime?
   deliveredAt      DateTime?

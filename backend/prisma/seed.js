@@ -1180,6 +1180,84 @@ async function main() {
   console.log("   Password: " + adminPassword);
   console.log("   ⚠️  Change this password immediately after first login.");
 
+  // Optional Demo Orders for testing (Gated by SEED_DEMO_ORDERS === "true")
+  if (process.env.SEED_DEMO_ORDERS === "true") {
+    console.log("🛒 Seeding demo orders for testing...");
+    const sampleProducts = await prisma.product.findMany({ take: 5, include: { images: true } });
+    const demoCustomers = [
+      { name: "Kwame Mensah", phone: "+233241234567", email: "kwame.m@example.com", region: "Greater Accra", city: "East Legon" },
+      { name: "Ama Serwaa", phone: "+233242345678", email: "ama.s@example.com", region: "Ashanti", city: "Kumasi" },
+      { name: "Kofi Boateng", phone: "+233243456789", email: "kofi.b@example.com", region: "Western", city: "Takoradi" },
+      { name: "Akosua Adjei", phone: "+233244567890", email: "akosua.a@example.com", region: "Central", city: "Cape Coast" }
+    ];
+
+    const statuses = ["pending", "paid", "paid", "shipped", "shipped", "delivered", "delivered", "cancelled"];
+    for (let i = 0; i < 10; i++) {
+      const cust = demoCustomers[i % demoCustomers.length];
+      const prod = sampleProducts[i % sampleProducts.length];
+      const status = statuses[i % statuses.length];
+      const daysAgo = (i * 3) % 28;
+      const orderDate = new Date();
+      orderDate.setDate(orderDate.getDate() - daysAgo);
+
+      const subtotal = prod.priceGHS * 1;
+      const deliveryFee = 25;
+      const total = subtotal + deliveryFee;
+
+      const orderData = {
+        subtotalGHS: subtotal,
+        deliveryFeeGHS: deliveryFee,
+        totalGHS: total,
+        deliveryRegion: cust.region,
+        shippingAddress: safeJsonStringify({
+          fullName: cust.name,
+          phone: cust.phone,
+          region: cust.region,
+          city: cust.city,
+          gpsAddress: "GA-183-9021",
+          landmark: "Near Market"
+        }),
+        status,
+        paymentChannel: i % 3 === 0 ? "card" : "mobile_money",
+        paymentReference: `gha_demo_${Date.now()}_${i}`,
+        createdAt: orderDate,
+        updatedAt: orderDate,
+        items: {
+          create: [
+            {
+              productId: prod.id,
+              name: prod.name,
+              priceGHS: prod.priceGHS,
+              qty: 1,
+              image: prod.images[0]?.url || "https://placehold.co/800x800"
+            }
+          ]
+        }
+      };
+
+      if (status === "paid" || status === "shipped" || status === "delivered") {
+        orderData.paidAt = new Date(orderDate.getTime() + 1000 * 60 * 15);
+      }
+      if (status === "shipped" || status === "delivered") {
+        orderData.shippedAt = new Date(orderDate.getTime() + 1000 * 60 * 60 * 24);
+        orderData.courier = "DHL";
+        orderData.trackingNumber = `DHL${Date.now()}${i}`;
+      }
+      if (status === "delivered") {
+        orderData.deliveredAt = new Date(orderDate.getTime() + 1000 * 60 * 60 * 48);
+      }
+      if (status === "cancelled") {
+        orderData.cancelledAt = new Date(orderDate.getTime() + 1000 * 60 * 60 * 2);
+        orderData.adminNote = "Cancelled per customer request";
+      }
+
+      await prisma.order.create({ data: orderData });
+    }
+
+    console.log("⚠️  Demo orders seeded (SEED_DEMO_ORDERS=true)");
+    console.log("   Set SEED_DEMO_ORDERS=false or omit it in production.");
+  }
+
   // Print Summary Table
   console.log("\n=======================================================");
   console.log("✅ SEED COMPLETED SUCCESSFULLY");
