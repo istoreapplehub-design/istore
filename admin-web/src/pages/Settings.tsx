@@ -181,8 +181,8 @@ export function Settings() {
               Store Name
             </label>
             <div className="font-semibold text-gray-900 flex items-center gap-2">
-              <span>GhanaApps</span>
-              <span className="text-xs text-gray-400 font-normal">(iStore Hub)</span>
+              <span>iStore Apple Hub</span>
+              <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full">Official Store</span>
             </div>
           </div>
 
