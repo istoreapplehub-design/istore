@@ -7,16 +7,16 @@ export const colors = {
   text: "#1D1D1F",
   textSecondary: "#6E6E73",
   textTertiary: "#86868B",
-  accent: "#0071E3",
-  accentDark: "#0058B0",
-  success: "#006B3F", // Subtle Ghana green
-  danger: "#CE1126",  // Ghana flag red
-  badge: "#CE1126",
-  gold: "#FCD116",    // Ghana flag gold
+  accent: "#171717",     // Luxury monochrome ink (matches Admin portal)
+  accentDark: "#000000",
+  success: "#171717",    // Confirmed/paid states render as solid ink
+  danger: "#171717",     // Destructive actions: black pill, white label
+  badge: "#171717",
+  gold: "#171717",
   border: "#E5E5EA",
   cardShadow: "rgba(0, 0, 0, 0.06)",
   tabInactive: "#8E8E93",
-  star: "#FFB400",
+  star: "#171717",
   gradientBottom: "rgba(0, 0, 0, 0.75)",
   gradientTop: "rgba(0, 0, 0, 0)",
   imageBg: "#F5F5F7"
@@ -36,10 +36,18 @@ export const radius = {
   md: 14,
   lg: 20,
   xl: 28,
-  pill: 980
+  pill: 980,
+  full: 9999
 } as const;
 
-export const typography: Record<string, TextStyle> = {
+export const fontFamily = {
+  regular: "Inter",
+  medium: "Inter Medium",
+  semibold: "Inter SemiBold",
+  bold: "Inter Bold"
+} as const;
+
+const typographyBase: Record<string, TextStyle> = {
   h1: {
     fontSize: 34,
     fontWeight: "700",
@@ -82,21 +90,61 @@ export const typography: Record<string, TextStyle> = {
     lineHeight: 16,
     color: colors.textSecondary
   },
+  largeTitle: {
+    fontSize: 34,
+    fontWeight: "700",
+    letterSpacing: -0.8,
+    lineHeight: 41,
+    color: colors.text
+  },
+  title1: {
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.6,
+    lineHeight: 34,
+    color: colors.text
+  },
+  headline: {
+    fontSize: 22,
+    fontWeight: "600",
+    letterSpacing: -0.3,
+    lineHeight: 28,
+    color: colors.text
+  },
+  subheadline: {
+    fontSize: 15,
+    fontWeight: "400",
+    letterSpacing: -0.1,
+    lineHeight: 20,
+    color: colors.text
+  },
+  callout: {
+    fontSize: 17,
+    fontWeight: "400",
+    letterSpacing: -0.2,
+    lineHeight: 22,
+    color: colors.text
+  },
   price: {
     fontSize: 20,
     fontWeight: "700",
     letterSpacing: -0.3,
     lineHeight: 26,
-    color: colors.accent
+    color: colors.text
   },
   priceSmall: {
     fontSize: 16,
     fontWeight: "600",
     letterSpacing: -0.2,
     lineHeight: 20,
-    color: colors.accent
+    color: colors.text
   }
 };
+
+export const typography = {
+  ...typographyBase,
+  fontFamily
+} as typeof typographyBase & { fontFamily: typeof fontFamily };
 
 export const shadow: Record<string, ViewStyle> = {
   soft: Platform.select({

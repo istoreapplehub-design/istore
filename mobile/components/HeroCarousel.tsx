@@ -1,138 +1,128 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Dimensions,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+import React, { useMemo, useState } from "react";
+import { Dimensions, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { Carousel } from "react-native-reanimated-carousel";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming
-} from "react-native-reanimated";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { colors, radius, spacing } from "../constants/theme";
+import { colors, formatGHS, radius } from "../constants/theme";
 import { Product } from "../types";
 import { SkeletonHeroBanner } from "./SkeletonLoader";
+import { ProductVisual, getProductImage } from "./ProductVisual";
 
 interface HeroCarouselProps {
   products: Product[];
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CAROUSEL_HEIGHT = 400;
+const SLIDE_HEIGHT = 470;
 
-const AnimatedImage = Animated.createAnimatedComponent(Image);
-
+/**
+ * Apple-style editorial hero: light stage, centred headline, product image below,
+ * and the signature "Buy" pill paired with a "Learn more" text link.
+ */
 export function HeroCarousel({ products }: HeroCarouselProps) {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Subtle continuous Ken Burns zoom animation
-  const kenBurnsScale = useSharedValue(1);
+  const slides = useMemo(
+    () => (products && products.length > 0 ? products.slice(0, 5) : []),
+    [products]
+  );
 
-  useEffect(() => {
-    kenBurnsScale.value = withRepeat(
-      withTiming(1.06, {
-        duration: 6000,
-        easing: Easing.inOut(Easing.ease)
-      }),
-      -1,
-      true
-    );
-  }, [kenBurnsScale]);
-
-  const animatedImageStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: kenBurnsScale.value }]
-  }));
-
-  const carouselData = useMemo(() => {
-    return products && products.length > 0 ? products.slice(0, 5) : [];
-  }, [products]);
-
-  if (carouselData.length === 0) {
+  if (slides.length === 0) {
     return <SkeletonHeroBanner />;
   }
+
+  const open = (item: Product) => {
+    Haptics.selectionAsync();
+    router.push(`/product/${item.slug}`);
+  };
 
   return (
     <View style={styles.container}>
       <Carousel<Product>
         loop
-        style={{ width: SCREEN_WIDTH, height: CAROUSEL_HEIGHT }}
+        style={{ width: SCREEN_WIDTH, height: SLIDE_HEIGHT }}
         itemSize={SCREEN_WIDTH}
-        autoplay={true}
-        autoplayInterval={4500}
-        data={carouselData}
+        autoplay
+        autoplayInterval={5200}
+        data={slides}
         onSnapToItem={(index: number) => setActiveIndex(index)}
-        renderItem={({ item }: { item: Product }) => {
-          const imageUrl =
-            item.images && item.images.length > 0
-              ? item.images[0]
-              : "https://placehold.co/800x800?text=Apple+Hero";
-
-          const categoryBadge = `${item.category.toUpperCase()}`;
-          const subtitle = [item.model, item.storage].filter(Boolean).join(" • ");
+        renderItem={({ item, index }: { item: Product; index: number }) => {
+          const image = getProductImage(item);
+          const subtitle = [item.model, item.storage].filter(Boolean).join(" · ");
+          const tagline =
+            subtitle || (item.condition === "Refurbished" ? "Certified refurbished" : "New, sealed in box");
 
           return (
-            <Pressable
-              style={styles.slide}
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push(`/product/${item.slug}`);
-              }}
-            >
-              <AnimatedImage
-                source={{ uri: imageUrl }}
-                style={[styles.slideImage, animatedImageStyle]}
-                resizeMode="cover"
-              />
-
-              <LinearGradient
-                colors={[colors.gradientTop, colors.gradientBottom]}
-                style={styles.gradientOverlay}
-              />
-
-              <View style={styles.textOverlay}>
-                <Text style={styles.categoryBadge}>{categoryBadge}</Text>
-                <Text style={styles.productName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                {subtitle ? (
-                  <Text style={styles.subtitle} numberOfLines={1}>
-                    {subtitle}
+            <View style={styles.slide}>
+              <View style={styles.copy}>
+                <Animated.View entering={FadeInDown.delay(index * 60).duration(420)}>
+                  <Text style={styles.eyebrow}>{item.category.toUpperCase()}</Text>
+                  <Text style={styles.title} numberOfLines={2}>
+                    {item.name}
                   </Text>
-                ) : null}
+                  <Text style={styles.tagline} numberOfLines={1}>
+                    {tagline}
+                  </Text>
+                </Animated.View>
 
-                <View style={styles.ctaButton}>
-                  <Text style={styles.ctaText}>Shop Now</Text>
-                </View>
+                <Animated.View
+                  entering={FadeInUp.delay(index * 60 + 90).duration(420)}
+                  style={styles.ctaRow}
+                >
+                  <Pressable
+                    style={({ pressed }) => [styles.buyPill, pressed && { opacity: 0.85 }]}
+                    onPress={() => open(item)}
+                  >
+                    <Text style={styles.buyPillText}>Buy</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [styles.learnMore, pressed && { opacity: 0.6 }]}
+                    onPress={() => open(item)}
+                  >
+                    <Text style={styles.learnMoreText}>Learn more</Text>
+                    <Ionicons name="chevron-forward" size={13} color={colors.accent} />
+                  </Pressable>
+                </Animated.View>
               </View>
-            </Pressable>
+
+              <View style={styles.stage}>
+                {image ? (
+                  <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+                ) : (
+                  <ProductVisual
+                    category={item.category}
+                    glyphSize={76}
+                    style={styles.visualFill}
+                  />
+                )}
+              </View>
+
+              <View style={styles.priceStrip}>
+                <Text style={styles.priceLabel}>From</Text>
+                <Text style={styles.priceValue}>{formatGHS(item.priceGHS)}</Text>
+                {item.compareAtPriceGHS && item.compareAtPriceGHS > item.priceGHS ? (
+                  <View style={styles.dealChip}>
+                    <Text style={styles.dealChipText}>
+                      Save {formatGHS(item.compareAtPriceGHS - item.priceGHS)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
           );
         }}
       />
 
-      {/* Pagination Dot Indicators */}
-      <View style={styles.paginationContainer}>
-        {carouselData.map((_, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                isActive ? styles.dotActive : styles.dotInactive
-              ]}
-            />
-          );
-        })}
+      <View style={styles.pagination}>
+        {slides.map((_, index) => (
+          <View
+            key={index}
+            style={[styles.dot, index === activeIndex ? styles.dotActive : styles.dotIdle]}
+          />
+        ))}
       </View>
     </View>
   );
@@ -141,86 +131,137 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
 const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH,
-    height: CAROUSEL_HEIGHT,
+    height: SLIDE_HEIGHT,
     position: "relative"
   },
   slide: {
     width: SCREEN_WIDTH,
-    height: CAROUSEL_HEIGHT,
-    position: "relative",
-    overflow: "hidden"
+    height: SLIDE_HEIGHT,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 20
   },
-  slideImage: {
-    width: "100%",
-    height: "100%"
+  copy: {
+    alignItems: "center",
+    paddingTop: 26
   },
-  gradientOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 240
-  },
-  textOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 48,
-    paddingHorizontal: spacing.lg
-  },
-  categoryBadge: {
+  eyebrow: {
     fontSize: 11,
-    letterSpacing: 1.5,
     fontWeight: "700",
-    color: "rgba(255, 255, 255, 0.85)"
+    letterSpacing: 1.4,
+    color: colors.textTertiary
   },
-  productName: {
-    fontSize: 32,
+  title: {
+    fontSize: 34,
     fontWeight: "700",
+    color: colors.text,
+    letterSpacing: -1,
+    textAlign: "center",
+    marginTop: 6,
+    lineHeight: 40
+  },
+  tagline: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginTop: 4
+  },
+  ctaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 22,
+    marginTop: 14
+  },
+  buyPill: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: radius.full
+  },
+  buyPillText: {
     color: "#FFFFFF",
-    letterSpacing: -0.5,
-    marginTop: 6
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "rgba(255, 255, 255, 0.9)",
-    marginTop: 4,
-    fontWeight: "400"
-  },
-  ctaButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 22,
-    paddingVertical: 11,
-    borderRadius: radius.pill,
-    marginTop: spacing.md
-  },
-  ctaText: {
-    color: "#000000",
     fontSize: 15,
     fontWeight: "600",
     letterSpacing: -0.2
   },
-  paginationContainer: {
+  learnMore: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2
+  },
+  learnMoreText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.accent
+  },
+  stage: {
+    flex: 1,
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8
+  },
+  image: {
+    width: "86%",
+    height: "100%"
+  },
+  visualFill: {
     position: "absolute",
-    bottom: 18,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0
+  },
+  priceStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingBottom: 34,
+    paddingTop: 10
+  },
+  priceLabel: {
+    fontSize: 13,
+    color: colors.textSecondary
+  },
+  priceValue: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: -0.3
+  },
+  dealChip: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full
+  },
+  dealChipText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.accent
+  },
+  pagination: {
+    position: "absolute",
+    bottom: 12,
     left: 0,
     right: 0,
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
     gap: 6
   },
   dot: {
     height: 6,
-    borderRadius: 3
+    borderRadius: radius.full
   },
   dotActive: {
     width: 18,
-    backgroundColor: "#FFFFFF"
+    backgroundColor: colors.accent
   },
-  dotInactive: {
+  dotIdle: {
     width: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.5)"
+    backgroundColor: "#C9C9CE"
   }
 });
+
+export default HeroCarousel;

@@ -11,13 +11,14 @@ import {
   TextInput,
   View
 } from "react-native";
-import { useRouter } from "expo-router";
+import { Href, useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
   const signIn = useUserStore((state) => state.signIn);
 
   const [email, setEmail] = useState("");
@@ -33,7 +34,8 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       await signIn(email.trim().toLowerCase(), password);
-      router.replace("/(tabs)");
+      const destination = returnTo ? `/${returnTo}` : "/(tabs)";
+      router.replace(destination as Href);
     } catch (err: any) {
       Alert.alert("Sign In Failed", err.message || "Invalid email or password.");
     } finally {
@@ -56,7 +58,7 @@ export default function LoginScreen() {
             <Text style={styles.brandSubtitle}>I-Store Ghana</Text>
             <Text style={styles.title}>Sign In</Text>
             <Text style={styles.subtitle}>
-              Sign in with your Apple account to manage orders, wishlist, and check out securely.
+              Sign in with your I-Store account to manage orders, wishlist, and check out securely.
             </Text>
           </View>
 
@@ -120,7 +122,7 @@ export default function LoginScreen() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account?</Text>
+            <Text style={styles.footerText}>{"Don't have an account?"}</Text>
             <Pressable onPress={() => router.push("/(auth)/register")}>
               <Text style={styles.footerLink}> Sign Up</Text>
             </Pressable>

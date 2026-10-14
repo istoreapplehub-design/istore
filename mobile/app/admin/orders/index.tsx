@@ -169,7 +169,7 @@ export default function AdminOrdersListScreen() {
         style={({ pressed }) => [styles.orderCard, pressed && styles.cardPressed]}
         onPress={() => {
           Haptics.selectionAsync();
-          router.push(`/(admin)/orders/${item.id}`);
+          router.push(`/admin/orders/${item.id}`);
         }}
       >
         {/* Row 1: Short ID & Status */}
@@ -280,7 +280,7 @@ export default function AdminOrdersListScreen() {
 
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>PENDING</Text>
-              <Text style={[styles.summaryValue, { color: "#FF9500" }]}>
+              <Text style={[styles.summaryValue, { color: "#6E6E73" }]}>
                 {summary.byStatus?.pending || 0}
               </Text>
             </View>
@@ -294,7 +294,7 @@ export default function AdminOrdersListScreen() {
 
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>SHIPPED</Text>
-              <Text style={[styles.summaryValue, { color: "#FF9500" }]}>
+              <Text style={[styles.summaryValue, { color: "#3D3D42" }]}>
                 {summary.byStatus?.shipped || 0}
               </Text>
             </View>

@@ -19,29 +19,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { colors, typography } from "../../constants/theme";
-import { Product } from "../../types";
-import { getProducts } from "../../services/api";
-import ProductCard from "../../components/ProductCard";
-import SkeletonLoader from "../../components/SkeletonLoader";
-import { SectionHeader } from "../../components/SectionHeader";
+import { colors, typography } from "../constants/theme";
+import { Product } from "../types";
+import { getProducts } from "../services/api";
+import ProductCard from "../components/ProductCard";
+import SkeletonLoader from "../components/SkeletonLoader";
+import ErrorState from "../components/ErrorState";
+import { SectionHeader } from "../components/SectionHeader";
 
 const RECENT_SEARCHES_KEY = "ghanaapps_recent_searches";
-
-const TRENDING_SEARCHES = [
-  "iPhone 15",
-  "MacBook Air",
-  "AirPods Pro",
-  "Apple Watch",
-  "iPad mini",
-  "MagSafe"
-];
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [retryTick, setRetryTick] = useState(0);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [trending, setTrending] = useState<string[]>([]);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load recent searches from AsyncStorage
@@ -57,6 +52,21 @@ export default function SearchScreen() {
       }
     }
     loadRecent();
+  }, []);
+
+  // Trending terms come from the live catalog so a tap always finds something.
+  useEffect(() => {
+    let mounted = true;
+    getProducts({ sort: "popular", limit: 8 })
+      .then((res) => {
+        if (mounted) setTrending(res.data.map((p) => p.name));
+      })
+      .catch(() => {
+        if (mounted) setTrending([]);
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const saveRecentSearch = async (term: string) => {
@@ -106,8 +116,10 @@ export default function SearchScreen() {
       try {
         const res = await getProducts({ search: query.trim(), limit: 20 });
         setResults(res.data);
-      } catch {
+        setError(null);
+      } catch (err) {
         setResults([]);
+        setError(err);
       } finally {
         setLoading(false);
       }
@@ -118,7 +130,7 @@ export default function SearchScreen() {
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [query]);
+  }, [query, retryTick]);
 
   const handleSelectChip = (text: string) => {
     Haptics.selectionAsync();
@@ -208,30 +220,32 @@ export default function SearchScreen() {
             </View>
           )}
 
-          <View style={styles.sectionContainer}>
-            <SectionHeader title="Trending in Ghana" />
-            <View style={styles.chipsWrap}>
-              {TRENDING_SEARCHES.map((item) => (
-                <Pressable
-                  key={item}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    styles.trendingChip,
-                    pressed && { opacity: 0.7 }
-                  ]}
-                  onPress={() => handleSelectChip(item)}
-                >
-                  <Ionicons
-                    name="trending-up-outline"
-                    size={14}
-                    color={colors.accent}
-                    style={{ marginRight: 6 }}
-                  />
-                  <Text style={[styles.chipText, { color: colors.text }]}>{item}</Text>
-                </Pressable>
-              ))}
+          {trending.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <SectionHeader title="Popular in the store" />
+              <View style={styles.chipsWrap}>
+                {trending.map((item) => (
+                  <Pressable
+                    key={item}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      styles.trendingChip,
+                      pressed && { opacity: 0.7 }
+                    ]}
+                    onPress={() => handleSelectChip(item)}
+                  >
+                    <Ionicons
+                      name="trending-up-outline"
+                      size={14}
+                      color={colors.accent}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={[styles.chipText, { color: colors.text }]}>{item}</Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
-          </View>
+          )}
         </ScrollView>
       ) : loading ? (
         /* Skeletons while searching */
@@ -247,14 +261,18 @@ export default function SearchScreen() {
           ))}
         </View>
       ) : results.length === 0 ? (
-        /* No results */
-        <View style={styles.emptyContainer}>
-          <Ionicons name="search-outline" size={64} color={colors.textSecondary} />
-          <Text style={styles.emptyTitle}>No results for "{query}"</Text>
-          <Text style={styles.emptySubtitle}>
-            Check the spelling or try a different keyword.
-          </Text>
-        </View>
+        error ? (
+          <ErrorState error={error} onRetry={() => setRetryTick((t) => t + 1)} />
+        ) : (
+          /* No results */
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={64} color={colors.textSecondary} />
+            <Text style={styles.emptyTitle}>{`No results for "${query}"`}</Text>
+            <Text style={styles.emptySubtitle}>
+              Check the spelling or try a different keyword.
+            </Text>
+          </View>
+        )
       ) : (
         /* Search Results List */
         <FlatList
@@ -329,7 +347,7 @@ const styles = StyleSheet.create({
     borderRadius: 980
   },
   trendingChip: {
-    backgroundColor: "rgba(0, 113, 227, 0.08)"
+    backgroundColor: "rgba(23, 23, 23, 0.08)"
   },
   chipText: {
     fontSize: 14,

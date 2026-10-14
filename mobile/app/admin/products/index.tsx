@@ -193,7 +193,7 @@ export default function AdminProductsListScreen() {
           style={({ pressed }) => [styles.productRow, pressed && styles.rowPressed]}
           onPress={() => {
             Haptics.selectionAsync();
-            router.push(`/(admin)/products/${item.id}`);
+            router.push(`/admin/products/${item.id}`);
           }}
         >
           {heroImage ? (
@@ -219,7 +219,7 @@ export default function AdminProductsListScreen() {
                 </Text>
               </View>
               {!item.isActive && (
-                <View style={[styles.miniPill, { backgroundColor: "rgba(206,17,38,0.1)" }]}>
+                <View style={[styles.miniPill, { backgroundColor: "rgba(23,23,23,0.1)" }]}>
                   <Text style={[styles.miniPillText, { color: colors.danger }]}>
                     Inactive
                   </Text>
@@ -269,7 +269,7 @@ export default function AdminProductsListScreen() {
           style={({ pressed }) => [styles.newBtn, pressed && { opacity: 0.8 }]}
           onPress={() => {
             Haptics.selectionAsync();
-            router.push("/(admin)/products/new");
+            router.push("/admin/products/new");
           }}
         >
           <Ionicons name="add" size={18} color="#FFFFFF" style={{ marginRight: 2 }} />
@@ -381,7 +381,7 @@ export default function AdminProductsListScreen() {
               </Text>
               <Pressable
                 style={({ pressed }) => [styles.emptyBtn, pressed && { opacity: 0.8 }]}
-                onPress={() => router.push("/(admin)/products/new")}
+                onPress={() => router.push("/admin/products/new")}
               >
                 <Text style={styles.emptyBtnText}>Create your first product</Text>
               </Pressable>
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   miniPill: {
-    backgroundColor: "rgba(0, 113, 227, 0.08)",
+    backgroundColor: "rgba(23, 23, 23, 0.08)",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary
   },
   stockLow: {
-    color: "#FF9500",
+    color: "#6E6E73",
     fontWeight: "700"
   },
   stockOutOfStock: {

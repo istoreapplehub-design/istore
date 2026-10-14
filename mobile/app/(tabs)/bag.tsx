@@ -21,6 +21,7 @@ import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { useCartStore } from "../../store/useCartStore";
 import { colors, formatGHS, typography } from "../../constants/theme";
 import PriceTag from "../../components/PriceTag";
+import { ProductVisual, getStoredImage } from "../../components/ProductVisual";
 
 export default function BagScreen() {
   const router = useRouter();
@@ -92,6 +93,7 @@ export default function BagScreen() {
               const variantDetails = [item.color, item.storage]
                 .filter(Boolean)
                 .join(" · ");
+              const thumb = getStoredImage(item.image);
               const isLast = index === items.length - 1;
 
               return (
@@ -103,11 +105,17 @@ export default function BagScreen() {
                   style={[styles.itemCard, !isLast && styles.itemBorderBottom]}
                 >
                   {/* Thumbnail */}
-                  <Image
-                    source={{ uri: item.image }}
-                    style={styles.itemImage}
-                    resizeMode="contain"
-                  />
+                  {thumb ? (
+                    <Image
+                      source={{ uri: thumb }}
+                      style={styles.itemImage}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <View style={styles.itemImageFallback}>
+                      <ProductVisual glyphSize={30} />
+                    </View>
+                  )}
 
                   {/* Details */}
                   <View style={styles.itemDetails}>
@@ -341,6 +349,12 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 14,
     backgroundColor: colors.imageBg
+  },
+  itemImageFallback: {
+    width: 80,
+    height: 80,
+    borderRadius: 14,
+    overflow: "hidden"
   },
   itemDetails: {
     flex: 1,

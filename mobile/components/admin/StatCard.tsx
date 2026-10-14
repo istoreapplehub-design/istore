@@ -81,8 +81,8 @@ export function StatCard({
             styles.trendPill,
             {
               backgroundColor: trend.positive
-                ? "rgba(0, 107, 63, 0.1)"
-                : "rgba(206, 17, 38, 0.1)"
+                ? "rgba(23, 23, 23, 0.1)"
+                : "rgba(23, 23, 23, 0.1)"
             }
           ]}
         >

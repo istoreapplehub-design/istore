@@ -20,9 +20,11 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, formatGHS, typography } from "../../constants/theme";
 import { Order } from "../../types";
-import { getMyOrders } from "../../services/api";
+import { getMyOrders, ApiError } from "../../services/api";
 import { useUserStore } from "../../store/useUserStore";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import ErrorState from "../../components/ErrorState";
+import { ProductVisual, getStoredImage } from "../../components/ProductVisual";
 
 function formatDate(isoString: string): string {
   try {
@@ -42,26 +44,26 @@ function StatusBadge({ status }: { status: Order["status"] }) {
     switch (status) {
       case "paid":
         return {
-          bg: "rgba(0, 113, 227, 0.1)",
-          text: colors.accent,
+          bg: "#171717",
+          text: "#FFFFFF",
           label: "Paid"
         };
       case "shipped":
         return {
-          bg: "rgba(255, 149, 0, 0.15)",
-          text: "#FF9500",
+          bg: "#E8E8E6",
+          text: "#171717",
           label: "Shipped"
         };
       case "delivered":
         return {
-          bg: "rgba(0, 107, 63, 0.1)",
-          text: colors.success,
+          bg: "#F2F2F7",
+          text: "#171717",
           label: "Delivered"
         };
       case "cancelled":
         return {
-          bg: "rgba(206, 17, 38, 0.1)",
-          text: colors.danger,
+          bg: "#F2F2F7",
+          text: "#AEAEB2",
           label: "Cancelled"
         };
       case "pending":
@@ -90,13 +92,20 @@ export default function OrdersIndexScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   const fetchOrders = useCallback(async () => {
+    if (!userId) {
+      setError(new ApiError("Sign in to see your order history.", "auth"));
+      setLoading(false);
+      return;
+    }
     try {
       const res = await getMyOrders(userId, { page: 1, limit: 30 });
       setOrders(res.data);
-    } catch {
-      // Graceful fallback
+      setError(null);
+    } catch (err) {
+      setError(err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -147,6 +156,22 @@ export default function OrdersIndexScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {orders.length === 0 ? (
+        error ? (
+          <ErrorState
+            error={error}
+            primaryActionLabel={
+              error instanceof ApiError && error.kind === "auth" ? "Sign In" : "Try Again"
+            }
+            onRetry={() => {
+              if (error instanceof ApiError && error.kind === "auth") {
+                router.push("/(auth)/login?returnTo=orders");
+              } else {
+                setLoading(true);
+                fetchOrders();
+              }
+            }}
+          />
+        ) : (
         <View style={styles.emptyContainer}>
           <Ionicons
             name="receipt-outline"
@@ -170,6 +195,7 @@ export default function OrdersIndexScreen() {
             <Text style={styles.startShoppingText}>Start Shopping</Text>
           </Pressable>
         </View>
+        )
       ) : (
         <FlatList
           data={orders}
@@ -206,18 +232,21 @@ export default function OrdersIndexScreen() {
 
                 {/* Row 2: Thumbnails */}
                 <View style={styles.thumbnailsRow}>
-                  {firstThreeItems.map((orderItem, idx) => (
-                    <Image
-                      key={idx}
-                      source={{
-                        uri:
-                          orderItem.image ||
-                          "https://placehold.co/200x200?text=Apple"
-                      }}
-                      style={styles.thumbnail}
-                      resizeMode="contain"
-                    />
-                  ))}
+                  {firstThreeItems.map((orderItem, idx) => {
+                    const thumb = getStoredImage(orderItem.image);
+                    return thumb ? (
+                      <Image
+                        key={idx}
+                        source={{ uri: thumb }}
+                        style={styles.thumbnail}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View key={idx} style={styles.thumbnailFallback}>
+                        <ProductVisual glyphSize={18} />
+                      </View>
+                    );
+                  })}
                   {remainingCount > 0 && (
                     <View style={styles.moreThumbnail}>
                       <Text style={styles.moreThumbnailText}>
@@ -298,6 +327,12 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     backgroundColor: colors.imageBg
+  },
+  thumbnailFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    overflow: "hidden"
   },
   moreThumbnail: {
     width: 48,

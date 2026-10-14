@@ -4,17 +4,24 @@
  * - Haptics.impactAsync("light") on wishlist toggle and back button
  * - Haptics.impactAsync("medium") on Add to Bag and Buy Now
  */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   DimensionValue,
   Dimensions,
   FlatList,
   Image,
+  KeyboardAvoidingView,
+  Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
+  ScrollView,
   Share,
   StyleSheet,
+  TextInput,
   Text,
   View
 } from "react-native";
@@ -31,10 +38,12 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radius, shadow, spacing, typography } from "../../constants/theme";
-import { getProduct } from "../../services/api";
-import { Product } from "../../types";
+import { createReview, getProduct, getReviews } from "../../services/api";
+import { Product, Review } from "../../types";
 import { useCartStore } from "../../store/useCartStore";
 import { useWishlistStore } from "../../store/useWishlistStore";
+import { useUserStore } from "../../store/useUserStore";
+import { ProductVisual } from "../../components/ProductVisual";
 import { ColorPicker } from "../../components/ColorPicker";
 import { PriceTag } from "../../components/PriceTag";
 import { ProductCard } from "../../components/ProductCard";
@@ -57,6 +66,23 @@ export default function ProductDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Reviews & rating summary
+  const [recentReviews, setRecentReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<{
+    breakdown: Record<string, number>;
+    total: number;
+    avgRating: number;
+  } | null>(null);
+
+  // Review composer
+  const [showReviewSheet, setShowReviewSheet] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewTitle, setReviewTitle] = useState("");
+  const [reviewBody, setReviewBody] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const { userId, name: userName } = useUserStore();
+
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedStorage, setSelectedStorage] = useState<string>("");
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -76,28 +102,49 @@ export default function ProductDetailScreen() {
   const stickyBarY = useSharedValue(120);
 
   // Fetch product on mount
-  useEffect(() => {
-    async function load() {
-      if (!slug) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await getProduct(slug);
-        setProduct(data);
-        if (data.colors && data.colors.length > 0) {
-          setSelectedColor(data.colors[0].name);
-        }
-        if (data.storage) {
-          setSelectedStorage(data.storage);
-        }
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Product not found");
-      } finally {
-        setLoading(false);
+  const loadProduct = useCallback(async () => {
+    if (!slug) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getProduct(slug);
+      setProduct(data);
+      if (data.colors && data.colors.length > 0) {
+        setSelectedColor(data.colors[0].name);
       }
+      if (data.storage) {
+        setSelectedStorage(data.storage);
+      }
+
+      getReviews(slug, { limit: 50 })
+        .then((res) => {
+          setRecentReviews(res.data);
+          const meta = res.meta as typeof res.meta & {
+            avgRating?: number;
+            ratingBreakdown?: Record<string, number>;
+            total?: number;
+          };
+          if (meta.ratingBreakdown) {
+            setReviewStats({
+              breakdown: meta.ratingBreakdown,
+              total: meta.total ?? res.data.length,
+              avgRating: meta.avgRating ?? data.rating
+            });
+          }
+        })
+        .catch(() => {
+          // Reviews are supplementary; product view still works without them
+        });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Product not found");
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [slug]);
+
+  useEffect(() => {
+    loadProduct();
+  }, [loadProduct]);
 
   // Track scroll position for top bar and sticky bottom CTA
   const scrollHandler = useAnimatedScrollHandler({
@@ -128,15 +175,11 @@ export default function ProductDetailScreen() {
   // Resolve active images based on selected color
   const activeImages = useMemo(() => {
     if (!product) return [];
-    if (selectedColor && product.colors && product.colors.length > 0) {
-      const colorObj = product.colors.find((c) => c.name === selectedColor);
-      if (colorObj && colorObj.images && colorObj.images.length > 0) {
-        return colorObj.images;
-      }
-    }
-    return product.images && product.images.length > 0
-      ? product.images
-      : ["https://placehold.co/800x800?text=Apple+Product"];
+    const colorObj = selectedColor
+      ? product.colors?.find((c) => c.name === selectedColor)
+      : undefined;
+    const raw = colorObj?.images?.length ? colorObj.images : product.images || [];
+    return raw.filter((url) => url && !url.includes("placehold.co"));
   }, [product, selectedColor]);
 
   // When color changes, reset image carousel to first slide
@@ -165,7 +208,7 @@ export default function ProductDetailScreen() {
       productId: product.id,
       name: product.name,
       priceGHS: product.priceGHS,
-      image: activeImages[0] || product.images[0] || "",
+      image: activeImages[0] || "",
       color: selectedColor || undefined,
       storage: selectedStorage || undefined,
       qty: 1
@@ -183,6 +226,58 @@ export default function ProductDetailScreen() {
   const handleBuyNow = () => {
     handleAddToCart();
     router.push("/checkout");
+  };
+
+  const handleSubmitReview = async () => {
+    if (!product || !userId) return;
+
+    setSubmittingReview(true);
+    try {
+      const res = await createReview(
+        product.slug,
+        {
+          rating: reviewRating,
+          title: reviewTitle.trim(),
+          body: reviewBody.trim(),
+          authorName: userName || "Verified Customer"
+        },
+        userId
+      );
+
+      setProduct((prev) =>
+        prev
+          ? {
+              ...prev,
+              rating: res.product.rating,
+              reviewCount: res.product.reviewCount
+            }
+          : prev
+      );
+      setRecentReviews((prev) => [res.review, ...prev]);
+      setReviewStats((prev) => {
+        const breakdown = { ...(prev?.breakdown ?? {}) };
+        const key = String(reviewRating);
+        breakdown[key] = (breakdown[key] ?? 0) + 1;
+        return {
+          breakdown,
+          total: (prev?.total ?? 0) + 1,
+          avgRating: res.product.rating
+        };
+      });
+
+      setShowReviewSheet(false);
+      setReviewTitle("");
+      setReviewBody("");
+      setReviewRating(5);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err: unknown) {
+      Alert.alert(
+        "Review Failed",
+        err instanceof Error ? err.message : "Could not submit your review."
+      );
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const handleShare = async () => {
@@ -233,28 +328,43 @@ export default function ProductDetailScreen() {
     return (
       <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
         <Ionicons name="alert-circle-outline" size={48} color={colors.textSecondary} />
-        <Text style={styles.errorTitle}>Product not found</Text>
+        <Text style={styles.errorTitle}>{"Couldn't load this product"}</Text>
         <Text style={styles.errorSub}>{error || "This item may be unavailable."}</Text>
-        <Pressable
-          style={styles.backBtnPill}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.back();
-          }}
-        >
-          <Text style={styles.backBtnText}>Go Back</Text>
-        </Pressable>
+        <View style={{ flexDirection: "row", gap: 12, marginTop: 8 }}>
+          <Pressable
+            style={styles.backBtnPill}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.back();
+            }}
+          >
+            <Text style={styles.backBtnText}>Go Back</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.backBtnPill, { backgroundColor: colors.accent }]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              loadProduct();
+            }}
+          >
+            <Text style={[styles.backBtnText, { color: "#FFFFFF" }]}>Try Again</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
 
-  const reviewBreakdownMock = [
-    { star: 5, pct: "75%", count: Math.round(product.reviewCount * 0.75) },
-    { star: 4, pct: "18%", count: Math.round(product.reviewCount * 0.18) },
-    { star: 3, pct: "5%", count: Math.round(product.reviewCount * 0.05) },
-    { star: 2, pct: "1%", count: Math.round(product.reviewCount * 0.01) },
-    { star: 1, pct: "1%", count: Math.round(product.reviewCount * 0.01) }
-  ];
+  const breakdownRows = reviewStats
+    ? [5, 4, 3, 2, 1].map((star) => {
+        const count =
+          reviewStats.breakdown[String(star)] ?? reviewStats.breakdown[star] ?? 0;
+        const pct = reviewStats.total > 0 ? Math.round((count / reviewStats.total) * 100) : 0;
+        return { star, count, pct };
+      })
+    : null;
+
+  const displayedReviews =
+    recentReviews.length > 0 ? recentReviews : (product.reviews || []).slice(0, 3);
 
   return (
     <View style={styles.root}>
@@ -308,47 +418,54 @@ export default function ProductDetailScreen() {
       >
         {/* ─── 2. IMAGE CAROUSEL ────────────────────────────────────────── */}
         <View style={styles.carouselContainer}>
-          <FlatList
-            ref={imageFlatListRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            data={activeImages}
-            keyExtractor={(_, index) => `img-${index}`}
-            onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-              const offsetX = e.nativeEvent.contentOffset.x;
-              const idx = Math.round(offsetX / SCREEN_WIDTH);
-              setActiveImageIndex(idx);
-            }}
-            renderItem={({ item, index }) => (
-              <View style={styles.imageSlide}>
-                {/* TODO: Shared element transition from Home card to hero image (requires Expo Router sharedTransitionTag & Reanimated). Add in M8 polish. */}
-                <Animated.Image
-                  sharedTransitionTag={
-                    index === 0 && product?.id ? `product-image-${product.id}` : undefined
-                  }
-                  source={{ uri: item }}
-                  style={styles.carouselImage}
-                  resizeMode="contain"
-                  accessibilityLabel={product?.name}
-                />
-              </View>
-            )}
-          />
-
-          {/* Dot Indicators */}
-          {activeImages.length > 1 && (
-            <View style={styles.dotsRow}>
-              {activeImages.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    i === activeImageIndex ? styles.dotActive : styles.dotInactive
-                  ]}
-                />
-              ))}
+          {activeImages.length === 0 ? (
+            <View style={styles.imageSlide}>
+              <ProductVisual category={product.category} glyphSize={110} />
             </View>
+          ) : (
+            <>
+              <FlatList
+                ref={imageFlatListRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                data={activeImages}
+                keyExtractor={(_, index) => `img-${index}`}
+                onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                  const offsetX = e.nativeEvent.contentOffset.x;
+                  const idx = Math.round(offsetX / SCREEN_WIDTH);
+                  setActiveImageIndex(idx);
+                }}
+                renderItem={({ item, index }) => (
+                  <View style={styles.imageSlide}>
+                    <Animated.Image
+                      sharedTransitionTag={
+                        index === 0 && product?.id ? `product-image-${product.id}` : undefined
+                      }
+                      source={{ uri: item }}
+                      style={styles.carouselImage}
+                      resizeMode="contain"
+                      accessibilityLabel={product?.name}
+                    />
+                  </View>
+                )}
+              />
+
+              {/* Dot Indicators */}
+              {activeImages.length > 1 && (
+                <View style={styles.dotsRow}>
+                  {activeImages.map((_, i) => (
+                    <View
+                      key={i}
+                      style={[
+                        styles.dot,
+                        i === activeImageIndex ? styles.dotActive : styles.dotInactive
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -381,7 +498,7 @@ export default function ProductDetailScreen() {
               compareAt={product.compareAtPriceGHS}
               size="lg"
             />
-            <Text style={styles.paystackHint}>or pay in 4 with Paystack</Text>
+            <Text style={styles.paystackHint}>MTN MoMo, Telecel Cash, AT Money or card via Paystack</Text>
           </View>
 
           {/* ─── 4. COLOR PICKER ────────────────────────────────────────── */}
@@ -489,38 +606,59 @@ export default function ProductDetailScreen() {
 
           {/* ─── 9. RATINGS & REVIEWS ───────────────────────────────────── */}
           <View style={styles.detailsBlock}>
-            <Text style={styles.blockTitle}>Ratings & Reviews</Text>
+            <View style={styles.reviewHeaderRow}>
+              <Text style={styles.blockTitle}>Ratings & Reviews</Text>
+              <Pressable
+                hitSlop={8}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  if (!userId) {
+                    router.push(`/(auth)/login?returnTo=product/${product.slug}`);
+                    return;
+                  }
+                  setShowReviewSheet(true);
+                }}
+                style={({ pressed }) => [styles.writeReviewBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name="create-outline" size={14} color={colors.text} />
+                <Text style={styles.writeReviewText}>Write a Review</Text>
+              </Pressable>
+            </View>
 
             <View style={styles.reviewSummaryRow}>
               <View style={styles.summaryLeft}>
-                <Text style={styles.bigRatingText}>{product.rating.toFixed(1)}</Text>
-                <StarRating rating={product.rating} size={13} />
+                <Text style={styles.bigRatingText}>
+                  {(reviewStats?.avgRating ?? product.rating).toFixed(1)}
+                </Text>
+                <StarRating rating={reviewStats?.avgRating ?? product.rating} size={13} />
                 <Text style={styles.summaryTotalText}>
-                  {product.reviewCount} ratings
+                  {reviewStats?.total ?? product.reviewCount} ratings
                 </Text>
               </View>
 
-              <View style={styles.summaryRight}>
-                {reviewBreakdownMock.map((row) => (
-                  <View key={row.star} style={styles.barRow}>
-                    <Text style={styles.starNumText}>{row.star}★</Text>
-                    <View style={styles.barTrack}>
-                      <View
-                        style={[
-                          styles.barFill,
-                          { width: row.pct as DimensionValue }
-                        ]}
-                      />
+              {breakdownRows && breakdownRows.some((r) => r.count > 0) && (
+                <View style={styles.summaryRight}>
+                  {breakdownRows.map((row) => (
+                    <View key={row.star} style={styles.barRow}>
+                      <Text style={styles.starNumText}>{row.star}★</Text>
+                      <View style={styles.barTrack}>
+                        <View
+                          style={[
+                            styles.barFill,
+                            { width: `${row.pct}%` as DimensionValue }
+                          ]}
+                        />
+                      </View>
                     </View>
-                  </View>
-                ))}
-              </View>
+                  ))}
+                </View>
+              )}
             </View>
 
             {/* Preview Reviews */}
-            {product.reviews && product.reviews.length > 0 ? (
+            {displayedReviews.length > 0 ? (
               <View style={styles.reviewsList}>
-                {product.reviews.slice(0, 3).map((r) => (
+                {displayedReviews.slice(0, 3).map((r) => (
                   <View key={r.id} style={styles.reviewCard}>
                     <View style={styles.reviewHeader}>
                       <Text style={styles.reviewerName}>{r.authorName}</Text>
@@ -533,7 +671,11 @@ export default function ProductDetailScreen() {
                   </View>
                 ))}
               </View>
-            ) : null}
+            ) : (
+              <Text style={styles.noReviewsText}>
+                No reviews yet. Be the first to review this product.
+              </Text>
+            )}
           </View>
         </View>
 
@@ -564,11 +706,17 @@ export default function ProductDetailScreen() {
         ]}
       >
         <View style={styles.stickyLeft}>
-          <Image
-            source={{ uri: activeImages[0] || product.images[0] }}
-            style={styles.stickyThumb}
-            resizeMode="contain"
-          />
+          {activeImages[0] ? (
+            <Image
+              source={{ uri: activeImages[0] }}
+              style={styles.stickyThumb}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={styles.stickyThumbFallback}>
+              <ProductVisual category={product.category} glyphSize={20} />
+            </View>
+          )}
           <View style={styles.stickyMeta}>
             <Text style={styles.stickyTitle} numberOfLines={1}>
               {product.name}
@@ -581,6 +729,96 @@ export default function ProductDetailScreen() {
           <Text style={styles.stickyCtaText}>Add to Bag</Text>
         </Pressable>
       </Animated.View>
+
+      {/* ─── 12. REVIEW COMPOSER SHEET ─────────────────────────────────── */}
+      <Modal
+        visible={showReviewSheet}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowReviewSheet(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.sheetRoot}
+        >
+          <View style={styles.sheetHeader}>
+            <Pressable hitSlop={10} onPress={() => setShowReviewSheet(false)}>
+              <Text style={styles.sheetCancelText}>Cancel</Text>
+            </Pressable>
+            <Text style={styles.sheetTitle}>Write a Review</Text>
+            <View style={{ width: 50 }} />
+          </View>
+
+          <ScrollView
+            contentContainerStyle={styles.sheetContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.sheetProductName}>{product.name}</Text>
+
+            <Text style={styles.sheetLabel}>Your rating</Text>
+            <View style={styles.starRow}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Pressable
+                  key={s}
+                  hitSlop={8}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setReviewRating(s);
+                  }}
+                >
+                  <Ionicons
+                    name={s <= reviewRating ? "star" : "star-outline"}
+                    size={32}
+                    color={colors.text}
+                  />
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={styles.sheetLabel}>Title</Text>
+            <TextInput
+              style={styles.sheetInput}
+              placeholder="Sum it up in a few words"
+              placeholderTextColor={colors.textTertiary}
+              value={reviewTitle}
+              onChangeText={setReviewTitle}
+              maxLength={100}
+            />
+
+            <Text style={styles.sheetLabel}>Your review</Text>
+            <TextInput
+              style={[styles.sheetInput, styles.sheetBodyInput]}
+              placeholder="What did you like or dislike? How was your experience?"
+              placeholderTextColor={colors.textTertiary}
+              value={reviewBody}
+              onChangeText={setReviewBody}
+              multiline
+              textAlignVertical="top"
+              maxLength={1000}
+            />
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.sheetSubmitBtn,
+                (submittingReview || reviewTitle.trim().length < 3 || reviewBody.trim().length < 10) && { opacity: 0.5 },
+                pressed && { transform: [{ scale: 0.99 }] }
+              ]}
+              disabled={
+                submittingReview ||
+                reviewTitle.trim().length < 3 ||
+                reviewBody.trim().length < 10
+              }
+              onPress={handleSubmitReview}
+            >
+              {submittingReview ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.sheetSubmitText}>Submit Review</Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -706,7 +944,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(0, 107, 63, 0.08)",
+    backgroundColor: "rgba(23, 23, 23, 0.08)",
     paddingVertical: 10,
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
@@ -896,6 +1134,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: colors.imageBg
   },
+  stickyThumbFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    overflow: "hidden"
+  },
   stickyMeta: {
     maxWidth: 140
   },
@@ -944,5 +1188,97 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "600"
+  },
+  reviewHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.xs
+  },
+  writeReviewBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.text,
+    borderRadius: 980,
+    paddingHorizontal: 14,
+    paddingVertical: 7
+  },
+  writeReviewText: {
+    ...typography.caption,
+    color: colors.text,
+    fontWeight: "600"
+  },
+  noReviewsText: {
+    ...typography.bodySmall,
+    marginTop: spacing.md
+  },
+  sheetRoot: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm
+  },
+  sheetCancelText: {
+    ...typography.body,
+    color: colors.textSecondary
+  },
+  sheetTitle: {
+    ...typography.headline,
+    fontWeight: "600"
+  },
+  sheetContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl
+  },
+  sheetProductName: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg
+  },
+  sheetLabel: {
+    ...typography.subheadline,
+    fontWeight: "600",
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm
+  },
+  starRow: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  sheetInput: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 13,
+    ...typography.body,
+    color: colors.text
+  },
+  sheetBodyInput: {
+    minHeight: 130,
+    paddingTop: 14
+  },
+  sheetSubmitBtn: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.xl,
+    minHeight: 52
+  },
+  sheetSubmitText: {
+    ...typography.headline,
+    color: "#FFFFFF",
+    fontWeight: "700"
   }
 });

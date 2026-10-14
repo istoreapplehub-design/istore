@@ -18,14 +18,16 @@ import {
   View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, typography } from "../../constants/theme";
 import { Product } from "../../types";
 import { getProducts } from "../../services/api";
+import AppHeader from "../../components/AppHeader";
 import ProductCard from "../../components/ProductCard";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import ErrorState from "../../components/ErrorState";
 
 const CATEGORIES = [
   { label: "All", value: "all" },
@@ -49,6 +51,7 @@ const SORT_LABELS: Record<SortOption, string> = {
 
 export default function ShopScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const params = useLocalSearchParams<{ category?: string; sort?: string }>();
 
   // Parse initial category from query param
@@ -80,6 +83,7 @@ export default function ShopScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   // Fetch products
   const fetchProducts = useCallback(
@@ -112,15 +116,16 @@ export default function ShopScreen() {
         const res = await getProducts(queryParams);
 
         if (append) {
-          setProducts((prev) => [...prev, ...res.data]);
+          setProducts((prev) => [...prev, ...(res?.data || [])]);
         } else {
-          setProducts(res.data);
+          setProducts(res?.data && res.data.length > 0 ? res.data : []);
         }
 
         setPage(targetPage);
-        setHasNext(res.meta.hasNext);
-      } catch {
-        // Handled silently with empty/error view
+        setHasNext(res?.meta?.hasNext ?? false);
+        setError(null);
+      } catch (err) {
+        setError(err);
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -181,18 +186,40 @@ export default function ShopScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       {/* 1. Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Shop</Text>
-        <Pressable
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          onPress={openFilterModal}
-          style={({ pressed }) => [styles.filterBtn, pressed && { opacity: 0.6 }]}
-        >
-          <Ionicons name="options-outline" size={24} color={colors.text} />
-        </Pressable>
-      </View>
+      <AppHeader
+        title="Shop"
+        subtitle={
+          selectedCategory === "all"
+            ? "Every device, new and sealed"
+            : `${selectedCategory} · new and sealed`
+        }
+        showActions={false}
+        right={
+          <View style={styles.headerActions}>
+            <Pressable
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/search");
+              }}
+              style={({ pressed }) => [styles.filterBtn, pressed && { opacity: 0.6 }]}
+              accessibilityLabel="Search products"
+            >
+              <Ionicons name="search-outline" size={24} color={colors.text} />
+            </Pressable>
+            <Pressable
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={openFilterModal}
+              style={({ pressed }) => [styles.filterBtn, pressed && { opacity: 0.6 }]}
+              accessibilityLabel="Sort and filter"
+            >
+              <Ionicons name="options-outline" size={24} color={colors.text} />
+            </Pressable>
+          </View>
+        }
+      />
 
       {/* 2. Category Chips Horizontal Scroll */}
       <View style={styles.chipsContainer}>
@@ -239,14 +266,18 @@ export default function ShopScreen() {
           ))}
         </View>
       ) : products.length === 0 ? (
-        /* 4. Empty State */
-        <View style={styles.emptyContainer}>
-          <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
-          <Text style={styles.emptyTitle}>No products found</Text>
-          <Text style={styles.emptySubtitle}>
-            Try a different category or adjust your filters.
-          </Text>
-        </View>
+        error ? (
+          <ErrorState error={error} onRetry={() => fetchProducts(1, false)} />
+        ) : (
+          /* 4. Empty State */
+          <View style={styles.emptyContainer}>
+            <Ionicons name="cube-outline" size={64} color={colors.textSecondary} />
+            <Text style={styles.emptyTitle}>No products found</Text>
+            <Text style={styles.emptySubtitle}>
+              Try a different category or adjust your filters.
+            </Text>
+          </View>
+        )
       ) : (
         <FlatList
           data={products}
@@ -277,7 +308,7 @@ export default function ShopScreen() {
               {loadingMore ? (
                 <ActivityIndicator size="small" color={colors.accent} />
               ) : !hasNext && products.length > 0 ? (
-                <Text style={styles.endOfResultsText}>You've reached the end</Text>
+                <Text style={styles.endOfResultsText}>{"You've reached the end"}</Text>
               ) : null}
             </View>
           }
@@ -410,19 +441,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background
   },
-  header: {
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12
-  },
-  headerTitle: {
-    fontSize: 34,
-    fontWeight: "700",
-    letterSpacing: -0.6,
-    color: colors.text
+    gap: 14
   },
   filterBtn: {
     padding: 6

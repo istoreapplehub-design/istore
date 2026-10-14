@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: themeColors.accent,
     borderStyle: "dashed",
-    backgroundColor: "rgba(0, 113, 227, 0.04)",
+    backgroundColor: "rgba(23, 23, 23, 0.04)",
     gap: 6
   },
   addBtnText: {

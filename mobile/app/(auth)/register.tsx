@@ -11,18 +11,19 @@ import {
   TextInput,
   View
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { email: prefillEmail } = useLocalSearchParams<{ email?: string }>();
   const signUp = useUserStore((state) => state.signUp);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(prefillEmail || "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 

@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { colors, radius, shadow, spacing } from "../constants/theme";
 import { Product } from "../types";
 import { PriceTag } from "./PriceTag";
+import { ProductVisual, getProductImage } from "./ProductVisual";
 import { StarRating } from "./StarRating";
 
 interface ProductCardProps {
@@ -55,10 +56,7 @@ export function ProductCard({
     }
   };
 
-  const imageUrl =
-    product.images && product.images.length > 0
-      ? product.images[0]
-      : "https://placehold.co/800x800?text=No+Image";
+  const imageUrl = getProductImage(product);
 
   // ─── VARIANT "ROW" ────────────────────────────────────────────────────────
   if (variant === "row") {
@@ -81,13 +79,17 @@ export function ProductCard({
         <View style={styles.rowMain}>
           <View style={styles.rowImageWrapper}>
             {/* Shared element transition from card to detail screen */}
-            <Animated.Image
-              sharedTransitionTag={`product-image-${product.id}`}
-              source={{ uri: imageUrl }}
-              style={styles.rowImage}
-              resizeMode="contain"
-              accessibilityLabel={product.name}
-            />
+            {imageUrl ? (
+              <Animated.Image
+                sharedTransitionTag={`product-image-${product.id}`}
+                source={{ uri: imageUrl }}
+                style={styles.rowImage}
+                resizeMode="contain"
+                accessibilityLabel={product.name}
+              />
+            ) : (
+              <ProductVisual category={product.category} glyphSize={22} />
+            )}
           </View>
 
           <View style={styles.rowContent}>
@@ -124,13 +126,17 @@ export function ProductCard({
     >
       <View style={styles.gridImageWrapper}>
         {/* Shared element transition from card to detail screen */}
-        <Animated.Image
-          sharedTransitionTag={`product-image-${product.id}`}
-          source={{ uri: imageUrl }}
-          style={styles.gridImage}
-          resizeMode="contain"
-          accessibilityLabel={product.name}
-        />
+        {imageUrl ? (
+          <Animated.Image
+            sharedTransitionTag={`product-image-${product.id}`}
+            source={{ uri: imageUrl }}
+            style={styles.gridImage}
+            resizeMode="contain"
+            accessibilityLabel={product.name}
+          />
+        ) : (
+          <ProductVisual category={product.category} glyphSize={54} />
+        )}
       </View>
 
       <View style={styles.gridContent}>

@@ -49,42 +49,42 @@ export const CATEGORIES: CategoryDefinition[] = [
     name: "iPhone",
     slug: "iphone",
     icon: "phone-portrait-outline",
-    color: "#0071E3",
+    color: "#171717",
     displayOrder: 1
   },
   {
     name: "iPad",
     slug: "ipad",
     icon: "tablet-portrait-outline",
-    color: "#5B8FB9",
+    color: "#3D3D42",
     displayOrder: 2
   },
   {
     name: "Mac",
     slug: "mac",
     icon: "laptop-outline",
-    color: "#1C242F",
+    color: "#000000",
     displayOrder: 3
   },
   {
     name: "Watch",
     slug: "watch",
     icon: "watch-outline",
-    color: "#FF6600",
+    color: "#55555A",
     displayOrder: 4
   },
   {
     name: "AirPods",
     slug: "airpods",
     icon: "headset-outline",
-    color: "#34C759",
+    color: "#6E6E73",
     displayOrder: 5
   },
   {
     name: "TV & Home",
     slug: "tv-and-home",
     icon: "tv-outline",
-    color: "#AF52DE",
+    color: "#2C2C2E",
     displayOrder: 6
   },
   {

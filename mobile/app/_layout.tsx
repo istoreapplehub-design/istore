@@ -14,6 +14,7 @@ import {
 import { colors, typography } from "../constants/theme";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useUserStore } from "../store/useUserStore";
+import { useWishlistStore } from "../store/useWishlistStore";
 
 /**
  * Root Application Layout
@@ -34,6 +35,9 @@ export default function RootLayout() {
       .getState()
       .hydrate()
       .finally(() => {
+        if (useUserStore.getState().userId) {
+          void useWishlistStore.getState().syncOnSignIn();
+        }
         setHydrated(true);
       });
   }, []);
@@ -57,11 +61,36 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: colors.background },
-              animation: "slide_from_right"
+              animation: "slide_from_right",
+              headerStyle: { backgroundColor: colors.background },
+              headerTintColor: colors.text,
+              headerShadowVisible: false,
+              headerTitleStyle: {
+                fontFamily: typography.fontFamily.semibold,
+                fontSize: 16
+              },
+              headerBackTitleStyle: {
+                fontFamily: typography.fontFamily.regular
+              }
             }}
           >
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="account"
+              options={{
+                headerShown: true,
+                title: "Account",
+                headerBackTitle: "Back"
+              }}
+            />
+            <Stack.Screen
+              name="search"
+              options={{
+                headerShown: false,
+                animation: "fade"
+              }}
+            />
             <Stack.Screen
               name="product/[slug]"
               options={{
@@ -108,6 +137,46 @@ export default function RootLayout() {
                 headerShown: true,
                 title: "Wishlist",
                 headerBackTitle: "Back"
+              }}
+            />
+            <Stack.Screen
+              name="addresses"
+              options={{
+                headerShown: true,
+                title: "Addresses",
+                headerBackTitle: "Account"
+              }}
+            />
+            <Stack.Screen
+              name="notifications"
+              options={{
+                headerShown: true,
+                title: "Notifications",
+                headerBackTitle: "Account"
+              }}
+            />
+            <Stack.Screen
+              name="preferences"
+              options={{
+                headerShown: true,
+                title: "Preferences",
+                headerBackTitle: "Account"
+              }}
+            />
+            <Stack.Screen
+              name="help"
+              options={{
+                headerShown: true,
+                title: "Help Center",
+                headerBackTitle: "Account"
+              }}
+            />
+            <Stack.Screen
+              name="legal"
+              options={{
+                headerShown: true,
+                title: "Legal",
+                headerBackTitle: "Account"
               }}
             />
           </Stack>

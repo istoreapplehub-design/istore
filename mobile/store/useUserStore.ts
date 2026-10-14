@@ -2,7 +2,9 @@ import { create } from "zustand";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { API_URL } from "../constants/config";
+import { saveAddresses } from "../services/api";
 import { ShippingAddress } from "../types";
+import { useWishlistStore } from "./useWishlistStore";
 
 export interface PrismaUser {
   id: string;
@@ -32,6 +34,7 @@ export interface UserState {
   signOut: () => Promise<void>;
   addAddress: (address: ShippingAddress) => void;
   removeAddress: (index: number) => void;
+  saveAddressBook: (addresses: ShippingAddress[]) => Promise<void>;
   isAdmin: () => boolean;
 }
 
@@ -156,6 +159,8 @@ export const useUserStore = create<UserState>((set, get) => ({
         addresses: user.addresses || [],
         loading: false
       });
+
+      void useWishlistStore.getState().syncOnSignIn();
     } catch (err) {
       set({ loading: false });
       throw err;
@@ -199,6 +204,8 @@ export const useUserStore = create<UserState>((set, get) => ({
         addresses: user.addresses || [],
         loading: false
       });
+
+      void useWishlistStore.getState().syncOnSignIn();
     } catch (err) {
       set({ loading: false });
       throw err;
@@ -234,5 +241,17 @@ export const useUserStore = create<UserState>((set, get) => ({
   removeAddress: (index: number) => {
     const addresses = get().addresses.filter((_, i) => i !== index);
     set({ addresses });
+  },
+
+  saveAddressBook: async (addresses: ShippingAddress[]) => {
+    const previous = get().addresses;
+    set({ addresses }); // optimistic
+    try {
+      const res = await saveAddresses(addresses);
+      set({ addresses: (res.addresses as ShippingAddress[]) || addresses });
+    } catch (err) {
+      set({ addresses: previous }); // rollback
+      throw err;
+    }
   }
 }));

@@ -224,12 +224,12 @@ const styles = StyleSheet.create({
   inactiveBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(206, 17, 38, 0.08)",
+    backgroundColor: "rgba(23, 23, 23, 0.08)",
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(206, 17, 38, 0.2)"
+    borderBottomColor: "rgba(23, 23, 23, 0.2)"
   },
   inactiveText: {
     flex: 1,

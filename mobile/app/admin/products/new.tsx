@@ -32,7 +32,7 @@ export default function AdminNewProductScreen() {
         [
           {
             text: "View Products",
-            onPress: () => router.replace("/(admin)/products")
+            onPress: () => router.replace("/admin/products")
           },
           {
             text: "Add Another",

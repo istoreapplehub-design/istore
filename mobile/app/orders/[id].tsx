@@ -20,9 +20,11 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, formatGHS, typography } from "../../constants/theme";
 import { Order } from "../../types";
-import { getOrder } from "../../services/api";
+import { cancelOrder, getOrder, ApiError } from "../../services/api";
 import { useUserStore } from "../../store/useUserStore";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import ErrorState from "../../components/ErrorState";
+import { ProductVisual, getStoredImage } from "../../components/ProductVisual";
 
 function formatTimestamp(isoString?: string | null): string {
   if (!isoString) return "";
@@ -48,14 +50,16 @@ export default function OrderDetailsScreen() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<unknown>(null);
 
   const fetchDetail = useCallback(async () => {
     if (!id) return;
     try {
       const data = await getOrder(id, userId);
       setOrder(data);
-    } catch {
-      // Silently handled
+      setError(null);
+    } catch (err) {
+      setError(err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -69,6 +73,38 @@ export default function OrderDetailsScreen() {
   const handleRefresh = () => {
     setRefreshing(true);
     fetchDetail();
+  };
+
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancelOrder = () => {
+    if (!order) return;
+    Alert.alert(
+      "Cancel this order?",
+      "The order will be cancelled and the reserved stock released. Paid orders are refunded to your original payment method within 5–10 business days.",
+      [
+        { text: "Keep Order", style: "cancel" },
+        {
+          text: "Cancel Order",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setCancelling(true);
+              const updated = await cancelOrder(order.id);
+              setOrder(updated);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            } catch (err: unknown) {
+              Alert.alert(
+                "Cancellation Failed",
+                err instanceof Error ? err.message : "Could not cancel this order."
+              );
+            } finally {
+              setCancelling(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -103,6 +139,29 @@ export default function OrderDetailsScreen() {
   }
 
   if (!order) {
+    if (error) {
+      return (
+        <SafeAreaView style={styles.notFoundContainer} edges={["top"]}>
+          <ErrorState
+            error={error}
+            primaryActionLabel={
+              error instanceof ApiError && error.kind === "auth" ? "Sign In" : "Try Again"
+            }
+            onRetry={() => {
+              if (error instanceof ApiError && error.kind === "auth") {
+                router.push("/(auth)/login");
+              } else {
+                setLoading(true);
+                fetchDetail();
+              }
+            }}
+          />
+          <Pressable style={styles.backBtn} onPress={() => router.back()}>
+            <Text style={styles.backBtnText}>Go Back</Text>
+          </Pressable>
+        </SafeAreaView>
+      );
+    }
     return (
       <SafeAreaView style={styles.notFoundContainer} edges={["top"]}>
         <Ionicons name="alert-circle-outline" size={64} color={colors.danger} />
@@ -185,10 +244,10 @@ export default function OrderDetailsScreen() {
             <Text
               style={[
                 styles.statusPillText,
-                order.status === "paid" && { color: colors.accent },
-                order.status === "shipped" && { color: "#FF9500" },
-                order.status === "delivered" && { color: colors.success },
-                order.status === "cancelled" && { color: colors.danger }
+                order.status === "paid" && { color: "#FFFFFF" },
+                order.status === "shipped" && { color: "#171717" },
+                order.status === "delivered" && { color: "#171717" },
+                order.status === "cancelled" && { color: "#AEAEB2" }
               ]}
             >
               {order.status.toUpperCase()}
@@ -266,20 +325,24 @@ export default function OrderDetailsScreen() {
               .filter(Boolean)
               .join(" · ");
             const isLast = idx === order.items.length - 1;
+            const thumb = getStoredImage(item.image);
 
             return (
               <View
                 key={idx}
                 style={[styles.itemRow, !isLast && styles.itemRowBorder]}
               >
-                <Image
-                  source={{
-                    uri:
-                      item.image || "https://placehold.co/200x200?text=Apple"
-                  }}
-                  style={styles.itemImage}
-                  resizeMode="contain"
-                />
+                {thumb ? (
+                  <Image
+                    source={{ uri: thumb }}
+                    style={styles.itemImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={styles.itemImageFallback}>
+                    <ProductVisual glyphSize={18} />
+                  </View>
+                )}
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName} numberOfLines={2}>
                     {item.name}
@@ -356,6 +419,25 @@ export default function OrderDetailsScreen() {
         </View>
 
         {/* 7. Help Section */}
+        {["pending", "paid"].includes(order.status) && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.cancelOrderBtn,
+              pressed && { opacity: 0.7 },
+              cancelling && { opacity: 0.5 }
+            ]}
+            disabled={cancelling}
+            onPress={() => {
+              Haptics.selectionAsync();
+              handleCancelOrder();
+            }}
+          >
+            <Text style={styles.cancelOrderText}>
+              {cancelling ? "Cancelling…" : "Cancel Order"}
+            </Text>
+          </Pressable>
+        )}
+
         <View style={styles.helpContainer}>
           <Text style={styles.helpText}>Need help with this order?</Text>
           <Pressable
@@ -439,16 +521,16 @@ const styles = StyleSheet.create({
     marginTop: 8
   },
   statusPaid: {
-    backgroundColor: "rgba(0, 113, 227, 0.1)"
+    backgroundColor: "#171717"
   },
   statusShipped: {
-    backgroundColor: "rgba(255, 149, 0, 0.15)"
+    backgroundColor: "#E8E8E6"
   },
   statusDelivered: {
-    backgroundColor: "rgba(0, 107, 63, 0.1)"
+    backgroundColor: "#F2F2F7"
   },
   statusCancelled: {
-    backgroundColor: "rgba(206, 17, 38, 0.1)"
+    backgroundColor: "#F2F2F7"
   },
   statusPillText: {
     fontSize: 13,
@@ -462,7 +544,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 16,
     padding: 16,
-    backgroundColor: "rgba(206, 17, 38, 0.08)",
+    backgroundColor: "rgba(23, 23, 23, 0.08)",
     borderRadius: 16
   },
   cancelledBannerText: {
@@ -570,6 +652,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.imageBg
   },
+  itemImageFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    overflow: "hidden"
+  },
   itemInfo: {
     flex: 1,
     marginLeft: 12,
@@ -649,6 +737,20 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     fontFamily: "monospace",
     marginTop: 4
+  },
+  cancelOrderBtn: {
+    alignItems: "center",
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    marginTop: 24
+  },
+  cancelOrderText: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: "600"
   },
   helpContainer: {
     alignItems: "center",

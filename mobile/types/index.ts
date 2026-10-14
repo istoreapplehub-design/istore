@@ -105,10 +105,12 @@ export interface Order {
 }
 
 export interface Category {
+  id?: string;
   name: string;
   slug: string;
-  count: number;
-  image: string;
+  count?: number;
+  image?: string;
+  icon?: string;
   displayOrder: number;
 }
 

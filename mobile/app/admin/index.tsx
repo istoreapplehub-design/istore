@@ -87,7 +87,7 @@ export default function AdminDashboardScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace("/(tabs)/account");
+      router.replace("/account");
     }
   };
 
@@ -209,7 +209,7 @@ export default function AdminDashboardScreen() {
                   value={String(totalOrders)}
                   icon="cart-outline"
                   color={colors.accent}
-                  onPress={() => router.push("/(admin)/orders")}
+                  onPress={() => router.push("/admin/orders")}
                 />
               </View>
               <View style={styles.statCol}>
@@ -218,7 +218,7 @@ export default function AdminDashboardScreen() {
                   value={String(totalProducts)}
                   icon="cube-outline"
                   color={colors.accent}
-                  onPress={() => router.push("/(admin)/products")}
+                  onPress={() => router.push("/admin/products")}
                 />
               </View>
               <View style={styles.statCol}>
@@ -226,8 +226,8 @@ export default function AdminDashboardScreen() {
                   label="Pending Orders"
                   value={String(pendingOrders)}
                   icon="time-outline"
-                  color="#FF9500"
-                  onPress={() => router.push("/(admin)/orders")}
+                  color="#6E6E73"
+                  onPress={() => router.push("/admin/orders")}
                 />
               </View>
             </View>
@@ -248,7 +248,7 @@ export default function AdminDashboardScreen() {
                       style={({ pressed }) => [styles.alertRow, pressed && { opacity: 0.7 }]}
                       onPress={() => {
                         Haptics.selectionAsync();
-                        router.push("/(admin)/products");
+                        router.push("/admin/products");
                       }}
                     >
                       <Ionicons name="alert-circle" size={18} color={colors.danger} />
@@ -264,14 +264,14 @@ export default function AdminDashboardScreen() {
                       style={({ pressed }) => [styles.alertRow, pressed && { opacity: 0.7 }]}
                       onPress={() => {
                         Haptics.selectionAsync();
-                        router.push("/(admin)/products");
+                        router.push("/admin/products");
                       }}
                     >
-                      <Ionicons name="warning" size={18} color="#FF9500" />
+                      <Ionicons name="warning" size={18} color="#6E6E73" />
                       <Text style={styles.alertWarningText}>
                         {lowStockCount} {lowStockCount === 1 ? "product" : "products"} low on stock
                       </Text>
-                      <Ionicons name="chevron-forward" size={16} color="#FF9500" />
+                      <Ionicons name="chevron-forward" size={16} color="#6E6E73" />
                     </Pressable>
                   )}
                 </View>
@@ -309,7 +309,7 @@ export default function AdminDashboardScreen() {
                   style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
                   onPress={() => {
                     Haptics.selectionAsync();
-                    router.push("/(admin)/products/new");
+                    router.push("/admin/products/new");
                   }}
                 >
                   <Ionicons name="add" size={18} color={colors.accent} style={{ marginRight: 6 }} />
@@ -320,7 +320,7 @@ export default function AdminDashboardScreen() {
                   style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
                   onPress={() => {
                     Haptics.selectionAsync();
-                    router.push("/(admin)/orders");
+                    router.push("/admin/orders");
                   }}
                 >
                   <Ionicons name="receipt-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
@@ -341,7 +341,7 @@ export default function AdminDashboardScreen() {
                   style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
                   onPress={() => {
                     Haptics.selectionAsync();
-                    router.push("/(admin)/products");
+                    router.push("/admin/products");
                   }}
                 >
                   <Ionicons name="cube-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF9500",
+    color: "#6E6E73",
     marginLeft: 8
   },
   hairline: {
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   },
   actionButtonPressed: {
     opacity: 0.7,
-    backgroundColor: "rgba(0, 113, 227, 0.05)"
+    backgroundColor: "rgba(23, 23, 23, 0.05)"
   },
   actionButtonText: {
     fontSize: 14,

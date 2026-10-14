@@ -6,6 +6,7 @@ import {
   Product,
   Review
 } from "../types";
+import { supabase } from "../lib/supabase";
 
 export interface InitializePaymentResponse {
   simulation: boolean;
@@ -18,17 +19,16 @@ export interface InitializePaymentResponse {
 export interface VerifyPaymentResponse {
   success: boolean;
   order: Order;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   paystackData?: any; // Gateway payload has dynamic structure
 }
 
 export interface CreateOrderPayload {
-  items: Array<{
+  items: {
     productId: string;
     qty: number;
     color?: string;
     storage?: string;
-  }>;
+  }[];
   shippingAddress: {
     fullName: string;
     phone: string;
@@ -47,7 +47,17 @@ export interface CreateReviewPayload {
   authorName: string;
 }
 
-import { supabase } from "../lib/supabase";
+export type ApiErrorKind = "network" | "server" | "auth";
+
+export class ApiError extends Error {
+  kind: ApiErrorKind;
+
+  constructor(message: string, kind: ApiErrorKind) {
+    super(message);
+    this.name = "ApiError";
+    this.kind = kind;
+  }
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_URL}${path}`;
@@ -73,7 +83,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
     if (!res.ok) {
       const message = data?.message || `Request failed with status ${res.status}`;
-      throw new Error(message);
+      throw new ApiError(message, res.status === 401 || res.status === 403 ? "auth" : "server");
     }
 
     return data as T;
@@ -81,7 +91,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     if (__DEV__) {
       console.warn(`[API] Error on ${options.method || "GET"} ${path}:`, err);
     }
-    throw err;
+    if (err instanceof ApiError) throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/network|could not connect|timed out|fetch failed|failed to connect/i.test(msg)) {
+      throw new ApiError(
+        `Unable to reach the I-Store server at\n${API_URL}\n\nMake sure this device is on the same Wi-Fi network as the server.`,
+        "network"
+      );
+    }
+    throw new ApiError(msg || "Something went wrong.", "server");
   }
 }
 
@@ -155,6 +173,23 @@ export async function createOrder(
   });
 }
 
+/** Public checkout for shoppers without an account. Email is required by the API. */
+export async function createGuestOrder(
+  body: CreateOrderPayload & { email: string }
+): Promise<Order> {
+  return request<Order>("/api/orders/guest", {
+    method: "POST",
+    body: JSON.stringify(body)
+  });
+}
+
+/** Look up a guest order — needs both the order id and the email it was placed with. */
+export async function trackGuestOrder(id: string, email: string): Promise<Order> {
+  return request<Order>(
+    `/api/orders/track/${encodeURIComponent(id)}?email=${encodeURIComponent(email)}`
+  );
+}
+
 export async function getMyOrders(
   userId?: string,
   params: Record<string, string | number | undefined> = {}
@@ -184,16 +219,43 @@ export async function getOrder(id: string, userId?: string): Promise<Order> {
   });
 }
 
+export async function cancelOrder(id: string): Promise<Order> {
+  return request<Order>(`/api/orders/${id}/cancel`, { method: "POST" });
+}
+
+export async function getSavedWishlist(): Promise<{ productIds: string[] }> {
+  return request("/api/user/wishlist");
+}
+
+export async function saveWishlist(
+  productIds: string[]
+): Promise<{ productIds: string[] }> {
+  return request("/api/user/wishlist", {
+    method: "PUT",
+    body: JSON.stringify({ productIds })
+  });
+}
+
+export async function saveAddresses(
+  addresses: unknown[]
+): Promise<{ addresses: unknown[] }> {
+  return request("/api/user/addresses", {
+    method: "PUT",
+    body: JSON.stringify({ addresses })
+  });
+}
+
 export async function initializePayment(
   orderId: string,
-  userId?: string
+  options: { userId?: string; email?: string } = {}
 ): Promise<InitializePaymentResponse> {
+  const { userId, email } = options;
   return request<InitializePaymentResponse>("/api/paystack/initialize", {
     method: "POST",
     headers: {
       ...(userId ? { "x-user-id": userId } : {})
     },
-    body: JSON.stringify({ orderId })
+    body: JSON.stringify({ orderId, ...(email ? { email } : {}) })
   });
 }
 

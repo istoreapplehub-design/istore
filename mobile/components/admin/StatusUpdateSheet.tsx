@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
   },
   radioRowSelected: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(0, 113, 227, 0.04)"
+    backgroundColor: "rgba(23, 23, 23, 0.04)"
   },
   radioCircle: {
     width: 20,

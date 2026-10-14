@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   pillSelected: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(0, 113, 227, 0.08)"
+    backgroundColor: "rgba(23, 23, 23, 0.08)"
   },
   pillUnselected: {
     borderColor: colors.border,

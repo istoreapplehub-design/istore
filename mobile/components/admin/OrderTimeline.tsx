@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
     marginTop: 6,
-    backgroundColor: "rgba(0, 113, 227, 0.08)",
+    backgroundColor: "rgba(23, 23, 23, 0.08)",
     alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 3,

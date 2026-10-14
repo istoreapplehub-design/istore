@@ -1,9 +1,4 @@
-/**
- * Haptics Audit:
- * - Haptics.selectionAsync() on category chip and top bar actions
- * - Haptics.notificationAsync("error") on network/API load failure
- */
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -15,73 +10,53 @@ import {
   View
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import Animated, {
   FadeInDown,
+  runOnJS,
   useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming
+  useSharedValue
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
-import { colors, radius, shadow, spacing, typography } from "../../constants/theme";
-import { CATEGORIES } from "../../constants/config";
-import { useHomeData } from "../../hooks/useHomeData";
-import { useCartStore } from "../../store/useCartStore";
-import { Product } from "../../types";
-import { Badge } from "../../components/Badge";
-import { CategoryTile } from "../../components/CategoryTile";
+import AppHeader from "../../components/AppHeader";
+import ErrorState from "../../components/ErrorState";
+import { AppleCategoryRibbon } from "../../components/AppleCategoryRibbon";
+import CountdownTimer from "../../components/CountdownTimer";
 import { HeroCarousel } from "../../components/HeroCarousel";
+import { FlashDealCard } from "../../components/FlashDealCard";
 import { ProductCard } from "../../components/ProductCard";
 import { SectionHeader } from "../../components/SectionHeader";
-import {
-  SkeletonHeroBanner,
-  SkeletonProductCard,
-  SkeletonRow
-} from "../../components/SkeletonLoader";
+import { ValuePropRail } from "../../components/ValuePropRail";
+import { SkeletonProductCard } from "../../components/SkeletonLoader";
+import { ProductVisual, getProductImage } from "../../components/ProductVisual";
+import { useHomeData } from "../../hooks/useHomeData";
+import { useFlashDeals } from "../../hooks/useFlashDeals";
+import { colors, formatGHS, radius, spacing } from "../../constants/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CATEGORY_TILE_WIDTH = (SCREEN_WIDTH - 32 - 12) / 2;
-const TODAY_CARD_WIDTH = 300;
-const TODAY_CARD_GAP = 16;
-const TODAY_SNAP_INTERVAL = TODAY_CARD_WIDTH + TODAY_CARD_GAP;
+const EDITORIAL_WIDTH = SCREEN_WIDTH - 96;
+const EDITORIAL_GAP = 14;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const cartItemCount = useCartStore((state) => state.getItemCount());
-  const {
-    featured,
-    newArrivals,
-    bestSellers,
-    categories,
-    loading,
-    error,
-    refetch
-  } = useHomeData();
+  const { featured, newArrivals, bestSellers, loading, error, refetch } = useHomeData();
+  const { deals, products, endsAt, error: flashError } = useFlashDeals();
 
+  const [scrolled, setScrolled] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    if (error && !loading && featured.length === 0) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    }
-  }, [error, loading, featured.length]);
-  const scrollY = useSharedValue(0);
+  const scrolledFlag = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
+      const past = event.contentOffset.y > 6;
+      if (past && scrolledFlag.value === 0) {
+        scrolledFlag.value = 1;
+        runOnJS(setScrolled)(true);
+      } else if (!past && scrolledFlag.value === 1) {
+        scrolledFlag.value = 0;
+        runOnJS(setScrolled)(false);
+      }
     }
-  });
-
-  const topBarBorderStyle = useAnimatedStyle(() => {
-    const isScrolled = scrollY.value > 40;
-    return {
-      opacity: withTiming(isScrolled ? 1 : 0, { duration: 180 })
-    };
   });
 
   const onRefresh = async () => {
@@ -91,78 +66,40 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  // Find product with the highest discount for the Featured Deal section
-  const featuredDealProduct: Product | undefined = [...newArrivals, ...bestSellers]
-    .filter((p) => p.compareAtPriceGHS && p.compareAtPriceGHS > p.priceGHS)
-    .sort(
-      (a, b) =>
-        (b.compareAtPriceGHS! - b.priceGHS) - (a.compareAtPriceGHS! - a.priceGHS)
-    )[0] || featured[0];
+  const heroProducts = featured.length > 0 ? featured : newArrivals.slice(0, 5);
+  const editorial = newArrivals.slice(0, 6);
 
-  const featuredDealSavings =
-    featuredDealProduct && featuredDealProduct.compareAtPriceGHS
-      ? featuredDealProduct.compareAtPriceGHS - featuredDealProduct.priceGHS
-      : 1400;
+  // With no catalog to show, say why instead of rendering an empty-looking store.
+  const nothingLoaded =
+    !loading && heroProducts.length === 0 && editorial.length === 0 && bestSellers.length === 0;
 
-  // ─── ERROR STATE ──────────────────────────────────────────────────────────
-  if (error && !loading && featured.length === 0) {
+  if (nothingLoaded && (error || flashError)) {
     return (
-      <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
-        <Ionicons name="cloud-offline-outline" size={48} color={colors.textSecondary} />
-        <Text style={styles.errorTitle}>Something went wrong</Text>
-        <Text style={styles.errorMessage}>{error.message}</Text>
-        <Pressable
-          style={styles.retryButton}
-          onPress={() => {
-            Haptics.selectionAsync();
-            refetch();
-          }}
-        >
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </Pressable>
+      <View style={styles.root}>
+        <AppHeader scrolled={scrolled} />
+        <ErrorState error={error || flashError} onRetry={() => refetch()} />
+      </View>
+    );
+  }
+
+  if (nothingLoaded) {
+    return (
+      <View style={styles.root}>
+        <AppHeader scrolled={scrolled} />
+        <ErrorState
+          empty
+          emptyTitle="The store is being stocked"
+          emptySubtitle="No devices are published yet. Please check back shortly."
+          emptyIcon="cube-outline"
+        />
       </View>
     );
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* ─── 1. STICKY TOP BAR ────────────────────────────────────────────── */}
-      <View style={styles.topBar}>
-        <Text style={styles.brandTitle}>I-Store</Text>
+    <View style={styles.root}>
+      <AppHeader scrolled={scrolled} />
 
-        <View style={styles.topBarActions}>
-          <Pressable
-            hitSlop={8}
-            style={styles.iconButton}
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/(tabs)/search");
-            }}
-          >
-            <Ionicons name="search-outline" size={24} color={colors.text} />
-          </Pressable>
-
-          <Pressable
-            hitSlop={8}
-            style={styles.iconButton}
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/(tabs)/bag");
-            }}
-          >
-            <Ionicons name="bag-outline" size={24} color={colors.text} />
-            {cartItemCount > 0 && (
-              <View style={styles.badgeWrapper}>
-                <Badge count={cartItemCount} />
-              </View>
-            )}
-          </Pressable>
-        </View>
-
-        <Animated.View style={[styles.topBarBottomBorder, topBarBorderStyle]} />
-      </View>
-
-      {/* ─── MAIN SCROLL VIEW ──────────────────────────────────────────────── */}
       <Animated.ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -174,91 +111,133 @@ export default function HomeScreen() {
             onRefresh={onRefresh}
             tintColor={colors.accent}
             colors={[colors.accent]}
-            title="Pull to refresh"
           />
         }
       >
-        {/* ─── 2. HERO CAROUSEL ───────────────────────────────────────────── */}
-        <Animated.View
-          entering={FadeInDown.delay(0).springify()}
-          style={styles.heroSection}
+        {/* Announcement strip */}
+        <Pressable
+          style={({ pressed }) => [styles.strip, pressed && { opacity: 0.7 }]}
+          onPress={() => {
+            Haptics.selectionAsync();
+            router.push("/(tabs)/flash");
+          }}
         >
-          {loading && featured.length === 0 ? (
-            <SkeletonHeroBanner />
-          ) : (
-            <HeroCarousel products={featured} />
-          )}
-        </Animated.View>
+          <Ionicons name="flash" size={13} color={colors.text} />
+          <Text style={styles.stripText}>
+            New flash prices every midnight Ghana time
+          </Text>
+          <Ionicons name="chevron-forward" size={13} color={colors.textTertiary} />
+        </Pressable>
 
-        {/* ─── 3. "TODAY" EDITORIAL CARDS ─────────────────────────────────── */}
-        {!loading && newArrivals.length > 0 && (
-          <Animated.View
-            entering={FadeInDown.delay(80).springify()}
-            style={styles.sectionWrapper}
-          >
-            <SectionHeader title="Today" subtitle="Handpicked for you" />
+        {/* Editorial hero */}
+        <HeroCarousel products={heroProducts} />
+
+        {/* Category rail */}
+        <View style={styles.ribbonWrap}>
+          <AppleCategoryRibbon products={products} />
+        </View>
+
+        {/* Flash sales band */}
+        {deals.length > 0 && (
+          <Animated.View entering={FadeInDown.duration(420)} style={styles.flashBand}>
+            <View style={styles.flashBandHead}>
+              <View style={styles.flashTitleRow}>
+                <Ionicons name="flash" size={17} color="#FFFFFF" />
+                <Text style={styles.flashTitle}>Flash Sales</Text>
+              </View>
+              <CountdownTimer endsAt={endsAt} variant="inline" />
+            </View>
+
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={false}
-              data={newArrivals.slice(0, 4)}
+              data={deals.slice(0, 8)}
               keyExtractor={(item) => item.id}
-              snapToInterval={TODAY_SNAP_INTERVAL}
-              decelerationRate="fast"
-              contentContainerStyle={styles.todayListContent}
-              renderItem={({ item }) => {
-                const img =
-                  item.images && item.images.length > 0
-                    ? item.images[0]
-                    : "https://placehold.co/800x800?text=Apple";
-
-                return (
-                  <Pressable
-                    style={styles.todayCard}
-                    onPress={() => {
-                      Haptics.selectionAsync();
-                      router.push(`/product/${item.slug}`);
-                    }}
-                  >
-                    <Image source={{ uri: img }} style={styles.todayImage} resizeMode="cover" />
-                    <LinearGradient
-                      colors={[colors.gradientTop, colors.gradientBottom]}
-                      style={styles.todayGradient}
-                    />
-
-                    <View style={styles.todayChevron}>
-                      <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
-                    </View>
-
-                    <View style={styles.todayTextContainer}>
-                      <Text style={styles.todayCategory}>
-                        {item.category.toUpperCase()}
-                      </Text>
-                      <Text style={styles.todayTitle} numberOfLines={2}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.todayPrice}>
-                        ₵{item.priceGHS.toLocaleString("en-GH", { maximumFractionDigits: 0 })}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              }}
+              contentContainerStyle={styles.flashListContent}
+              renderItem={({ item }) => <FlashDealCard product={item} />}
             />
+
+            <Pressable
+              style={({ pressed }) => [styles.flashSeeAll, pressed && { opacity: 0.85 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/(tabs)/flash");
+              }}
+            >
+              <Text style={styles.flashSeeAllText}>See all {deals.length} deals</Text>
+              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+            </Pressable>
           </Animated.View>
         )}
 
-        {/* ─── 4. "NEW ARRIVALS" HORIZONTAL SCROLLER ──────────────────────── */}
-        <Animated.View
-          entering={FadeInDown.delay(160).springify()}
-          style={styles.sectionWrapper}
-        >
+        {/* The latest — editorial cards */}
+        <Animated.View entering={FadeInDown.delay(60).duration(420)}>
           <SectionHeader
-            title="New Arrivals"
+            title="The latest"
+            subtitle="Take a look at what's new right now"
             onSeeAll={() => router.push("/(tabs)/shop")}
           />
-          {loading && newArrivals.length === 0 ? (
-            <View style={styles.skeletonsRow}>
-              <SkeletonProductCard />
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={editorial}
+            keyExtractor={(item) => item.id}
+            snapToInterval={EDITORIAL_WIDTH + EDITORIAL_GAP}
+            decelerationRate="fast"
+            contentContainerStyle={styles.editorialContent}
+            renderItem={({ item }) => {
+              const image = getProductImage(item);
+
+              return (
+                <Pressable
+                  style={styles.editorialCard}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    router.push(`/product/${item.slug}`);
+                  }}
+                >
+                  <View style={styles.editorialCopy}>
+                    <Text style={styles.editorialEyebrow}>
+                      {item.compareAtPriceGHS && item.compareAtPriceGHS > item.priceGHS
+                        ? "On sale now"
+                        : "Just landed"}
+                    </Text>
+                    <Text style={styles.editorialTitle} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.editorialPrice}>
+                      From {formatGHS(item.priceGHS)}
+                    </Text>
+                    <View style={styles.editorialLinkRow}>
+                      <View style={styles.editorialPill}>
+                        <Text style={styles.editorialPillText}>Buy</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+                    </View>
+                  </View>
+
+                  {image ? (
+                    <Image source={{ uri: image }} style={styles.editorialImage} resizeMode="cover" />
+                  ) : (
+                    <View style={styles.editorialImageFallback}>
+                      <ProductVisual category={item.category} glyphSize={54} />
+                    </View>
+                  )}
+                </Pressable>
+              );
+            }}
+          />
+        </Animated.View>
+
+        {/* Most loved */}
+        <Animated.View entering={FadeInDown.delay(120).duration(420)}>
+          <SectionHeader
+            title="Most loved in Ghana"
+            subtitle="What our customers keep coming back for"
+            onSeeAll={() => router.push("/(tabs)/shop?sort=popular")}
+          />
+          {loading && bestSellers.length === 0 ? (
+            <View style={styles.skeletonRow}>
               <SkeletonProductCard />
               <SkeletonProductCard />
             </View>
@@ -266,118 +245,56 @@ export default function HomeScreen() {
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={false}
-              data={newArrivals}
+              data={bestSellers}
               keyExtractor={(item) => item.id}
-              removeClippedSubviews={true}
-              windowSize={3}
-              maxToRenderPerBatch={3}
-              contentContainerStyle={styles.horizontalListContent}
+              contentContainerStyle={styles.productRowContent}
               renderItem={({ item }) => <ProductCard product={item} variant="grid" />}
             />
           )}
         </Animated.View>
 
-        {/* ─── 5. "SHOP BY CATEGORY" GRID ─────────────────────────────────── */}
-        <Animated.View
-          entering={FadeInDown.delay(240).springify()}
-          style={styles.sectionWrapper}
-        >
-          <SectionHeader title="Shop by Category" />
-          <View style={styles.categoryGrid}>
-            {categories.map((cat) => {
-              const configDef = CATEGORIES.find(
-                (c) => c.slug.toLowerCase() === cat.slug.toLowerCase()
-              );
-              const iconName = (configDef?.icon || "cube-outline") as keyof typeof Ionicons.glyphMap;
-
-              return (
-                <View key={cat.slug} style={{ width: CATEGORY_TILE_WIDTH }}>
-                  <CategoryTile
-                    name={cat.name}
-                    count={cat.count}
-                    icon={iconName}
-                    onPress={() =>
-                      router.push(`/(tabs)/shop?category=${encodeURIComponent(cat.name)}`)
-                    }
-                  />
-                </View>
-              );
-            })}
-          </View>
-        </Animated.View>
-
-        {/* ─── 6. "BEST SELLERS" VERTICAL GROUPED LIST ────────────────────── */}
-        <Animated.View
-          entering={FadeInDown.delay(320).springify()}
-          style={styles.sectionWrapper}
-        >
+        {/* Why I-Store */}
+        <Animated.View entering={FadeInDown.delay(180).duration(420)}>
           <SectionHeader
-            title="Best Sellers"
-            onSeeAll={() => router.push("/(tabs)/shop?sort=popular")}
+            title="Why I-Store is the best place to shop Apple."
+            subtitle="The parts that matter when it's ₵20,000 on the line"
           />
-
-          <View style={styles.bestSellersGroup}>
-            {loading && bestSellers.length === 0 ? (
-              <View style={{ padding: spacing.md }}>
-                <SkeletonRow />
-                <SkeletonRow />
-                <SkeletonRow />
-              </View>
-            ) : (
-              bestSellers.slice(0, 5).map((item) => (
-                <ProductCard key={item.id} product={item} variant="row" />
-              ))
-            )}
-          </View>
+          <ValuePropRail />
         </Animated.View>
 
-        {/* ─── 7. FEATURED DEAL BANNER ────────────────────────────────────── */}
-        {featuredDealProduct && (
-          <Animated.View
-            entering={FadeInDown.delay(400).springify()}
-            style={styles.dealSectionWrapper}
-          >
+        {/* Guest-safe footer links */}
+        <View style={styles.footer}>
+          <Text style={styles.footerHeading}>Help is always available</Text>
+          <View style={styles.footerLinks}>
             <Pressable
-              style={styles.dealCard}
               onPress={() => {
                 Haptics.selectionAsync();
-                router.push(`/product/${featuredDealProduct.slug}`);
+                router.push("/help");
               }}
             >
-              <LinearGradient
-                colors={[colors.accent, "#0051A3"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.dealGradient}
-              >
-                <View style={styles.dealContent}>
-                  <Text style={styles.dealLabel}>LIMITED TIME</Text>
-                  <Text style={styles.dealTitle} numberOfLines={2}>
-                    {featuredDealProduct.name}
-                  </Text>
-                  <Text style={styles.dealSavings}>
-                    Save ₵{featuredDealSavings.toLocaleString("en-GH")}
-                  </Text>
-                  <View style={styles.dealCta}>
-                    <Text style={styles.dealCtaText}>Shop Now</Text>
-                  </View>
-                </View>
-
-                {featuredDealProduct.images && featuredDealProduct.images[0] && (
-                  <Image
-                    source={{ uri: featuredDealProduct.images[0] }}
-                    style={styles.dealImage}
-                    resizeMode="contain"
-                  />
-                )}
-              </LinearGradient>
+              <Text style={styles.footerLink}>Help Center</Text>
             </Pressable>
-          </Animated.View>
-        )}
-
-        {/* ─── 8. FOOTER ──────────────────────────────────────────────────── */}
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>Made in Ghana 🇬🇭</Text>
+            <View style={styles.footerDot} />
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/legal?type=terms");
+              }}
+            >
+              <Text style={styles.footerLink}>Terms</Text>
+            </Pressable>
+            <View style={styles.footerDot} />
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/legal?type=privacy");
+              }}
+            >
+              <Text style={styles.footerLink}>Privacy</Text>
+            </Pressable>
+          </View>
+          <Ionicons name="logo-apple" size={18} color={colors.textTertiary} />
+          <Text style={styles.footerBrand}>I-Store Ghana · Accra</Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -389,231 +306,178 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background
   },
-  topBar: {
-    height: 56,
+  scrollContent: {
+    paddingBottom: 40
+  },
+  strip: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 9,
     backgroundColor: colors.background,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border
+  },
+  stripText: {
+    fontSize: 12.5,
+    fontWeight: "500",
+    color: colors.text,
+    letterSpacing: -0.1
+  },
+  ribbonWrap: {
+    paddingVertical: spacing.lg
+  },
+  flashBand: {
+    marginHorizontal: 16,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.accentDark,
+    borderRadius: radius.xl,
+    paddingTop: 18
+  },
+  flashBandHead: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.md,
-    zIndex: 10
+    paddingHorizontal: 18,
+    marginBottom: 14
   },
-  brandTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    letterSpacing: -0.6,
-    color: colors.text
-  },
-  topBarActions: {
+  flashTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md
+    gap: 7
   },
-  iconButton: {
-    position: "relative",
-    padding: 4
-  },
-  badgeWrapper: {
-    position: "absolute",
-    top: -2,
-    right: -6
-  },
-  topBarBottomBorder: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border
-  },
-  scrollContent: {
-    paddingBottom: 100
-  },
-  heroSection: {
-    marginTop: spacing.xs
-  },
-  sectionWrapper: {
-    marginTop: spacing.lg
-  },
-  todayListContent: {
-    paddingHorizontal: spacing.md,
-    gap: TODAY_CARD_GAP
-  },
-  todayCard: {
-    width: TODAY_CARD_WIDTH,
-    height: 340,
-    borderRadius: 24,
-    overflow: "hidden",
-    position: "relative"
-  },
-  todayImage: {
-    width: "100%",
-    height: "100%"
-  },
-  todayGradient: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 200
-  },
-  todayChevron: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  todayTextContainer: {
-    position: "absolute",
-    left: 20,
-    right: 20,
-    bottom: 20
-  },
-  todayCategory: {
-    fontSize: 11,
-    letterSpacing: 1.5,
-    fontWeight: "700",
-    color: "rgba(255, 255, 255, 0.85)"
-  },
-  todayTitle: {
-    fontSize: 22,
+  flashTitle: {
+    fontSize: 21,
     fontWeight: "700",
     color: "#FFFFFF",
-    letterSpacing: -0.4,
-    marginTop: 4
+    letterSpacing: -0.5
   },
-  todayPrice: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.9)",
-    marginTop: 8
-  },
-  skeletonsRow: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.md
-  },
-  horizontalListContent: {
-    paddingHorizontal: spacing.md,
-    gap: spacing.md - 4
-  },
-  categoryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  flashListContent: {
+    paddingLeft: 18,
+    paddingRight: 8,
     gap: 12,
-    paddingHorizontal: spacing.md
+    paddingBottom: 16
   },
-  bestSellersGroup: {
-    marginHorizontal: spacing.md,
-    backgroundColor: "#FFFFFF",
-    borderRadius: radius.lg,
-    overflow: "hidden",
-    ...shadow.soft,
-    paddingVertical: 4
-  },
-  dealSectionWrapper: {
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.md
-  },
-  dealCard: {
-    borderRadius: 24,
-    height: 200,
-    overflow: "hidden"
-  },
-  dealGradient: {
-    flex: 1,
+  flashSeeAll: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    position: "relative"
+    justifyContent: "center",
+    gap: 7,
+    paddingVertical: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255,255,255,0.16)"
   },
-  dealContent: {
-    flex: 1,
-    paddingRight: 110
-  },
-  dealLabel: {
-    fontSize: 11,
-    letterSpacing: 1.5,
-    color: "rgba(255, 255, 255, 0.8)",
-    fontWeight: "700"
-  },
-  dealTitle: {
-    fontSize: 24,
-    fontWeight: "700",
+  flashSeeAllText: {
     color: "#FFFFFF",
-    letterSpacing: -0.4,
-    marginTop: 6
-  },
-  dealSavings: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.95)",
-    marginTop: 8
-  },
-  dealCta: {
-    alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-    marginTop: 14
-  },
-  dealCtaText: {
-    color: "#000000",
     fontSize: 14,
     fontWeight: "600"
   },
-  dealImage: {
-    position: "absolute",
-    right: 16,
-    bottom: 16,
-    width: 100,
-    height: 100,
-    borderRadius: radius.lg
+  editorialContent: {
+    paddingHorizontal: 16,
+    gap: EDITORIAL_GAP
   },
-  footerContainer: {
-    marginTop: spacing.xl,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.lg
+  editorialCard: {
+    width: EDITORIAL_WIDTH,
+    height: 380,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: "hidden"
   },
-  footerText: {
-    fontSize: 12,
+  editorialCopy: {
+    padding: 18
+  },
+  editorialEyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    color: colors.textTertiary,
+    textTransform: "uppercase"
+  },
+  editorialTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: -0.5,
+    color: colors.text,
+    marginTop: 4,
+    lineHeight: 27
+  },
+  editorialPrice: {
+    fontSize: 14,
+    fontWeight: "600",
     color: colors.textSecondary,
-    fontWeight: "500"
+    marginTop: 5
   },
-  errorContainer: {
+  editorialLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12
+  },
+  editorialPill: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: radius.full
+  },
+  editorialPillText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600"
+  },
+  editorialImage: {
+    width: "100%",
+    flex: 1,
+    marginTop: 4
+  },
+  editorialImageFallback: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-    backgroundColor: colors.background
+    justifyContent: "center"
   },
-  errorTitle: {
-    ...typography.h3,
-    color: colors.text,
-    marginTop: spacing.md
+  skeletonRow: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    gap: 14
   },
-  errorMessage: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.xs
+  productRowContent: {
+    paddingHorizontal: 16,
+    gap: 14
   },
-  retryButton: {
-    backgroundColor: colors.accent,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radius.pill,
-    marginTop: spacing.lg
+  footer: {
+    marginTop: spacing.xl,
+    alignItems: "center",
+    paddingHorizontal: 24
   },
-  retryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600"
+  footerHeading: {
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+    color: colors.text
+  },
+  footerLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 10,
+    marginBottom: spacing.lg
+  },
+  footerLink: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.accent
+  },
+  footerDot: {
+    width: 3,
+    height: 3,
+    borderRadius: radius.full,
+    backgroundColor: colors.border
+  },
+  footerBrand: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    marginTop: 6
   }
 });

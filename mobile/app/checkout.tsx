@@ -5,7 +5,7 @@
  * - Haptics.notificationAsync("warning") on validation failure
  * - Haptics.notificationAsync("success") on verified payment
  */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -27,15 +27,20 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
+import { getPreferences } from "../lib/preferences";
 import { GHANA_REGIONS } from "../constants/config";
-import { colors, formatGHS, typography } from "../constants/theme";
+import { colors, formatGHS } from "../constants/theme";
 import {
+  createGuestOrder,
   createOrder,
   initializePayment,
   verifyPayment
 } from "../services/api";
 import { Order } from "../types";
 import PaystackCheckoutModal from "../components/PaystackCheckoutModal";
+import { ProductVisual, getStoredImage } from "../components/ProductVisual";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const REGION_FEE_MAP: Record<string, number> = {
   "Greater Accra": 25.0,
@@ -61,19 +66,35 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
 
   const { items, getSubtotalGHS, clearCart } = useCartStore();
-  const { userId, addresses, name: defaultName, phone: defaultPhone } = useUserStore();
+  const { userId, session, addresses, name: defaultName, phone: defaultPhone, email: defaultEmail } =
+    useUserStore();
+
+  /** Guests pick an checkout lane before the form; members go straight in. */
+  const [checkoutMode, setCheckoutMode] = useState<"choose" | "guest" | "member">(
+    session ? "member" : "choose"
+  );
 
   const subtotalGHS = getSubtotalGHS();
-  const defaultAddress = addresses[0];
+  const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0];
 
   // Form state
-  const [fullName, setFullName] = useState(defaultAddress?.fullName || defaultName || "");
+  const [email, setEmail] = useState(defaultEmail || "");
+  const [fullName, setFullName] = useState(
+    defaultAddress?.fullName || (defaultName === "Guest User" ? "" : defaultName || "")
+  );
   const [phone, setPhone] = useState(defaultAddress?.phone || defaultPhone || "");
   const [region, setRegion] = useState(defaultAddress?.region || "");
   const [city, setCity] = useState(defaultAddress?.city || "");
   const [gpsAddress, setGpsAddress] = useState(defaultAddress?.gpsAddress || "");
   const [landmark, setLandmark] = useState(defaultAddress?.landmark || "");
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (defaultAddress?.region) return;
+    getPreferences().then((p) => {
+      if (p.defaultRegion) setRegion((prev) => prev || p.defaultRegion);
+    });
+  }, [defaultAddress?.region]);
 
   // UI state
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -99,8 +120,15 @@ export default function CheckoutScreen() {
   const isFullNameValid = fullName.trim().length >= 2;
   const isRegionValid = !!region && GHANA_REGIONS.includes(region as (typeof GHANA_REGIONS)[number]);
   const isCityValid = city.trim().length >= 2;
+  const isEmailValid = EMAIL_RE.test(email.trim());
+  const needsGuestEmail = checkoutMode === "guest";
 
-  const isFormValid = isFullNameValid && isPhoneValid && isRegionValid && isCityValid;
+  const isFormValid =
+    isFullNameValid &&
+    isPhoneValid &&
+    isRegionValid &&
+    isCityValid &&
+    (!needsGuestEmail || isEmailValid);
 
   const handleBlur = (field: string) => {
     setFocusedField(null);
@@ -125,7 +153,8 @@ export default function CheckoutScreen() {
         fullName: true,
         phone: true,
         region: true,
-        city: true
+        city: true,
+        ...(needsGuestEmail ? { email: true } : {})
       });
       return;
     }
@@ -137,6 +166,8 @@ export default function CheckoutScreen() {
 
     setSubmitting(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    const cleanEmail = email.trim().toLowerCase();
 
     try {
       const orderBody = {
@@ -157,17 +188,24 @@ export default function CheckoutScreen() {
         notes: notes.trim() || undefined
       };
 
-      const order = await createOrder(orderBody, userId);
+      const order = needsGuestEmail
+        ? await createGuestOrder({ ...orderBody, email: cleanEmail })
+        : await createOrder(orderBody, userId);
+
       setCreatedOrder(order);
 
-      const paymentInit = await initializePayment(order.id, userId);
+      const paymentInit = needsGuestEmail
+        ? await initializePayment(order.id, { email: cleanEmail })
+        : await initializePayment(order.id, { userId });
 
       if (paymentInit.simulation) {
         // Direct simulation path: immediately verify and confirm order
         const verifyRes = await verifyPayment(paymentInit.reference);
         if (verifyRes.success) {
           clearCart();
-          router.replace(`/order-success?orderId=${order.id}`);
+          router.replace(
+            `/order-success?orderId=${order.id}${needsGuestEmail ? `&guest=1&email=${encodeURIComponent(cleanEmail)}` : ""}`
+          );
         } else {
           throw new Error("Simulation payment verification failed.");
         }
@@ -199,7 +237,10 @@ export default function CheckoutScreen() {
         setSubmitting(false);
       }
       clearCart();
-      router.replace(`/order-success?orderId=${createdOrder.id}`);
+      const guestQuery = needsGuestEmail
+        ? `&guest=1&email=${encodeURIComponent(email.trim().toLowerCase())}`
+        : "";
+      router.replace(`/order-success?orderId=${createdOrder.id}${guestQuery}`);
     }
   };
 
@@ -207,9 +248,92 @@ export default function CheckoutScreen() {
     setShowPaystack(false);
     Alert.alert(
       "Payment Cancelled",
-      "Your order was created and is pending payment. You can pay anytime from My Orders."
+      needsGuestEmail
+        ? "Your order is saved as pending. Finish payment within 30 minutes or it will be released automatically."
+        : "Your order was created and is pending payment. You can pay anytime from My Orders."
     );
   };
+
+  if (checkoutMode === "choose") {
+    const lanes = [
+      {
+        key: "guest" as const,
+        icon: "flash-outline" as const,
+        title: "Continue as a guest",
+        body: "No account needed. Pay with MoMo or card — we attach the order to your email so you can follow up on it."
+      },
+      {
+        key: "signin" as const,
+        icon: "person-circle-outline" as const,
+        title: "Sign in",
+        body: "Faster checkout with your saved addresses, wishlist and order history."
+      },
+      {
+        key: "register" as const,
+        icon: "add-circle-outline" as const,
+        title: "Create an I-Store account",
+        body: "Takes about 20 seconds. Worth it if you order more than once."
+      }
+    ];
+
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <View style={styles.header}>
+          <Pressable
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => router.back()}
+            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
+          >
+            <Ionicons name="close" size={24} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Checkout</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.laneContent}>
+          <Text style={styles.laneTitle}>How would you like to check out?</Text>
+          <Text style={styles.laneSubtitle}>
+            {items.length} {items.length === 1 ? "item" : "items"} · {formatGHS(subtotalGHS)} in
+            your bag
+          </Text>
+
+          {lanes.map((lane) => (
+            <Pressable
+              key={lane.key}
+              style={({ pressed }) => [styles.laneCard, pressed && styles.laneCardPressed]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                if (lane.key === "guest") {
+                  setCheckoutMode("guest");
+                  return;
+                }
+                if (lane.key === "signin") {
+                  router.push("/(auth)/login?returnTo=checkout");
+                  return;
+                }
+                router.push("/(auth)/register");
+              }}
+            >
+              <Ionicons name={lane.icon} size={26} color={colors.text} />
+              <View style={styles.laneCopy}>
+                <Text style={styles.laneCardTitle}>{lane.title}</Text>
+                <Text style={styles.laneCardBody}>{lane.body}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={19} color={colors.textTertiary} />
+            </Pressable>
+          ))}
+
+          <View style={styles.laneAssurance}>
+            <Ionicons name="lock-closed-outline" size={15} color={colors.textSecondary} />
+            <Text style={styles.laneAssuranceText}>
+              Payments run through Paystack. I-Store never stores your card details or MoMo
+              credentials.
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -238,8 +362,57 @@ export default function CheckoutScreen() {
           ]}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Guest banner */}
+          {needsGuestEmail && (
+            <View style={styles.guestBanner}>
+              <Ionicons name="person-outline" size={16} color={colors.text} />
+              <Text style={styles.guestBannerText}>Checking out as a guest</Text>
+              <Pressable
+                hitSlop={10}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  router.push("/(auth)/login?returnTo=checkout");
+                }}
+              >
+                <Text style={styles.guestBannerLink}>Sign in instead</Text>
+              </Pressable>
+            </View>
+          )}
+
           {/* 1. SHIPPING ADDRESS */}
           <Text style={styles.sectionTitle}>Shipping Address</Text>
+
+          {needsGuestEmail && (
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Email for your order *</Text>
+              <TextInput
+                style={[
+                  styles.textInput,
+                  focusedField === "email" && styles.textInputFocused,
+                  touched.email && !isEmailValid && styles.textInputError
+                ]}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                textContentType="emailAddress"
+                onFocus={() => handleFocus("email")}
+                onBlur={() => handleBlur("email")}
+              />
+              {touched.email && !isEmailValid ? (
+                <Text style={styles.errorText}>
+                  Enter a valid email — we use it to look this order up if you contact us.
+                </Text>
+              ) : (
+                <Text style={styles.fieldHint}>
+                  We keep it on the order and use it to confirm delivery details. No marketing.
+                </Text>
+              )}
+            </View>
+          )}
 
           {/* Full Name */}
           <View style={styles.fieldGroup}>
@@ -400,11 +573,17 @@ export default function CheckoutScreen() {
                   idx !== items.length - 1 && styles.productRowBorder
                 ]}
               >
-                <Image
-                  source={{ uri: item.image }}
-                  style={styles.productThumb}
-                  resizeMode="contain"
-                />
+                {getStoredImage(item.image) ? (
+                  <Image
+                    source={{ uri: getStoredImage(item.image)! }}
+                    style={styles.productThumb}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={styles.productThumbFallback}>
+                    <ProductVisual glyphSize={20} />
+                  </View>
+                )}
                 <View style={styles.productInfo}>
                   <Text style={styles.productName} numberOfLines={1}>
                     {item.name}
@@ -667,6 +846,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.imageBg
   },
+  productThumbFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    overflow: "hidden"
+  },
   productInfo: {
     flex: 1,
     marginLeft: 12,
@@ -774,7 +959,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border
   },
   regionItemSelected: {
-    backgroundColor: "rgba(0, 113, 227, 0.05)"
+    backgroundColor: "rgba(23, 23, 23, 0.05)"
   },
   regionItemName: {
     fontSize: 16,
@@ -789,5 +974,91 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     marginTop: 2
+  },
+  laneContent: {
+    padding: 20,
+    paddingBottom: 48
+  },
+  laneTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    letterSpacing: -0.6,
+    color: colors.text,
+    marginTop: 12
+  },
+  laneSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 6,
+    marginBottom: 22
+  },
+  laneCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 12
+  },
+  laneCardPressed: {
+    backgroundColor: colors.surface,
+    transform: [{ scale: 0.99 }]
+  },
+  laneCopy: {
+    flex: 1
+  },
+  laneCardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text
+  },
+  laneCardBody: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: colors.textSecondary,
+    marginTop: 3
+  },
+  laneAssurance: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    marginTop: 14,
+    paddingHorizontal: 4
+  },
+  laneAssuranceText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.textTertiary
+  },
+  guestBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    marginTop: 10
+  },
+  guestBannerText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.text
+  },
+  guestBannerLink: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.accent
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    marginTop: 5,
+    marginLeft: 2
   }
 });

@@ -5,6 +5,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
 import { useCartStore } from "../../store/useCartStore";
 
+/**
+ * Four guest-first destinations. Search and Account live in the root stack and are
+ * reached from the header, so browsing never requires an account.
+ */
 export default function TabLayout() {
   const cartItemCount = useCartStore((state) => state.getItemCount());
 
@@ -18,14 +22,17 @@ export default function TabLayout() {
           backgroundColor: "#FFFFFF",
           borderTopColor: colors.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: Platform.OS === "ios" ? 88 : 64,
+          height: Platform.OS === "ios" ? 86 : 62,
           paddingTop: 6,
-          paddingBottom: Platform.OS === "ios" ? 28 : 8
+          paddingBottom: Platform.OS === "ios" ? 26 : 6
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: "500",
           letterSpacing: 0.1
+        },
+        tabBarItemStyle: {
+          paddingTop: 4
         },
         tabBarIconStyle: {
           marginTop: 2
@@ -37,11 +44,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "home" : "home-outline"} size={23} color={color} />
           )
         }}
       />
@@ -50,24 +53,16 @@ export default function TabLayout() {
         options={{
           title: "Shop",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "grid" : "grid-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "storefront" : "storefront-outline"} size={23} color={color} />
           )
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="flash"
         options={{
-          title: "Search",
+          title: "Flash",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "search" : "search-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "flash" : "flash-outline"} size={23} color={color} />
           )
         }}
       />
@@ -85,24 +80,7 @@ export default function TabLayout() {
             height: 18
           },
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "bag" : "bag-outline"}
-              size={24}
-              color={color}
-            />
-          )
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: "Account",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              size={24}
-              color={color}
-            />
+            <Ionicons name={focused ? "bag" : "bag-outline"} size={23} color={color} />
           )
         }}
       />

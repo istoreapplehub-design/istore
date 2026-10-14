@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "../../constants/theme";
 
 export type OrderStatus = "pending" | "paid" | "shipped" | "delivered" | "cancelled";
 
@@ -20,23 +19,23 @@ const STATUS_CONFIG: Record<
   },
   paid: {
     label: "Paid",
-    bg: "rgba(0, 113, 227, 0.1)",
-    text: colors.accent
+    bg: "#171717",
+    text: "#FFFFFF"
   },
   shipped: {
     label: "Shipped",
-    bg: "rgba(255, 149, 0, 0.15)",
-    text: "#FF9500"
+    bg: "#E8E8E6",
+    text: "#171717"
   },
   delivered: {
     label: "Delivered",
-    bg: "rgba(0, 107, 63, 0.1)",
-    text: "#006B3F"
+    bg: "#F2F2F7",
+    text: "#171717"
   },
   cancelled: {
     label: "Cancelled",
-    bg: "rgba(255, 59, 48, 0.1)",
-    text: "#FF3B30"
+    bg: "#F2F2F7",
+    text: "#AEAEB2"
   }
 };
 

@@ -23,14 +23,28 @@ import Animated, {
 import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
 import { colors, formatGHS, typography } from "../constants/theme";
-import { getOrder } from "../services/api";
+import { getOrder, trackGuestOrder } from "../services/api";
 import { Order } from "../types";
 
 export default function OrderSuccessScreen() {
   const router = useRouter();
-  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+  const { orderId, guest, email } = useLocalSearchParams<{
+    orderId?: string;
+    guest?: string;
+    email?: string;
+  }>();
   const { clearCart } = useCartStore();
-  const { userId } = useUserStore();
+  const { userId, session } = useUserStore();
+
+  const receiptEmail = (() => {
+    if (!email) return "";
+    try {
+      return decodeURIComponent(email);
+    } catch {
+      return email;
+    }
+  })();
+  const isGuestOrder = guest === "1" && !session;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +97,9 @@ export default function OrderSuccessScreen() {
         return;
       }
       try {
-        const fetched = await getOrder(orderId, userId);
+        const fetched = isGuestOrder
+          ? await trackGuestOrder(orderId, receiptEmail)
+          : await getOrder(orderId, userId);
         if (mounted) {
           setOrder(fetched);
         }
@@ -101,7 +117,7 @@ export default function OrderSuccessScreen() {
     return () => {
       mounted = false;
     };
-  }, [orderId, userId]);
+  }, [orderId, userId, isGuestOrder, receiptEmail]);
 
   const checkAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: checkScale.value }]
@@ -121,14 +137,20 @@ export default function OrderSuccessScreen() {
     }
   };
 
+  const handleCreateAccount = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/(auth)/register",
+      params: { email: receiptEmail }
+    });
+  };
+
   const handleContinueShopping = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace("/(tabs)");
   };
 
-  const displayOrderNumber = orderId
-    ? `#${orderId.slice(0, 8).toUpperCase()}`
-    : "#GH-" + Math.floor(100000 + Math.random() * 900000);
+  const displayOrderNumber = orderId ? `#${orderId.slice(0, 8).toUpperCase()}` : null;
 
   const displayPaymentMethod = (() => {
     if (!order?.paymentChannel) return "Mobile Money / Card";
@@ -136,10 +158,6 @@ export default function OrderSuccessScreen() {
     if (order.paymentChannel === "card") return "Debit / Credit Card";
     return order.paymentChannel.toUpperCase();
   })();
-
-  const displayAddress = order?.shippingAddress
-    ? `${order.shippingAddress.city}, ${order.shippingAddress.region}`
-    : "Accra, Greater Accra";
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -171,7 +189,7 @@ export default function OrderSuccessScreen() {
           <View style={styles.summaryCard}>
             <View style={styles.cardRow}>
               <Text style={styles.cardLabel}>Order Number</Text>
-              <Text style={styles.cardValueMono}>{displayOrderNumber}</Text>
+              <Text style={styles.cardValueMono}>{displayOrderNumber ?? "Pending"}</Text>
             </View>
 
             <View style={[styles.cardRow, styles.rowMargin]}>
@@ -187,30 +205,50 @@ export default function OrderSuccessScreen() {
             </View>
 
             <View style={[styles.cardRow, styles.rowMargin]}>
-              <Text style={styles.cardLabel}>Estimated Delivery</Text>
-              <Text style={styles.cardValue}>2–4 business days</Text>
+              <Text style={styles.cardLabel}>Delivery Estimate</Text>
+              <Text style={styles.cardValue}>1–4 working days</Text>
             </View>
 
-            <View style={[styles.cardRow, styles.rowMargin]}>
-              <Text style={styles.cardLabel}>Delivery Address</Text>
-              <Text style={styles.cardValueAddress} numberOfLines={1}>
-                {displayAddress}
-              </Text>
-            </View>
+            {order?.shippingAddress && (
+              <View style={[styles.cardRow, styles.rowMargin]}>
+                <Text style={styles.cardLabel}>Delivery Address</Text>
+                <Text style={styles.cardValueAddress} numberOfLines={1}>
+                  {`${order.shippingAddress.city}, ${order.shippingAddress.region}`}
+                </Text>
+              </View>
+            )}
           </View>
+        )}
+
+        {isGuestOrder && (
+          <Text style={styles.guestNote}>
+            Keep this confirmation. Your order is linked to {receiptEmail || order?.shippingAddress?.phone || "the contact details you provided"} — quote your order number if you need to reach us about it.
+          </Text>
         )}
 
         {/* Action Buttons */}
         <View style={styles.buttonsContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.trackBtn,
-              pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
-            ]}
-            onPress={handleTrackOrder}
-          >
-            <Text style={styles.trackBtnText}>Track Order</Text>
-          </Pressable>
+          {isGuestOrder ? (
+            <Pressable
+              style={({ pressed }) => [
+                styles.trackBtn,
+                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
+              ]}
+              onPress={handleCreateAccount}
+            >
+              <Text style={styles.trackBtnText}>Create an account</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={({ pressed }) => [
+                styles.trackBtn,
+                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
+              ]}
+              onPress={handleTrackOrder}
+            >
+              <Text style={styles.trackBtnText}>Track Order</Text>
+            </Pressable>
+          )}
 
           <Pressable
             style={({ pressed }) => [
@@ -250,7 +288,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: "rgba(0, 107, 63, 0.3)"
+    backgroundColor: "rgba(23, 23, 23, 0.3)"
   },
   checkmarkCircle: {
     width: 96,
@@ -344,6 +382,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     maxWidth: "55%",
     textAlign: "right"
+  },
+  guestNote: {
+    ...typography.caption,
+    marginTop: 16,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 19
   },
   buttonsContainer: {
     marginTop: 28

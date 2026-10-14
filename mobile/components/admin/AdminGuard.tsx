@@ -8,7 +8,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) return null;
   if (!user) return <Redirect href="/(auth)/login" />;
-  if (user.role !== "admin") return <Redirect href="/(tabs)/account" />;
+  if (user.role !== "admin") return <Redirect href="/account" />;
   return <>{children}</>;
 }
 

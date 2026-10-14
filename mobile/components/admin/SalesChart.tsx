@@ -63,7 +63,7 @@ export function SalesChart({ data, height = 200 }: SalesChartProps) {
           areaChart
           color={colors.accent}
           startFillColor={colors.accent}
-          endFillColor="rgba(0, 113, 227, 0.0)"
+          endFillColor="rgba(23, 23, 23, 0.0)"
           startOpacity={0.2}
           endOpacity={0.0}
           hideDataPoints
