@@ -34,7 +34,9 @@ export function Orders() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () => new URLSearchParams(window.location.search).get("q") ?? ""
+  );
   const [statusFilter, setStatusFilter] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -255,7 +257,7 @@ export function Orders() {
                   const shortId = `#${ord.id.slice(0, 8).toUpperCase()}`;
                   const customerName = ord.shippingAddress?.fullName || ord.user?.name || "Customer";
                   const phone = ord.shippingAddress?.phone || ord.user?.phone || "";
-                  const itemCount = ord._count?.items ?? ord.items?.length ?? 0;
+                  const itemCount = ord.itemCount ?? ord._count?.items ?? ord.items?.length ?? 0;
 
                   return (
                     <tr

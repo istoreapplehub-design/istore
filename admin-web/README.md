@@ -1,4 +1,4 @@
-# iStore Hub & GhanaApps Admin
+# I-Store Admin
 
 Desktop operations web application for managing Apple hardware inventory, processing Ghanaian customer orders, and monitoring revenue analytics.
 

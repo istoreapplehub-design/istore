@@ -213,7 +213,7 @@ export function Settings() {
                 className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition disabled:opacity-50"
               >
                 {exportingProducts ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
                 ) : (
                   <Download className="w-4 h-4" />
                 )}
@@ -235,7 +235,7 @@ export function Settings() {
                 className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition disabled:opacity-50"
               >
                 {exportingOrders ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
                 ) : (
                   <Download className="w-4 h-4" />
                 )}
@@ -306,7 +306,7 @@ export function Settings() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="text-[11px] font-semibold text-gray-400 uppercase flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5 text-blue-500" />
+                  <Package className="w-3.5 h-3.5 text-neutral-700" />
                   <span>Total Products</span>
                 </div>
                 <div className="text-lg font-bold text-gray-900 mt-1">
@@ -316,7 +316,7 @@ export function Settings() {
 
               <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="text-[11px] font-semibold text-gray-400 uppercase flex items-center gap-1.5">
-                  <ShoppingBag className="w-3.5 h-3.5 text-amber-500" />
+                  <ShoppingBag className="w-3.5 h-3.5 text-neutral-700" />
                   <span>Total Orders</span>
                 </div>
                 <div className="text-lg font-bold text-gray-900 mt-1">
@@ -326,7 +326,7 @@ export function Settings() {
 
               <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="text-[11px] font-semibold text-gray-400 uppercase flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-indigo-500" />
+                  <Users className="w-3.5 h-3.5 text-neutral-700" />
                   <span>Total Users</span>
                 </div>
                 <div className="text-lg font-bold text-gray-900 mt-1">
@@ -336,7 +336,7 @@ export function Settings() {
 
               <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <div className="text-[11px] font-semibold text-gray-400 uppercase flex items-center gap-1.5">
-                  <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+                  <DollarSign className="w-3.5 h-3.5 text-neutral-700" />
                   <span>Total Revenue</span>
                 </div>
                 <div className="text-lg font-bold text-gray-900 mt-1">

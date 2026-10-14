@@ -1,265 +1,417 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  TrendingUp,
-  CreditCard,
-  PieChart as PieIcon,
-  ShoppingBag,
   DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
-  Calendar,
+  ShoppingBag,
+  TrendingUp,
   Layers,
-  Download
+  BarChart3,
+  Trophy,
+  CreditCard,
+  Boxes
 } from "lucide-react";
 import { getRevenueStats, getAdminProductStats, formatGHS } from "../lib/api";
+import { ApiError, Empty } from "../components/StatePanels";
+
+type Period = "today" | "7d" | "30d" | "all";
+
+const PERIODS: { value: Period; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "7d", label: "7 Days" },
+  { value: "30d", label: "30 Days" },
+  { value: "all", label: "All Time" }
+];
+
+const CHANNEL_LABELS: Record<string, string> = {
+  mobile_money: "Mobile money",
+  card: "Card",
+  bank: "Bank transfer"
+};
+
+function dayLabel(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short" });
+}
+
+function fullDate(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short"
+  });
+}
+
+function KpiCard({
+  label,
+  value,
+  meta,
+  icon
+}: {
+  label: string;
+  value: string;
+  meta: React.ReactNode;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs">
+      <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
+        <span>{label}</span>
+        <span className="text-neutral-900">{icon}</span>
+      </div>
+      <div className="mt-3 text-2xl font-black text-gray-900 tracking-tight">{value}</div>
+      <div className="mt-2 text-xs font-medium text-gray-500 leading-relaxed">{meta}</div>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  subtitle,
+  icon,
+  children,
+  className = ""
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs ${className}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-gray-900 text-base">{title}</h3>
+          {subtitle ? <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p> : null}
+        </div>
+        {icon ? <span className="text-neutral-900">{icon}</span> : null}
+      </div>
+      <div className="mt-5">{children}</div>
+    </div>
+  );
+}
 
 export function Analytics() {
-  const [period, setPeriod] = useState<"today" | "7d" | "30d" | "all">("30d");
+  const [period, setPeriod] = useState<Period>("30d");
 
-  const { data: revStats, isLoading: loadingRev } = useQuery({
+  const {
+    data: rev,
+    isLoading: loadingRev,
+    isError: revError,
+    error: revErrorObj,
+    refetch: refetchRev
+  } = useQuery({
     queryKey: ["revenue-analytics", period],
     queryFn: () => getRevenueStats(period)
   });
 
-  const { data: prodStats } = useQuery({
+  const {
+    data: prodStats,
+    isError: prodError,
+    error: prodErrorObj,
+    refetch: refetchProd
+  } = useQuery({
     queryKey: ["product-stats"],
     queryFn: getAdminProductStats
   });
 
-  const totalRevenue = revStats?.revenueGHS || 45290;
-  const orderCount = revStats?.orderCount || 142;
-  const avgOrderValue = revStats?.avgOrderValueGHS || (totalRevenue / (orderCount || 1));
+  const dailyData = (rev?.byDay ?? []).slice(-14);
+  const maxDaily = Math.max(...dailyData.map((d) => d.revenueGHS), 0);
 
-  // Category breakdown
-  const categoryData = [
-    { name: "iPhones", pct: 48, revenue: totalRevenue * 0.48 },
-    { name: "MacBooks", pct: 28, revenue: totalRevenue * 0.28 },
-    { name: "AirPods & Audio", pct: 14, revenue: totalRevenue * 0.14 },
-    { name: "Apple Watches", pct: 7, revenue: totalRevenue * 0.07 },
-    { name: "Accessories", pct: 3, revenue: totalRevenue * 0.03 }
-  ];
+  const peakDay = dailyData.reduce(
+    (best, d) => (d.revenueGHS > (best?.revenueGHS ?? 0) ? d : best),
+    dailyData[0]
+  );
 
-  // Daily revenue bars
-  const dailyData = revStats?.byDay && revStats.byDay.length > 0
-    ? revStats.byDay.slice(-7)
-    : [
-        { date: "Mon", revenueGHS: 4200, orderCount: 14 },
-        { date: "Tue", revenueGHS: 5800, orderCount: 18 },
-        { date: "Wed", revenueGHS: 5100, orderCount: 16 },
-        { date: "Thu", revenueGHS: 8500, orderCount: 24 },
-        { date: "Fri", revenueGHS: 6400, orderCount: 20 },
-        { date: "Sat", revenueGHS: 7900, orderCount: 22 },
-        { date: "Sun", revenueGHS: 6600, orderCount: 19 }
-      ];
+  const tradingDays = dailyData.filter((d) => d.revenueGHS > 0);
+  const averagePerActiveDay =
+    tradingDays.length > 0
+      ? tradingDays.reduce((sum, d) => sum + d.revenueGHS, 0) / tradingDays.length
+      : 0;
 
-  const maxDaily = Math.max(...dailyData.map((d) => d.revenueGHS), 1000);
+  const categoryRows = Object.entries(prodStats?.byCategory ?? {})
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+  const categoryTotal = categoryRows.reduce((sum, c) => sum + c.count, 0);
+
+  const topSellers = rev?.topProducts ?? [];
+  const topSellersRevenue = topSellers.reduce((sum, p) => sum + p.revenueGHS, 0);
+
+  const channels = Object.entries(rev?.byChannel ?? {}).map(([key, value]) => ({
+    key,
+    label: CHANNEL_LABELS[key] || key,
+    count: value.count,
+    revenueGHS: value.revenueGHS
+  }));
+  const channelOrders = channels.reduce((sum, c) => sum + c.count, 0);
+
+  if (revError) {
+    return (
+      <div className="bg-white rounded-2xl border border-[#ebebe9] shadow-xs">
+        <ApiError message={(revErrorObj as Error)?.message} onRetry={refetchRev} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      {/* ─── 1. HEADER & PERIOD SELECTOR ─────────────────────────────────── */}
+      {/* ─── HEADER & PERIOD SELECTOR ─────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
             Store Analytics
           </h1>
           <p className="mt-1 text-sm text-gray-500 font-medium">
-            Financial metrics, daily transaction volume, and product category distribution.
+            Computed from settled orders (paid, shipped, delivered) in the database.
           </p>
         </div>
 
-        {/* Period Selector Tabs */}
         <div className="flex items-center gap-1.5 p-1 bg-white border border-[#ebebe9] rounded-full shadow-xs self-start sm:self-auto">
-          {(["today", "7d", "30d", "all"] as const).map((p) => {
-            const isSelected = period === p;
-            const labelMap = { today: "Today", "7d": "7 Days", "30d": "30 Days", all: "All Time" };
+          {PERIODS.map((p) => {
+            const isSelected = period === p.value;
             return (
               <button
-                key={p}
-                onClick={() => setPeriod(p)}
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
                 className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition ${
                   isSelected
                     ? "bg-neutral-900 text-white shadow-xs"
                     : "text-gray-600 hover:text-black hover:bg-gray-100"
                 }`}
               >
-                {labelMap[p]}
+                {p.label}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* ─── 2. TOP PERFORMANCE KPI CARDS ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-            <span>Gross Sales Volume</span>
-            <DollarSign className="w-4 h-4 text-neutral-900" />
-          </div>
-          <div className="mt-3 text-2xl font-black text-gray-900 tracking-tight">
-            {formatGHS(totalRevenue)}
-          </div>
-          <div className="mt-2 text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            ↑ 14.8% vs last cycle
-          </div>
+      {loadingRev ? (
+        <div className="bg-white rounded-2xl border border-[#ebebe9] shadow-xs py-20 text-center text-xs font-semibold text-gray-400 animate-pulse">
+          Loading store analytics…
         </div>
+      ) : !rev ? null : (
+        <>
+          {/* ─── KPI CARDS ──────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard
+              label="Gross Sales"
+              value={formatGHS(rev.revenueGHS)}
+              icon={<DollarSign className="w-4 h-4" />}
+              meta={
+                rev.orderCount > 0
+                  ? `${rev.orderCount} settled order${rev.orderCount === 1 ? "" : "s"} in this range`
+                  : "No settled orders in this range"
+              }
+            />
 
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-            <span>Total Completed Orders</span>
-            <ShoppingBag className="w-4 h-4 text-neutral-900" />
-          </div>
-          <div className="mt-3 text-2xl font-black text-gray-900 tracking-tight">
-            {orderCount}
-          </div>
-          <div className="mt-2 text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            ↑ 8.2% vs last cycle
-          </div>
-        </div>
+            <KpiCard
+              label="Completed Orders"
+              value={String(rev.orderCount)}
+              icon={<ShoppingBag className="w-4 h-4" />}
+              meta="Paid, shipped or delivered"
+            />
 
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-            <span>Average Order Value</span>
-            <TrendingUp className="w-4 h-4 text-neutral-900" />
-          </div>
-          <div className="mt-3 text-2xl font-black text-gray-900 tracking-tight">
-            {formatGHS(avgOrderValue)}
-          </div>
-          <div className="mt-2 text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            ↑ 5.1% vs last cycle
-          </div>
-        </div>
+            <KpiCard
+              label="Average Order Value"
+              value={formatGHS(rev.avgOrderValueGHS)}
+              icon={<TrendingUp className="w-4 h-4" />}
+              meta={
+                rev.orderCount > 0
+                  ? "Gross sales ÷ settled orders"
+                  : "Needs at least one settled order"
+              }
+            />
 
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs">
-          <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-            <span>Catalog Stock Value</span>
-            <Layers className="w-4 h-4 text-neutral-900" />
+            <KpiCard
+              label="Catalog Stock Value"
+              value={prodStats ? formatGHS(prodStats.totalStockValueGHS) : "—"}
+              icon={<Layers className="w-4 h-4" />}
+              meta={
+                prodStats
+                  ? `${prodStats.activeProducts} live of ${prodStats.totalProducts} listings`
+                  : "Catalog stats unavailable"
+              }
+            />
           </div>
-          <div className="mt-3 text-2xl font-black text-gray-900 tracking-tight">
-            {formatGHS(prodStats?.totalStockValueGHS || 142500)}
-          </div>
-          <div className="mt-2 text-xs font-semibold text-gray-500">
-            {prodStats?.totalProducts || 24} unique Apple configurations
-          </div>
-        </div>
-      </div>
 
-      {/* ─── 3. DAILY REVENUE BREAKDOWN & CATEGORY SHARE ──────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* Daily Sales Bar Chart */}
-        <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-gray-900 text-base">Revenue Volume By Day</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Real-time daily transaction distributions</p>
-              </div>
-              <span className="text-xs font-bold bg-neutral-100 text-neutral-900 px-3 py-1 rounded-full border border-neutral-200">
-                GHS ₵
-              </span>
-            </div>
+          {/* ─── REVENUE BY DAY + CATALOG MIX ───────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <Panel
+              title="Revenue By Day"
+              subtitle={`Settled order revenue across the last ${dailyData.length} days of this range`}
+              icon={<BarChart3 className="w-4 h-4" />}
+              className="lg:col-span-8"
+            >
+              {maxDaily === 0 ? (
+                <Empty>
+                  No settled orders in this period. Paid, shipped or delivered orders will draw this
+                  chart.
+                </Empty>
+              ) : (
+                <>
+                  <div className="h-56 flex items-end justify-between gap-2 sm:gap-4 border-b border-gray-100 pb-2">
+                    {dailyData.map((d) => {
+                      const heightPct = (d.revenueGHS / maxDaily) * 100;
+                      return (
+                        <div
+                          key={d.date}
+                          className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
+                        >
+                          <div
+                            title={`${formatGHS(d.revenueGHS)} · ${d.orderCount} order${
+                              d.orderCount === 1 ? "" : "s"
+                            }`}
+                            style={{ height: `${d.revenueGHS > 0 ? Math.max(heightPct, 4) : 1}%` }}
+                            className={`w-full max-w-[34px] rounded-t-lg transition duration-200 ${
+                              d.revenueGHS > 0
+                                ? "bg-neutral-900 hover:bg-neutral-700 cursor-pointer"
+                                : "bg-gray-100"
+                            }`}
+                          />
+                          <span className="text-[10px] font-semibold text-gray-400 mt-1">
+                            {dayLabel(d.date)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
 
-            <div className="mt-8 h-60 flex items-end justify-between gap-3 sm:gap-6 border-b border-gray-100 pb-2">
-              {dailyData.map((d, idx) => {
-                const heightPct = Math.min(100, Math.max(15, (d.revenueGHS / maxDaily) * 100));
-                const dayLabel = d.date.length > 5 ? d.date.slice(5) : d.date;
-
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div
-                      style={{ height: `${heightPct}%` }}
-                      className="w-full max-w-[36px] bg-neutral-900 hover:bg-neutral-700 rounded-t-lg transition duration-200 cursor-pointer relative group"
-                    >
-                      {/* Tooltip on Hover */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-black text-white text-[10px] font-bold py-1 px-2 rounded-md whitespace-nowrap z-20 shadow-md">
-                        {formatGHS(d.revenueGHS)} ({d.orderCount} orders)
-                      </div>
-                    </div>
-                    <span className="text-[11px] font-semibold text-gray-400 mt-2">
-                      {dayLabel}
+                  <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
+                    <span>
+                      Peak day:{" "}
+                      <strong className="text-gray-900">
+                        {formatGHS(peakDay?.revenueGHS ?? 0)} ({fullDate(peakDay?.date ?? "")})
+                      </strong>
+                    </span>
+                    <span>
+                      Average:{" "}
+                      <strong className="text-gray-900">
+                        {formatGHS(averagePerActiveDay)} / trading day
+                      </strong>{" "}
+                      ({tradingDays.length} of {dailyData.length} days)
                     </span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                </>
+              )}
+            </Panel>
 
-          <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-            <span>Peak Day: <strong>₵8,500.00 (Thursday)</strong></span>
-            <span>Average: <strong>{formatGHS(totalRevenue / 7)} / day</strong></span>
-          </div>
-        </div>
-
-        {/* Category Share Distribution */}
-        <div className="lg:col-span-4 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div>
-            <h3 className="font-bold text-gray-900 text-base">Category Revenue Share</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Top performing hardware segments</p>
-
-            <div className="mt-6 space-y-4">
-              {categoryData.map((cat) => (
-                <div key={cat.name}>
-                  <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
-                    <span className="text-gray-900">{cat.name}</span>
-                    <span className="text-gray-500">{formatGHS(cat.revenue)} ({cat.pct}%)</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      style={{ width: `${cat.pct}%` }}
-                      className="h-full bg-neutral-900 rounded-full"
-                    />
-                  </div>
+            <Panel
+              title="Catalog Mix"
+              subtitle="Listings per category, straight from the product table"
+              icon={<Boxes className="w-4 h-4" />}
+              className="lg:col-span-4"
+            >
+              {prodError ? (
+                <ApiError message={(prodErrorObj as Error)?.message} onRetry={refetchProd} />
+              ) : categoryRows.length === 0 ? (
+                <Empty>No products in the catalog yet.</Empty>
+              ) : (
+                <div className="space-y-4">
+                  {categoryRows.map((cat) => {
+                    const pct = categoryTotal > 0 ? (cat.count / categoryTotal) * 100 : 0;
+                    return (
+                      <div key={cat.name}>
+                        <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
+                          <span className="text-gray-900">{cat.name}</span>
+                          <span className="text-gray-500">
+                            {cat.count} listing{cat.count === 1 ? "" : "s"} ({pct.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${pct}%` }}
+                            className="h-full bg-neutral-900 rounded-full"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              )}
+            </Panel>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-            <span className="text-xs font-bold text-neutral-800">
-              iPhones & MacBooks account for 76% of total revenue
-            </span>
+          {/* ─── BEST SELLERS + CHANNELS ────────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <Panel
+              title="Best Sellers"
+              subtitle="Top line items by settled revenue in this range"
+              icon={<Trophy className="w-4 h-4" />}
+              className="lg:col-span-7"
+            >
+              {topSellers.length === 0 ? (
+                <Empty>
+                  No sold line items yet — best sellers appear once an order is paid.
+                </Empty>
+              ) : (
+                <div className="space-y-4">
+                  {topSellers.map((p) => {
+                    const share =
+                      topSellersRevenue > 0 ? (p.revenueGHS / topSellersRevenue) * 100 : 0;
+                    return (
+                      <div key={p.productId}>
+                        <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                          <span className="text-gray-900 truncate">{p.name}</span>
+                          <span className="text-gray-500 whitespace-nowrap">
+                            {p.unitsSold} unit{p.unitsSold === 1 ? "" : "s"} ·{" "}
+                            {formatGHS(p.revenueGHS)}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${share}%` }}
+                            className="h-full bg-neutral-900 rounded-full"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Panel>
+
+            <Panel
+              title="Settlement Channels"
+              subtitle="Payment channel recorded on each settled order"
+              icon={<CreditCard className="w-4 h-4" />}
+              className="lg:col-span-5"
+            >
+              {channelOrders === 0 ? (
+                <Empty>No settled orders to split by channel in this range.</Empty>
+              ) : (
+                <div className="space-y-3">
+                  {channels
+                    .filter((c) => c.count > 0)
+                    .sort((a, b) => b.count - a.count)
+                    .map((c) => {
+                      const pct = (c.count / channelOrders) * 100;
+                      return (
+                        <div
+                          key={c.key}
+                          className="p-4 bg-neutral-50 rounded-xl border border-neutral-200"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-500 uppercase">
+                              {c.label}
+                            </span>
+                            <span className="text-xs font-bold text-neutral-900">
+                              {pct.toFixed(0)}%
+                            </span>
+                          </div>
+                          <div className="text-xl font-extrabold text-neutral-900 mt-1">
+                            {c.count} order{c.count === 1 ? "" : "s"}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {formatGHS(c.revenueGHS)} settled
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </Panel>
           </div>
-        </div>
-
-      </div>
-
-      {/* ─── 4. PAYMENT GATEWAY RECONCILIATION ────────────────────────────── */}
-      <div className="bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs">
-        <h3 className="font-bold text-gray-900 text-base mb-1">
-          Settlement Channels & Payment Methods
-        </h3>
-        <p className="text-xs text-gray-500 mb-6">
-          Verified transactions processed via Paystack instant gateways
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-            <div className="text-xs font-bold text-gray-500 uppercase">MTN Mobile Money</div>
-            <div className="text-xl font-extrabold text-neutral-900 mt-1">62% of Orders</div>
-            <div className="text-xs text-gray-600 mt-1">Instant confirmation</div>
-          </div>
-
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-            <div className="text-xs font-bold text-gray-500 uppercase">Telecel Cash</div>
-            <div className="text-xl font-extrabold text-neutral-900 mt-1">18% of Orders</div>
-            <div className="text-xs text-gray-600 mt-1">Instant confirmation</div>
-          </div>
-
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-            <div className="text-xs font-bold text-gray-500 uppercase">Visa / Mastercard</div>
-            <div className="text-xl font-extrabold text-neutral-900 mt-1">15% of Orders</div>
-            <div className="text-xs text-gray-600 mt-1">Direct card gateway</div>
-          </div>
-
-          <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-            <div className="text-xs font-bold text-gray-500 uppercase">Bank Transfer / MoMo Direct</div>
-            <div className="text-xl font-extrabold text-neutral-900 mt-1">5% of Orders</div>
-            <div className="text-xs text-gray-600 mt-1">Manual verification</div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

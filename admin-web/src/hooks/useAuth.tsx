@@ -120,9 +120,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Supabase sign out error:", err);
+    } finally {
       setSession(null);
       setUser(null);
-    } finally {
       setLoading(false);
     }
   };

@@ -163,7 +163,7 @@ export function OrderDetail() {
           <button
             disabled={isFinalState || allowedTransitions.length === 0}
             onClick={handleOpenStatusModal}
-            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-sm transition disabled:opacity-40"
+            className="px-5 py-2 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-full shadow-xs transition disabled:opacity-40"
           >
             Update Status
           </button>
@@ -190,7 +190,7 @@ export function OrderDetail() {
                 {address?.phone && (
                   <a
                     href={`tel:${address.phone}`}
-                    className="inline-flex items-center gap-1.5 text-xs text-blue-600 font-semibold hover:underline mt-2"
+                    className="inline-flex items-center gap-1.5 text-xs text-black font-semibold hover:underline mt-2"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span>{address.phone}</span>
@@ -200,7 +200,7 @@ export function OrderDetail() {
                 {order.user?.email && (
                   <a
                     href={`mailto:${order.user.email}`}
-                    className="inline-flex items-center gap-1.5 text-xs text-blue-600 font-semibold hover:underline mt-1 block"
+                    className="inline-flex items-center gap-1.5 text-xs text-black font-semibold hover:underline mt-1 block"
                   >
                     <Mail className="w-3.5 h-3.5" />
                     <span>{order.user.email}</span>
@@ -306,7 +306,7 @@ export function OrderDetail() {
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 z-10 ${
                       event.done
-                        ? "bg-blue-600 text-white"
+                        ? "bg-black text-white"
                         : "bg-white border-2 border-gray-200 text-transparent"
                     }`}
                   >
@@ -335,7 +335,7 @@ export function OrderDetail() {
                     )}
 
                     {event.trackingNumber && (
-                      <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-mono font-semibold">
+                      <div className="mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 bg-neutral-100 text-neutral-900 rounded text-[11px] font-mono font-semibold">
                         <Truck className="w-3 h-3" />
                         <span>
                           {event.courier ? `${event.courier}: ` : ""}
@@ -358,13 +358,13 @@ export function OrderDetail() {
                 Payment Method & Ref
               </span>
               <p className="text-sm font-semibold text-gray-900 capitalize mt-0.5">
-                {order.paymentChannel ? order.paymentChannel.replace("_", " ") : "Pending Channel"}
+                {order.paymentChannel ? order.paymentChannel.replace("_", " ") : "Channel not recorded"}
               </p>
               {order.paymentReference && (
                 <button
                   type="button"
                   onClick={() => copyText(order.paymentReference!, "Payment Reference")}
-                  className="mt-1 flex items-center gap-1 font-mono text-xs text-blue-600 hover:underline"
+                  className="mt-1 flex items-center gap-1 font-mono text-xs text-black hover:underline"
                 >
                   <span>{order.paymentReference}</span>
                   <Copy className="w-3 h-3" />
@@ -389,7 +389,7 @@ export function OrderDetail() {
                 <button
                   type="button"
                   onClick={() => copyText(order.trackingNumber!, "Tracking Number")}
-                  className="mt-1 flex items-center gap-1 font-mono text-xs text-blue-600 hover:underline font-bold"
+                  className="mt-1 flex items-center gap-1 font-mono text-xs text-black hover:underline font-bold"
                 >
                   <span>{order.trackingNumber}</span>
                   <Copy className="w-3 h-3" />
@@ -454,7 +454,7 @@ export function OrderDetail() {
                       key={t.value}
                       className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${
                         newStatus === t.value
-                          ? "border-blue-600 bg-blue-50/50 text-blue-900 font-semibold"
+                          ? "border-black bg-neutral-100 text-black font-semibold"
                           : "border-gray-200 hover:bg-gray-50 text-gray-700"
                       }`}
                     >
@@ -464,7 +464,7 @@ export function OrderDetail() {
                         value={t.value}
                         checked={newStatus === t.value}
                         onChange={() => setNewStatus(t.value)}
-                        className="text-blue-600 focus:ring-blue-500"
+                        className="text-black focus:ring-black accent-black"
                       />
                       <span className="text-sm">{t.label}</span>
                     </label>
@@ -486,7 +486,7 @@ export function OrderDetail() {
                           onClick={() => setCourier(c === "Other" ? "" : c)}
                           className={`px-3 py-1 text-xs font-semibold rounded-lg border transition ${
                             courier === c
-                              ? "bg-blue-600 text-white border-blue-600"
+                              ? "bg-black text-white border-black"
                               : "border-gray-200 text-gray-600 hover:bg-gray-50"
                           }`}
                         >
@@ -500,7 +500,7 @@ export function OrderDetail() {
                       placeholder="e.g. DHL Express, EMS Ghana"
                       value={courier}
                       onChange={(e) => setCourier(e.target.value)}
-                      className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-blue-500"
+                      className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-black"
                     />
                   </div>
 
@@ -514,7 +514,7 @@ export function OrderDetail() {
                       placeholder="e.g. DHL9876543210"
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
-                      className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-mono outline-none focus:border-blue-500"
+                      className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-mono outline-none focus:border-black"
                     />
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export function OrderDetail() {
                   placeholder="Notes about fulfillment or customer communications..."
                   value={adminNote}
                   onChange={(e) => setAdminNote(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 p-3 text-xs outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-gray-200 p-3 text-xs outline-none focus:border-black"
                 />
               </div>
 
@@ -544,7 +544,7 @@ export function OrderDetail() {
                 <button
                   type="submit"
                   disabled={updateStatusMutation.isPending}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-sm disabled:opacity-50"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-full shadow-xs disabled:opacity-50"
                 >
                   {updateStatusMutation.isPending ? "Updating..." : "Save Status"}
                 </button>

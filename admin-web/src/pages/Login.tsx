@@ -5,15 +5,93 @@ import {
   Mail,
   Eye,
   EyeOff,
+  Apple,
+  Search,
   Package,
-  TrendingUp,
+  Boxes,
   Truck,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
-  Sparkles
+  LayoutDashboard,
+  CreditCard,
+  Headphones,
+  AlertTriangle
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+
+const SLIDES = [
+  {
+    headline: "Your catalog, orders and revenue in one clean console",
+    sub: "Sign in to work from live store data — every figure on these screens is read straight from the I-Store database.",
+    cards: [
+      {
+        icon: LayoutDashboard,
+        title: "Operations Dashboard",
+        badge: "Live",
+        body: "Revenue, settled orders, average order value and stock alerts, all computed server-side from the orders and products tables."
+      },
+      {
+        icon: Search,
+        title: "Store-wide search",
+        badge: "Instant",
+        body: "Look up any product by name, model or description and any order by ID, customer name or phone from the top bar."
+      }
+    ]
+  },
+  {
+    headline: "Fulfilment you can actually track",
+    sub: "Move orders through the lifecycle the API enforces: pending, paid, shipped, delivered — with courier and tracking details on each one.",
+    cards: [
+      {
+        icon: Truck,
+        title: "Order lifecycle",
+        badge: "Enforced",
+        body: "Status changes are validated by the backend, so an order can never jump straight from pending to delivered."
+      },
+      {
+        icon: Package,
+        title: "Dispatch records",
+        badge: "Per order",
+        body: "Add courier and tracking number on a shipment, then follow the full timeline from checkout to delivery."
+      }
+    ]
+  },
+  {
+    headline: "Inventory that tells you the truth",
+    sub: "Product specs, colourways, storage options and photography are yours to manage, with low-stock signals derived from real quantities.",
+    cards: [
+      {
+        icon: Boxes,
+        title: "Catalog control",
+        badge: "Full CRUD",
+        body: "Create, edit, deactivate and restore listings, upload product images, and set pricing against compare-at pricing."
+      },
+      {
+        icon: AlertTriangle,
+        title: "Stock signals",
+        badge: "Auto",
+        body: "Out-of-stock and low-stock lists come from the products table the moment you load the page."
+      }
+    ]
+  },
+  {
+    headline: "Paystack settlements and real customer care",
+    sub: "Reconcile mobile money, card and bank-transfer orders, then reach the buyer behind any order through the contact details on file.",
+    cards: [
+      {
+        icon: CreditCard,
+        title: "Settlement channels",
+        badge: "Paystack",
+        body: "Analytics split settled revenue by the payment channel each order actually recorded."
+      },
+      {
+        icon: Headphones,
+        title: "Customer care",
+        badge: "WhatsApp / Email",
+        body: "Open a WhatsApp or email draft for any order straight from the customer's phone number and address on file."
+      }
+    ]
+  }
+];
 
 export function Login() {
   const navigate = useNavigate();
@@ -64,8 +142,8 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f3f1] flex items-center justify-center p-3 sm:p-6 lg:p-8">
-      {/* Outer Card Container */}
+    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-3 sm:p-6 lg:p-8">
+      
       <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-gray-200/70 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
         
         {/* ─── LEFT COLUMN: ADMIN SIGN IN ─────────────────────────────────── */}
@@ -73,12 +151,10 @@ export function Login() {
           <div>
             {/* Brand Logo Header */}
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                
+              <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center shadow-sm">
+                <Apple className="w-4 h-4" />
               </div>
-              <span className="font-extrabold text-xl tracking-tight text-gray-900">
-                iStore Hub
-              </span>
+              <span className="font-extrabold text-xl tracking-tight text-gray-900">I-Store</span>
             </div>
 
             {/* Title & Subtitle */}
@@ -88,7 +164,7 @@ export function Login() {
                 <span>Admin Operations Portal</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Welcome to iStore Hub
+                Welcome to I-Store
               </h1>
               <p className="mt-2 text-sm text-gray-500 leading-relaxed">
                 Sign in to manage store catalog, orders, and fulfillment.
@@ -117,7 +193,7 @@ export function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@ghanaapps.shop"
+                    placeholder="you@istore.com"
                     className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 text-sm text-gray-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition"
                   />
                 </div>
@@ -166,12 +242,8 @@ export function Login() {
 
           {/* Footer Copyright */}
           <div className="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-2">
-            <span>Copyright © iStore Hub. All Rights Reserved.</span>
-            <div className="flex items-center gap-2">
-              <span className="hover:text-gray-600 cursor-pointer">Terms & Condition</span>
-              <span>|</span>
-              <span className="hover:text-gray-600 cursor-pointer">Privacy & Policy</span>
-            </div>
+            <span>Copyright © I-Store. All Rights Reserved.</span>
+<span>Apple hardware retail, Accra</span>
           </div>
         </div>
 
@@ -188,209 +260,42 @@ export function Login() {
             }}
           />
 
-          {/* Active Slide Dynamic Cards */}
-          <div className="relative z-10 w-full max-w-md mx-auto space-y-4 my-auto pt-2">
-            
-            {/* SLIDE 0: FINANCIAL PLAN & CAPITAL ALLOCATIONS */}
-            {currentSlide === 0 && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform -rotate-1 hover:rotate-0 transition duration-300">
-                  <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
-                    <span>Financial Plan</span>
-                    <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full">This month ⌵</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-16 h-16 shrink-0 flex items-center justify-center">
-                      <svg className="w-16 h-16 transform -rotate-90">
-                        <circle cx="32" cy="32" r="24" stroke="#e2e8f0" strokeWidth="6" fill="transparent" />
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="24"
-                          stroke="#171717"
-                          strokeWidth="6"
-                          strokeDasharray="150"
-                          strokeDashoffset="45"
-                          fill="transparent"
-                        />
-                      </svg>
-                      <span className="absolute text-[10px] font-bold text-gray-700">76%</span>
-                    </div>
-                    <div>
-                      <div className="text-lg font-extrabold text-gray-900">₵2,005.45</div>
-                      <div className="text-[10px] text-gray-400">Available Revenue</div>
-                      <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-500 font-medium">
-                        <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" /> Sales
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" /> Stock
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform rotate-1 hover:rotate-0 transition duration-300 ml-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <div>
-                      <div className="text-[10px] font-bold text-gray-400 uppercase">Capital Allocations</div>
-                      <div className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-                        <span>₵17,366.00</span>
-                        <span className="text-[10px] font-bold text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded">
-                          ↑ 12%
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] text-gray-400">Updated just now</span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between py-1 border-b border-gray-100">
-                      <span className="font-semibold text-gray-700 text-xs">iPhone 15 Pro Max</span>
-                      <span className="font-bold text-gray-900">₵1,300</span>
-                    </div>
-                    <div className="flex items-center justify-between py-1 border-b border-gray-100">
-                      <span className="font-semibold text-gray-700 text-xs">MacBook Pro M3</span>
-                      <span className="font-bold text-gray-900">₵2,450</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SLIDE 1: LIVE ORDER FULFILLMENT & LOGISTICS */}
-            {currentSlide === 1 && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform -rotate-1 hover:rotate-0 transition duration-300">
+          {/* Capability slides — the portal reports only what the database returns */}
+          <div className="relative z-10 w-full max-w-md mx-auto my-auto pt-2">
+            <div className="space-y-4 animate-fade-in">
+              {SLIDES[currentSlide].cards.map((card, idx) => (
+                <div
+                  key={card.title}
+                  className={`bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform transition duration-300 hover:rotate-0 ${
+                    idx % 2 === 0 ? "-rotate-1" : "rotate-1 ml-4"
+                  }`}
+                >
                   <div className="flex items-center justify-between text-xs mb-2">
                     <div className="flex items-center gap-1.5 font-bold text-neutral-900">
-                      <Truck className="w-4 h-4" />
-                      <span>Fulfillment & Dispatch</span>
+                      <card.icon className="w-4 h-4" />
+                      <span>{card.title}</span>
                     </div>
-                    <span className="text-[10px] font-bold bg-neutral-100 px-2 py-0.5 rounded-full">Active</span>
+                    <span className="text-[10px] font-bold bg-neutral-100 px-2 py-0.5 rounded-full">
+                      {card.badge}
+                    </span>
                   </div>
-                  <div className="text-lg font-black text-gray-900">₵8,420.00 in Transit</div>
-                  <p className="text-[11px] text-gray-500 mt-0.5">18 packages dispatched across Accra & Kumasi</p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="w-[84%] h-full bg-neutral-900 rounded-full" />
-                    </div>
-                    <span className="text-xs font-bold text-gray-800">84%</span>
-                  </div>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">{card.body}</p>
                 </div>
-
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform rotate-1 hover:rotate-0 transition duration-300 ml-4">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-2">Recent Dispatches</div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
-                      <div>
-                        <div className="font-bold text-gray-900">#ORD-79B3B</div>
-                        <div className="text-[10px] text-gray-400">Speedaf Courier • Kumasi</div>
-                      </div>
-                      <span className="text-[10px] font-bold bg-neutral-900 text-white px-2 py-0.5 rounded-full">
-                        Shipped
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-bold text-gray-900">#ORD-1247A</div>
-                        <div className="text-[10px] text-gray-400">Direct Rider • East Legon</div>
-                      </div>
-                      <span className="text-[10px] font-bold bg-neutral-200 text-neutral-800 px-2 py-0.5 rounded-full">
-                        Delivered
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SLIDE 2: HARDWARE CATALOG & INVENTORY HEALTH */}
-            {currentSlide === 2 && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform -rotate-1 hover:rotate-0 transition duration-300">
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <div className="flex items-center gap-1.5 font-bold text-neutral-900">
-                      <Package className="w-4 h-4" />
-                      <span>Hardware Catalog Matrix</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-neutral-900">94 Models</span>
-                  </div>
-                  <div className="text-lg font-black text-gray-900 mt-1">₵142,500.00 Value</div>
-                  <p className="text-[11px] text-gray-500">All Apple iPhones, MacBooks, iPads & Watches synced</p>
-                </div>
-
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform rotate-1 hover:rotate-0 transition duration-300 ml-4">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-2">Smart Reorder Alerts</div>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
-                      <span className="font-semibold text-gray-800">iPhone 15 Pro Max 256GB</span>
-                      <span className="text-[11px] font-bold text-neutral-900">8 left</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-gray-800">Apple Watch Ultra 2</span>
-                      <span className="text-[11px] font-bold text-neutral-900">4 left</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SLIDE 3: OMNICHANNEL PAYMENTS & SUPPORT HUB */}
-            {currentSlide === 3 && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform -rotate-1 hover:rotate-0 transition duration-300">
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-bold text-neutral-900">Payment Channels Settled</span>
-                    <span className="text-[10px] font-bold text-neutral-900">Instant</span>
-                  </div>
-                  <div className="text-lg font-black text-gray-900 mt-1">MTN MoMo & Cards</div>
-                  <p className="text-[11px] text-gray-500">Live webhook synchronization with automated verification</p>
-                </div>
-
-                <div className="bg-white/95 text-gray-900 rounded-2xl p-4 shadow-2xl backdrop-blur-md border border-white/20 transform rotate-1 hover:rotate-0 transition duration-300 ml-4">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 mb-2">Customer Care & Reviews</div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-base font-extrabold text-gray-900">4.9 ★ Rating</div>
-                      <div className="text-[10px] text-gray-400">100% Genuine Apple Verified</div>
-                    </div>
-                    <div className="px-2.5 py-1 bg-neutral-900 text-white font-bold text-[11px] rounded-lg">
-                      Top Rated
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
+              ))}
+            </div>
           </div>
 
-          {/* Lower Hero Text */}
+          {/* Lower hero text */}
           <div className="relative z-10 mt-8 pt-4">
-            <div className="w-11 h-11 rounded-2xl bg-white text-black flex items-center justify-center font-black text-xl shadow-lg mb-4">
-              
-            </div>
-
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
-              {currentSlide === 0 && "A Unified Hub for Smarter Apple Retail Management"}
-              {currentSlide === 1 && "End-to-End Fulfillment & Real-Time Logistics"}
-              {currentSlide === 2 && "Intelligent Inventory & Stock Protection"}
-              {currentSlide === 3 && "Omnichannel Payments & Customer Care"}
+              {SLIDES[currentSlide].headline}
             </h2>
 
             <p className="mt-2.5 text-sm text-neutral-300 leading-relaxed max-w-lg">
-              {currentSlide === 0 &&
-                "iStore Hub empowers you with a unified operational command center—delivering deep insights and a 360° view of your entire store catalog and orders."}
-              {currentSlide === 1 &&
-                "Effortlessly coordinate couriers, track shipment timelines, and deliver Apple hardware right to your customers' doorsteps."}
-              {currentSlide === 2 &&
-                "Track live stock levels, configure specs and colorways, and prevent inventory depletion with automated replenishment alerts."}
-              {currentSlide === 3 &&
-                "Seamless mobile money checkout, instant webhook payment reconciliations, and responsive customer care support."}
+              {SLIDES[currentSlide].sub}
             </p>
 
-            {/* 4 Interactive Clickable Carousel Pills (Fixed & Clickable!) */}
+            {/* Slide pills */}
             <div className="mt-6 flex items-center gap-2">
               {[0, 1, 2, 3].map((idx) => (
                 <button

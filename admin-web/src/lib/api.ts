@@ -70,8 +70,7 @@ export async function getAdminProducts(
 }
 
 export async function getAdminProductStats(): Promise<AdminStats> {
-  const res = await request<{ stats: AdminStats }>("/api/admin/products/stats");
-  return res.stats;
+  return request<AdminStats>("/api/admin/products/stats");
 }
 
 export async function getAdminProductById(id: string): Promise<Product> {
@@ -101,11 +100,10 @@ export async function deactivateAdminProduct(id: string): Promise<{ success: boo
   });
 }
 
-export async function restoreAdminProduct(id: string): Promise<Product> {
-  const res = await request<{ product: Product }>(`/api/admin/products/${id}/restore`, {
+export async function restoreAdminProduct(id: string): Promise<{ message: string }> {
+  return request<{ message: string }>(`/api/admin/products/${id}/restore`, {
     method: "PATCH"
   });
-  return res.product;
 }
 
 // ─────────────────────────────────────────
@@ -125,8 +123,8 @@ export async function getAdminOrders(
 }
 
 export async function getAdminOrderById(id: string): Promise<Order> {
-  const res = await request<{ order: Order }>(`/api/admin/orders/${id}`);
-  return res.order;
+  const res = await request<{ data: Order }>(`/api/admin/orders/${id}`);
+  return res.data;
 }
 
 export async function updateAdminOrderStatus(
@@ -138,11 +136,11 @@ export async function updateAdminOrderStatus(
     adminNote?: string;
   }
 ): Promise<Order> {
-  const res = await request<{ order: Order }>(`/api/admin/orders/${id}/status`, {
+  const res = await request<{ data: Order }>(`/api/admin/orders/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify(body)
   });
-  return res.order;
+  return res.data;
 }
 
 export async function getAdminOrderTimeline(id: string): Promise<OrderTimelineEvent[]> {
@@ -257,7 +255,11 @@ export async function uploadAdminImage(file: File): Promise<{ url: string; path:
     throw new Error(data?.message || data?.error || `Upload failed (${res.status})`);
   }
 
-  return data;
+  if (!data?.image?.publicUrl) {
+    throw new Error("Upload succeeded but the store returned no image URL.");
+  }
+
+  return { url: data.image.publicUrl, path: data.image.path };
 }
 
 // ─────────────────────────────────────────
@@ -268,5 +270,17 @@ export function formatGHS(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2
   })}`;
+}
+
+export function timeAgo(iso?: string | null): string {
+  if (!iso) return "—";
+  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 

@@ -14,7 +14,7 @@ export function NotFound() {
       </p>
       <Link
         to="/dashboard"
-        className="mt-6 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition shadow-sm"
+        className="mt-6 inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white text-sm font-semibold px-5 py-2.5 rounded-full transition shadow-xs"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Return to Dashboard</span>

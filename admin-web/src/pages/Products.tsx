@@ -28,7 +28,9 @@ export function Products() {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () => new URLSearchParams(window.location.search).get("q") ?? ""
+  );
   const [category, setCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
@@ -97,7 +99,7 @@ export function Products() {
 
         <Link
           to="/products/new"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full px-5 py-2.5 shadow-sm transition self-start sm:self-auto"
+          className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white font-semibold rounded-full px-5 py-2.5 shadow-xs transition self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>New Product</span>
@@ -117,7 +119,7 @@ export function Products() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-black focus:ring-1 focus:ring-black outline-none transition"
           />
         </div>
 
@@ -129,7 +131,7 @@ export function Products() {
               setCategory(e.target.value);
               setPage(1);
             }}
-            className="px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:bg-white focus:border-blue-500 outline-none transition"
+            className="px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:bg-white focus:border-black outline-none transition"
           >
             <option value="all">All Categories</option>
             <option value="iPhone">iPhone</option>
@@ -148,7 +150,7 @@ export function Products() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:bg-white focus:border-blue-500 outline-none transition"
+            className="px-3.5 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-700 focus:bg-white focus:border-black outline-none transition"
           >
             <option value="all">All Status</option>
             <option value="active">Active Only</option>
@@ -202,7 +204,7 @@ export function Products() {
                       <td className="px-6 py-3.5">
                         <Link
                           to={`/products/${item.id}/edit`}
-                          className="font-semibold text-gray-900 hover:text-blue-600 transition block truncate max-w-xs"
+                          className="font-semibold text-gray-900 hover:text-black hover:underline transition block truncate max-w-xs"
                         >
                           {item.name}
                         </Link>
@@ -261,7 +263,7 @@ export function Products() {
                         <div className="flex items-center justify-end gap-2">
                           <Link
                             to={`/products/${item.id}/edit`}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition"
                             title="Edit Product"
                           >
                             <Edit2 className="w-4 h-4" />

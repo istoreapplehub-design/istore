@@ -1,590 +1,583 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  TrendingUp,
-  ShoppingBag,
-  Calendar,
-  ChevronDown,
   ArrowUpRight,
-  Clock,
-  ExternalLink,
-  CircleAlert
+  Boxes,
+  Package,
+  RefreshCw,
+  ShoppingBag,
+  Wallet
 } from "lucide-react";
 import {
-  getRevenueStats,
-  getAdminProductStats,
+  formatGHS,
   getAdminOrders,
-  formatGHS
+  getAdminProducts,
+  getRevenueStats,
+  timeAgo
 } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
+import { StatusBadge } from "../components/StatusBadge";
+import { ApiError, Empty } from "../components/StatePanels";
+
+type Period = "today" | "7d" | "30d" | "all";
+
+const PERIODS: { value: Period; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "7d", label: "7 days" },
+  { value: "30d", label: "30 days" },
+  { value: "all", label: "All time" }
+];
+
+const CHANNELS = [
+  { key: "mobile_money", label: "Mobile money", color: "#171717" },
+  { key: "card", label: "Card", color: "#737373" },
+  { key: "bank", label: "Bank transfer", color: "#d4d4d4" }
+];
+
+const LOW_STOCK_THRESHOLD = 5;
+
+/** Normalised polyline through real daily revenue points. */
+function sparkPath(values: number[], width: number, height: number): string {
+  if (values.length < 2) return "";
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const span = max - min || 1;
+  return values
+    .map((value, index) => {
+      const x = (index / (values.length - 1)) * width;
+      const y = height - ((value - min) / span) * height;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function Panel({
+  title,
+  subtitle,
+  action,
+  children
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#ebebe9] shadow-xs flex flex-col">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
+          {subtitle ? <div className="text-[11px] text-gray-400 mt-0.5">{subtitle}</div> : null}
+        </div>
+        {action}
+      </div>
+      <div className="flex-1 mt-4">{children}</div>
+    </div>
+  );
+}
 
 export function Dashboard() {
   const { user } = useAuth();
-  const [salesTimeframe, setSalesTimeframe] = useState("This week");
-  const [productSort, setProductSort] = useState("By revenue");
+  const queryClient = useQueryClient();
+  const [period, setPeriod] = useState<Period>("7d");
+  const [productSort, setProductSort] = useState<"revenue" | "volume">("revenue");
 
-  const { data: revStats } = useQuery({
-    queryKey: ["revenue-stats", "30d"],
-    queryFn: () => getRevenueStats("30d")
+  const {
+    data: rev,
+    isLoading: loadingRev,
+    isError: revError,
+    error: revErr
+  } = useQuery({
+    queryKey: ["revenue-stats", period],
+    queryFn: () => getRevenueStats(period)
   });
 
-  const { data: prodStats } = useQuery({
-    queryKey: ["product-stats"],
-    queryFn: getAdminProductStats
+  const { data: productsData, isError: productsError } = useQuery({
+    queryKey: ["admin-products-all"],
+    queryFn: () => getAdminProducts({ limit: 100 })
   });
 
-  const { data: recentOrdersData } = useQuery({
+  const { data: recentOrdersData, isError: ordersError } = useQuery({
     queryKey: ["recent-orders"],
     queryFn: () => getAdminOrders({ page: 1, limit: 5 })
   });
 
-  const todayDateFormatted = new Intl.DateTimeFormat("en-GB", {
+  const productRows = productsData?.data;
+  const products = productRows ?? [];
+  const recentOrders = recentOrdersData?.data ?? [];
+
+  const stockById = useMemo(
+    () => new Map((productRows ?? []).map((p) => [p.id, p.stock])),
+    [productRows]
+  );
+
+  const dailyValues = (rev?.byDay ?? []).map((d) => d.revenueGHS);
+  const peakDay = Math.max(...dailyValues, 0);
+
+  const inventoryAlerts = useMemo(
+    () =>
+      (productRows ?? [])
+        .filter((p) => p.isActive && p.stock < LOW_STOCK_THRESHOLD)
+        .sort((a, b) => a.stock - b.stock),
+    [productRows]
+  );
+
+  const topProducts = useMemo(() => {
+    const list = [...(rev?.topProducts ?? [])];
+    list.sort((a, b) =>
+      productSort === "volume" ? b.unitsSold - a.unitsSold : b.revenueGHS - a.revenueGHS
+    );
+    return list.slice(0, 5);
+  }, [rev, productSort]);
+  const topProductPeak = topProducts[0]?.revenueGHS ?? 0;
+
+  const channelTotal = CHANNELS.reduce(
+    (sum, channel) => sum + (rev?.byChannel?.[channel.key]?.count ?? 0),
+    0
+  );
+
+  const todayLabel = new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric"
   }).format(new Date());
 
-  // Top products
-  const topProducts = [
+  const retryAll = () => {
+    queryClient.invalidateQueries();
+  };
+
+  const metrics = [
     {
-      id: "1",
-      name: "iPhone 15 Pro Max 256GB",
-      price: 2340,
-      sold: 492,
-      total: 500,
-      stock: 8,
-      pct: 92,
-      image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=150&auto=format&fit=crop&q=80"
+      label: "Revenue",
+      value: rev ? formatGHS(rev.revenueGHS) : "—",
+      sub: `${PERIODS.find((p) => p.value === period)?.label ?? ""} · paid orders only`,
+      icon: Wallet,
+      spark: dailyValues
     },
     {
-      id: "2",
-      name: "MacBook Pro 16\" M3 Max",
-      price: 3680,
-      sold: 369,
-      total: 450,
-      stock: 14,
-      pct: 82,
-      image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=150&auto=format&fit=crop&q=80"
+      label: "Paid orders",
+      value: rev ? rev.orderCount.toLocaleString() : "—",
+      sub: rev ? `${rev.orderCount} settled in this period` : "Loading…",
+      icon: ShoppingBag,
+      spark: (rev?.byDay ?? []).map((d) => d.orderCount)
     },
     {
-      id: "3",
-      name: "AirPods Max Space Black",
-      price: 1890,
-      sold: 592,
-      total: 800,
-      stock: 26,
-      pct: 74,
-      image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=150&auto=format&fit=crop&q=80"
+      label: "Average order",
+      value: rev ? formatGHS(rev.avgOrderValueGHS) : "—",
+      sub: rev && rev.orderCount > 0 ? "Revenue ÷ paid orders" : "Needs at least one paid order",
+      icon: ArrowUpRight,
+      spark: dailyValues
+    },
+    {
+      label: "Live products",
+      value: productsData?.stats
+        ? `${productsData.stats.activeCount} / ${productsData.stats.totalCount}`
+        : "—",
+      sub: productsData?.stats
+        ? `${productsData.stats.outOfStockCount} out of stock · ${productsData.stats.lowStockCount} low`
+        : "Loading…",
+      icon: Package,
+      spark: []
     }
-  ];
-
-  // Bar chart daily data for Sales Trend (Monochrome)
-  const barChartData = [
-    { day: "Mon", lastWeek: 28, thisWeek: 42 },
-    { day: "Tue", lastWeek: 35, thisWeek: 58 },
-    { day: "Wed", lastWeek: 68, thisWeek: 50 },
-    { day: "Thu", lastWeek: 45, thisWeek: 85 },
-    { day: "Fri", lastWeek: 72, thisWeek: 60 },
-    { day: "Sat", lastWeek: 55, thisWeek: 78 },
-    { day: "Sun", lastWeek: 40, thisWeek: 65 }
-  ];
-
-  const recentOrders = recentOrdersData?.data?.slice(0, 4) || [
-    { id: "1247", time: "2 min ago", total: 24.5, status: "shipped" },
-    { id: "1246", time: "5 mins ago", total: 18.0, status: "pending" },
-    { id: "1245", time: "8 min ago", total: 31.25, status: "delivered" },
-    { id: "1244", time: "12 min ago", total: 15.5, status: "shipped" }
   ];
 
   return (
     <div className="space-y-6 pb-12">
-      {/* ─── 1. WELCOME GREETING ROW (MONOCHROME LUXURY) ──────────────────── */}
+      {/* ─── GREETING + PERIOD ─────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
-            Welcome back, {user?.name?.split(" ")[0] || "Admin"}!
+            Welcome back, {user?.name?.split(" ")[0] || "Admin"}
           </h1>
-          <p className="mt-1 text-sm text-gray-500 font-medium">
-            {todayDateFormatted}. Operations summary ready.
-          </p>
+          <p className="mt-1 text-sm text-gray-500 font-medium">{todayLabel}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Online Customers Indicator */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#ebebe9] shadow-xs text-xs font-semibold text-gray-800">
-            <span className="w-2 h-2 rounded-full bg-black animate-pulse" />
-            <span>2 online customers</span>
-          </div>
+        <div className="inline-flex items-center p-1 bg-white border border-[#ebebe9] rounded-full shadow-xs">
+          {PERIODS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setPeriod(option.value)}
+              className={`px-3.5 py-1.5 text-xs font-semibold rounded-full transition ${
+                period === option.value
+                  ? "bg-neutral-900 text-white"
+                  : "text-gray-600 hover:text-black"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          {/* Today Filter Button */}
+      {revError ? (
+        <div className="bg-white rounded-2xl border border-[#ebebe9] shadow-xs px-5 py-4 flex items-center justify-between gap-4">
+          <div className="text-sm text-gray-700">
+            <span className="font-semibold text-gray-900">Store API unreachable. </span>
+            {revErr instanceof Error ? revErr.message : "Numbers below are unavailable."}
+          </div>
           <button
             type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#ebebe9] shadow-xs text-xs font-semibold text-gray-900 hover:bg-gray-50 transition"
+            onClick={retryAll}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-900 border border-neutral-200 rounded-full hover:bg-neutral-100 transition shrink-0"
           >
-            <Calendar className="w-3.5 h-3.5 text-gray-500" />
-            <span>Today</span>
+            <RefreshCw className="w-3.5 h-3.5" /> Retry
           </button>
         </div>
-      </div>
+      ) : null}
 
-      {/* ─── 2. TOP 4 METRIC CARDS (BLACK & WHITE MONOCHROME) ─────────────── */}
+      {/* ─── METRIC CARDS ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Card 1: Revenue today */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Revenue today</span>
-            {/* Black Sparkline SVG */}
-            <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
-              <path
-                d="M2 18 C 15 20, 25 10, 40 14 C 55 18, 65 4, 78 6"
-                stroke="#171717"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
-            ₵5,234
-          </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            <span>↑ 12.3%</span>
-            <span className="text-gray-400 font-normal">vs yesterday</span>
-          </div>
-        </div>
-
-        {/* Card 2: Orders today */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Orders today</span>
-            {/* Black Sparkline SVG */}
-            <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
-              <path
-                d="M2 16 C 15 14, 25 20, 40 12 C 55 5, 65 14, 78 8"
-                stroke="#171717"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
-            42
-          </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            <span>↑ 5%</span>
-            <span className="text-gray-400 font-normal">vs yesterday</span>
-          </div>
-        </div>
-
-        {/* Card 3: Average order */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Average order</span>
-            {/* Black Sparkline SVG */}
-            <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
-              <path
-                d="M2 19 C 15 12, 25 16, 40 8 C 55 12, 65 6, 78 4"
-                stroke="#171717"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
-            ₵124.62
-          </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            <span>↑ 7.1%</span>
-            <span className="text-gray-400 font-normal">vs yesterday</span>
-          </div>
-        </div>
-
-        {/* Card 4: Conversion rate */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-500">Conversion rate</span>
-            {/* Black Sparkline SVG */}
-            <svg className="w-20 h-6 overflow-visible" viewBox="0 0 80 24" fill="none">
-              <path
-                d="M2 6 C 15 8, 25 18, 40 14 C 55 12, 65 20, 78 18"
-                stroke="#171717"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
-            3.2%
-          </div>
-          <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full w-fit">
-            <span>↑ 0.3%</span>
-            <span className="text-gray-400 font-normal">vs yesterday</span>
-          </div>
-        </div>
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
+          const path = sparkPath(metric.spark, 80, 22);
+          return (
+            <div
+              key={metric.label}
+              className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between min-h-[132px]"
+            >
+              <div className="flex items-start justify-between">
+                <span className="text-xs font-semibold text-gray-500">{metric.label}</span>
+                <Icon className="w-4 h-4 text-gray-400" />
+              </div>
+              <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
+                {loadingRev && metric.label !== "Live products" ? "…" : metric.value}
+              </div>
+              <div className="mt-2 flex items-end justify-between gap-2">
+                <span className="text-[11px] text-gray-400 font-medium leading-tight">
+                  {metric.sub}
+                </span>
+                {path ? (
+                  <svg className="w-20 h-6 overflow-visible shrink-0" viewBox="0 0 80 22">
+                    <path d={path} stroke="#171717" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </svg>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* ─── 3. MIDDLE SECTION: SALES TREND & TOP PRODUCT ─────────────────── */}
+      {/* ─── SALES TREND + TOP PRODUCTS ────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* Left Column: Sales Trend (Monochrome Dual Bar Chart) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Sales trend
+                Revenue by day
               </span>
-              <div className="mt-1 flex items-center gap-3">
-                <span className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                  ₵39,190
-                </span>
-                <span className="text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200">
-                  ↑ 8.4%
-                </span>
+              <div className="mt-1 text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                {rev ? formatGHS(rev.revenueGHS) : "—"}
               </div>
             </div>
-
-            {/* Legends & Period Dropdown */}
-            <div className="flex items-center gap-4 text-xs font-semibold text-gray-600">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-neutral-300" />
-                <span>Last week</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-neutral-900" />
-                <span>This week</span>
-              </div>
-
-              <div className="relative">
-                <select
-                  value={salesTimeframe}
-                  onChange={(e) => setSalesTimeframe(e.target.value)}
-                  className="appearance-none pl-3 pr-7 py-1 text-xs font-semibold bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full cursor-pointer outline-none transition"
-                >
-                  <option value="This week">This week</option>
-                  <option value="Last week">Last week</option>
-                  <option value="This month">This month</option>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-              </div>
+            <div className="text-[11px] text-gray-400 font-medium">
+              {rev ? `${rev.byDay.length} days shown · peak ${formatGHS(peakDay)}` : "Loading…"}
             </div>
           </div>
 
-          {/* Dual Bar Chart Render */}
-          <div className="mt-8 pt-4">
-            <div className="h-56 flex items-end justify-between gap-3 sm:gap-6 border-b border-gray-100 pb-2">
-              {barChartData.map((item) => (
-                <div key={item.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                  {/* Paired Bars */}
-                  <div className="w-full flex items-end justify-center gap-1.5 sm:gap-2.5 h-full">
-                    {/* Last Week Bar (Light Gray) */}
+          {revError ? (
+            <ApiError message={revErr instanceof Error ? revErr.message : undefined} onRetry={retryAll} />
+          ) : peakDay === 0 ? (
+            <Empty>
+              No paid orders in this period. Switch the range above or check back once
+              checkout activity lands.
+            </Empty>
+          ) : (
+            <>
+              <div className="mt-8 h-56 flex items-end justify-between gap-1 sm:gap-2 border-b border-gray-100 pb-2">
+                {rev!.byDay.map((day) => {
+                  const pct = peakDay ? (day.revenueGHS / peakDay) * 100 : 0;
+                  return (
                     <div
-                      style={{ height: `${item.lastWeek}%` }}
-                      className="w-3 sm:w-5 bg-neutral-300 rounded-t-md transition-all duration-300 hover:opacity-90"
-                      title={`Last Week: ${item.lastWeek}%`}
-                    />
-                    {/* This Week Bar (Dark Charcoal / Black) */}
-                    <div
-                      style={{ height: `${item.thisWeek}%` }}
-                      className="w-3 sm:w-5 bg-neutral-900 rounded-t-md transition-all duration-300 hover:opacity-90"
-                      title={`This Week: ${item.thisWeek}%`}
-                    />
-                  </div>
-                  {/* Day Label */}
-                  <span className="text-[11px] font-semibold text-gray-400 mt-2">
-                    {item.day}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Y-Axis Value Labels */}
-            <div className="flex items-center justify-between text-[10px] text-gray-400 font-semibold pt-2">
-              <span>₵0</span>
-              <span>₵2K</span>
-              <span>₵4K</span>
-              <span>₵6K</span>
-              <span>₵8K</span>
-              <span>₵10K</span>
-            </div>
-          </div>
+                      key={day.date}
+                      className="flex-1 h-full flex flex-col items-center justify-end gap-1 min-w-0"
+                      title={`${day.date}: ${formatGHS(day.revenueGHS)} · ${day.orderCount} orders`}
+                    >
+                      <div
+                        style={{ height: `${Math.max(pct, day.revenueGHS > 0 ? 3 : 0)}%` }}
+                        className={`w-full max-w-[26px] rounded-t-md transition-all duration-300 ${
+                          day.revenueGHS > 0 ? "bg-neutral-900" : "bg-neutral-100"
+                        }`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-gray-400 font-semibold pt-2">
+                <span>{rev!.byDay[0]?.date ?? ""}</span>
+                <span>{formatGHS(peakDay)}</span>
+                <span>{rev!.byDay[rev!.byDay.length - 1]?.date ?? ""}</span>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Right Column: Top Product Card */}
-        <div className="lg:col-span-4 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-            <h3 className="font-bold text-gray-900 text-sm">Top product</h3>
-            
-            <div className="relative">
-              <select
-                value={productSort}
-                onChange={(e) => setProductSort(e.target.value)}
-                className="appearance-none pl-2.5 pr-6 py-1 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-full cursor-pointer outline-none"
-              >
-                <option value="By revenue">By revenue</option>
-                <option value="By volume">By volume</option>
-              </select>
-              <ChevronDown className="w-3 h-3 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="divide-y divide-gray-100 space-y-4 pt-2">
-            {topProducts.map((p) => (
-              <div key={p.id} className="pt-3 flex items-center gap-3">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="w-12 h-12 rounded-xl object-cover border border-gray-100 shrink-0 bg-gray-50"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-xs text-gray-900 truncate">
-                    {p.name}
-                  </div>
-                  <div className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
-                    <span className="font-bold text-gray-900">₵{p.price.toLocaleString()}</span>
-                    <span>•</span>
-                    <span className="text-neutral-700 font-semibold">{p.sold}/{p.total} Sold</span>
-                  </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5">
-                    Stock: {p.stock} units
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <Panel
+          title="Top sellers"
+          subtitle={rev ? `${topProducts.length} products with settled revenue` : "Loading…"}
+          action={
+            <select
+              value={productSort}
+              onChange={(event) => setProductSort(event.target.value as "revenue" | "volume")}
+              className="appearance-none pl-2.5 pr-6 py-1 text-xs font-semibold bg-gray-50 border border-gray-200 rounded-full cursor-pointer outline-none"
+            >
+              <option value="revenue">By revenue</option>
+              <option value="volume">By volume</option>
+            </select>
+          }
+        >
+          {topProducts.length === 0 ? (
+            <Empty>No product has been sold in this period yet.</Empty>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {topProducts.map((product) => {
+                const pct = topProductPeak
+                  ? Math.round((product.revenueGHS / topProductPeak) * 100)
+                  : 0;
+                const stock = stockById.get(product.productId);
+                return (
+                  <div key={product.productId} className="py-3 first:pt-0 last:pb-0">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-xs font-bold text-gray-900 truncate">
+                        {product.name}
+                      </span>
+                      <span className="text-xs font-bold text-gray-900 shrink-0">
+                        {formatGHS(product.revenueGHS)}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-500">
+                      <span>{product.unitsSold} sold</span>
+                      <span>·</span>
+                      <span>{stock === undefined ? "stock unavailable" : `${stock} in stock`}</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        style={{ width: `${p.pct}%` }}
+                        style={{ width: `${pct}%` }}
                         className="h-full bg-neutral-900 rounded-full"
                       />
                     </div>
-                    <span className="text-[10px] font-bold text-gray-700">{p.pct}%</span>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
+                );
+              })}
+            </div>
+          )}
+        </Panel>
       </div>
 
-      {/* ─── 4. BOTTOM SECTION: INVENTORY, TRAFFIC, ORDERS ────────────────── */}
+      {/* ─── INVENTORY / PAYMENT MIX / RECENT ORDERS ───────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        
-        {/* Column 1: Inventory alerts */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-gray-900 text-sm">Inventory alerts</h3>
-                <span className="text-[11px] text-gray-400">3 items need attention</span>
-              </div>
-              <Link
-                to="/products"
-                className="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition"
-              >
-                See all
-              </Link>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              {/* Item 1: Critical */}
-              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-neutral-900">
-                    <span className="w-2 h-2 rounded-full bg-neutral-900" />
-                    <span>Critical</span>
+        <Panel
+          title="Inventory alerts"
+          subtitle={
+            productsError
+              ? "Inventory unavailable"
+              : `${inventoryAlerts.length} live products under ${LOW_STOCK_THRESHOLD} units`
+          }
+          action={
+            <Link
+              to="/products"
+              className="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition"
+            >
+              See all
+            </Link>
+          }
+        >
+          {productsError ? (
+            <ApiError onRetry={retryAll} />
+          ) : inventoryAlerts.length === 0 ? (
+            <Empty>Every live product is stocked above the alert threshold.</Empty>
+          ) : (
+            <div className="space-y-3">
+              {inventoryAlerts.slice(0, 4).map((product) => {
+                const critical = product.stock === 0;
+                const filled = Math.max(product.stock, 0);
+                return (
+                  <div
+                    key={product.id}
+                    className="p-3 bg-neutral-50 rounded-xl border border-neutral-100"
+                  >
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="flex items-center gap-1.5 font-bold text-neutral-900">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            critical ? "bg-neutral-900" : "bg-neutral-400"
+                          }`}
+                        />
+                        {critical ? "Out of stock" : "Low stock"}
+                      </span>
+                      <span className="font-bold text-neutral-900">{product.stock} left</span>
+                    </div>
+                    <div className="mt-1.5 text-xs font-bold text-gray-900 truncate">
+                      {product.name}
+                    </div>
+                    <div className="text-[11px] text-gray-400">{product.category}</div>
+                    <div className="mt-2 flex items-center gap-1">
+                      {Array.from({ length: LOW_STOCK_THRESHOLD }).map((_, index) => (
+                        <div
+                          key={index}
+                          className={`flex-1 h-1 rounded-full ${
+                            index < filled ? "bg-neutral-900" : "bg-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <span className="font-bold text-neutral-900 text-[11px]">5 units left</span>
-                </div>
-                <div className="mt-1.5 font-bold text-xs text-gray-900 truncate">
-                  iPhone 15 Pro 128GB
-                </div>
-                <div className="text-[11px] text-gray-400">Sells: 3 pcs/day</div>
-
-                {/* Segmented bar */}
-                <div className="mt-2 flex items-center gap-1">
-                  <div className="flex-1 h-1 bg-neutral-900 rounded-full" />
-                  <div className="flex-1 h-1 bg-neutral-900 rounded-full" />
-                  <div className="flex-1 h-1 bg-neutral-900 rounded-full" />
-                  <div className="flex-1 h-1 bg-gray-200 rounded-full" />
-                  <div className="flex-1 h-1 bg-gray-200 rounded-full" />
-                </div>
-              </div>
-
-              {/* Item 2: Low */}
-              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-neutral-700">
-                    <span className="w-2 h-2 rounded-full bg-neutral-400" />
-                    <span>Low Stock</span>
-                  </div>
-                  <span className="font-bold text-neutral-800 text-[11px]">8 units left</span>
-                </div>
-                <div className="mt-1.5 font-bold text-xs text-gray-900 truncate">
-                  Apple Watch Ultra 2
-                </div>
-                <div className="text-[11px] text-gray-400">Sells: 2 pcs/day</div>
-
-                {/* Segmented bar */}
-                <div className="mt-2 flex items-center gap-1">
-                  <div className="flex-1 h-1 bg-neutral-600 rounded-full" />
-                  <div className="flex-1 h-1 bg-neutral-600 rounded-full" />
-                  <div className="flex-1 h-1 bg-gray-200 rounded-full" />
-                  <div className="flex-1 h-1 bg-gray-200 rounded-full" />
-                </div>
-              </div>
+                );
+              })}
             </div>
-          </div>
-        </div>
+          )}
+        </Panel>
 
-        {/* Column 2: Traffic sources (Monochrome Donut Chart) */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-gray-900 text-sm">Traffic sources</h3>
-              <span className="text-xs text-gray-400 font-semibold bg-gray-50 px-2 py-0.5 rounded-full">
-                This week ⌵
-              </span>
-            </div>
-
-            {/* Donut Chart with Center Visitor Stat */}
-            <div className="my-6 flex items-center justify-center">
-              <div className="relative w-40 h-40 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="80" cy="80" r="60" stroke="#f3f4f6" strokeWidth="18" fill="transparent" />
-                  {/* Segment 1: Mobile App (Solid Black) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="#171717"
-                    strokeWidth="18"
-                    strokeDasharray="376"
-                    strokeDashoffset="140"
-                    strokeLinecap="round"
-                    fill="transparent"
-                  />
-                  {/* Segment 2: Web Store (Medium Charcoal) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="#737373"
-                    strokeWidth="18"
-                    strokeDasharray="376"
-                    strokeDashoffset="260"
-                    strokeLinecap="round"
-                    fill="transparent"
-                  />
-                  {/* Segment 3: Referrals (Light Gray) */}
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r="60"
-                    stroke="#d4d4d4"
-                    strokeWidth="18"
-                    strokeDasharray="376"
-                    strokeDashoffset="330"
-                    strokeLinecap="round"
-                    fill="transparent"
-                  />
-                </svg>
-
-                {/* Center Stats */}
-                <div className="absolute text-center">
-                  <div className="text-xl font-extrabold text-gray-900">4,312</div>
-                  <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                    Total visitors
+        <Panel
+          title="Payment mix"
+          subtitle={channelTotal ? `${channelTotal} settled orders` : "No settled orders yet"}
+        >
+          {revError ? (
+            <ApiError onRetry={retryAll} />
+          ) : channelTotal === 0 ? (
+            <Empty>
+              Nothing has been paid through Paystack in this period, so there is no channel split
+              to show.
+            </Empty>
+          ) : (
+            <>
+              <div className="my-2 flex items-center justify-center">
+                <div className="relative w-40 h-40 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="60" stroke="#f3f4f6" strokeWidth="18" fill="transparent" />
+                    {(() => {
+                      const circumference = 2 * Math.PI * 60;
+                      let consumed = 0;
+                      return CHANNELS.map((channel) => {
+                        const count = rev?.byChannel?.[channel.key]?.count ?? 0;
+                        const length = (count / channelTotal) * circumference;
+                        const offset = -consumed;
+                        consumed += length;
+                        if (count === 0) return null;
+                        return (
+                          <circle
+                            key={channel.key}
+                            cx="80"
+                            cy="80"
+                            r="60"
+                            stroke={channel.color}
+                            strokeWidth="18"
+                            fill="transparent"
+                            strokeDasharray={`${length} ${circumference - length}`}
+                            strokeDashoffset={offset}
+                          />
+                        );
+                      });
+                    })()}
+                  </svg>
+                  <div className="absolute text-center">
+                    <div className="text-xl font-extrabold text-gray-900">{channelTotal}</div>
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Orders
+                    </div>
                   </div>
                 </div>
               </div>
+              <div className="space-y-1.5">
+                {CHANNELS.map((channel) => {
+                  const entry = rev?.byChannel?.[channel.key];
+                  const count = entry?.count ?? 0;
+                  const share = channelTotal ? Math.round((count / channelTotal) * 100) : 0;
+                  return (
+                    <div
+                      key={channel.key}
+                      className="flex items-center justify-between text-[11px] font-medium"
+                    >
+                      <span className="flex items-center gap-2 text-gray-600">
+                        <span className="w-2 h-2 rounded-full" style={{ background: channel.color }} />
+                        {channel.label}
+                      </span>
+                      <span className="text-gray-900 font-bold">
+                        {count} · {share}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </Panel>
+
+        <Panel
+          title="Recent orders"
+          subtitle={
+            recentOrdersData
+              ? `${recentOrdersData.meta.total} order${recentOrdersData.meta.total === 1 ? "" : "s"} total`
+              : "Loading…"
+          }
+          action={
+            <Link
+              to="/orders"
+              className="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition"
+            >
+              See all
+            </Link>
+          }
+        >
+          {ordersError ? (
+            <ApiError onRetry={retryAll} />
+          ) : recentOrders.length === 0 ? (
+            <Empty>No orders have been placed yet.</Empty>
+          ) : (
+            <div className="space-y-1">
+              {recentOrders.map((order) => (
+                <Link
+                  key={order.id}
+                  to={`/orders/${order.id}`}
+                  className="flex items-center justify-between gap-3 py-2.5 border-b border-gray-50 last:border-0 hover:bg-gray-50/60 rounded-lg px-1 -mx-1 transition"
+                >
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-gray-800 truncate">
+                      #{order.id.slice(0, 8).replace("-", "")}
+                    </div>
+                    <div className="text-[11px] text-gray-400">
+                      {order.user?.name || "Guest"} · {timeAgo(order.createdAt)}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xs font-bold text-gray-900">
+                      {formatGHS(order.totalGHS)}
+                    </div>
+                    <StatusBadge status={order.status} size="sm" />
+                  </div>
+                </Link>
+              ))}
             </div>
+          )}
+        </Panel>
+      </div>
 
-            {/* Donut Legend */}
-            <div className="flex items-center justify-center gap-4 text-xs font-semibold text-gray-500">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-neutral-900" /> Mobile
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-neutral-500" /> Web
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-neutral-300" /> Direct
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Column 3: Recent orders */}
-        <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-gray-900 text-sm">Recent orders</h3>
-              <Link
-                to="/orders"
-                className="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-full transition"
-              >
-                See all
-              </Link>
-            </div>
-
-            {/* Orders Table */}
-            <div className="mt-4">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="text-[11px] font-bold text-gray-400 uppercase border-b border-gray-100 pb-2">
-                    <th className="pb-2 font-semibold">Order</th>
-                    <th className="pb-2 font-semibold">Time</th>
-                    <th className="pb-2 font-semibold">Total</th>
-                    <th className="pb-2 font-semibold text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 font-normal">
-                  {recentOrders.map((ord: any) => {
-                    const statusClass =
-                      ord.status === "shipped"
-                        ? "bg-neutral-900 text-white"
-                        : ord.status === "pending"
-                        ? "bg-neutral-200 text-neutral-800"
-                        : "bg-neutral-100 text-neutral-900 border border-neutral-300";
-
-                    const statusLabel =
-                      ord.status === "shipped"
-                        ? "Shipped"
-                        : ord.status === "pending"
-                        ? "Process"
-                        : "Deliver";
-
-                    const orderNumber = ord.id.slice(0, 5).replace("-", "");
-
-                    return (
-                      <tr key={ord.id} className="hover:bg-gray-50/50 transition">
-                        <td className="py-2.5 font-bold text-gray-800">
-                          #{orderNumber}
-                        </td>
-                        <td className="py-2.5 text-gray-400 text-[11px]">
-                          {ord.time || "2 min ago"}
-                        </td>
-                        <td className="py-2.5 font-bold text-gray-900">
-                          ₵{(ord.totalGHS || ord.total || 24.5).toFixed(2)}
-                        </td>
-                        <td className="py-2.5 text-right">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusClass}`}
-                          >
-                            {statusLabel}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
+      {/* ─── QUICK ACTIONS ─────────────────────────────────────────────── */}
+      <div className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-wrap items-center gap-3">
+        <Boxes className="w-4 h-4 text-gray-400" />
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Quick actions
+        </span>
+        <Link
+          to="/products/new"
+          className="px-3.5 py-1.5 text-xs font-semibold text-white bg-neutral-900 rounded-full hover:bg-black transition"
+        >
+          Add product
+        </Link>
+        <Link
+          to="/orders"
+          className="px-3.5 py-1.5 text-xs font-semibold text-neutral-900 border border-neutral-200 rounded-full hover:bg-neutral-100 transition"
+        >
+          Fulfil orders
+        </Link>
+        <Link
+          to="/analytics"
+          className="px-3.5 py-1.5 text-xs font-semibold text-neutral-900 border border-neutral-200 rounded-full hover:bg-neutral-100 transition"
+        >
+          View analytics
+        </Link>
       </div>
     </div>
   );

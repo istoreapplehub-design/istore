@@ -12,6 +12,7 @@ import { Admins } from "./pages/Admins";
 import { Analytics } from "./pages/Analytics";
 import { Support } from "./pages/Support";
 import { Settings } from "./pages/Settings";
+import { Profile } from "./pages/Profile";
 import { NotFound } from "./pages/NotFound";
 
 export function App() {
@@ -40,6 +41,7 @@ export function App() {
         <Route path="admins" element={<Admins />} />
         <Route path="support" element={<Support />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

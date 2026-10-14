@@ -35,6 +35,7 @@ export interface Product {
 export interface ShippingAddress {
   fullName: string;
   phone: string;
+  email?: string | null;
   region: string;
   city: string;
   gpsAddress?: string;
@@ -64,6 +65,7 @@ export interface Order {
   };
   items: OrderItem[];
   _count?: { items: number };
+  itemCount?: number;
   subtotalGHS: number;
   deliveryFeeGHS: number;
   totalGHS: number;
@@ -140,6 +142,13 @@ export interface PaginatedResponse<T> {
     totalRevenueGHS: number;
     todayRevenueGHS: number;
     todayOrderCount: number;
+  };
+  stats?: {
+    totalCount: number;
+    activeCount: number;
+    inactiveCount: number;
+    outOfStockCount: number;
+    lowStockCount: number;
   };
 }
 

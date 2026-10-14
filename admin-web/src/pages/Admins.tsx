@@ -51,8 +51,7 @@ export function Admins() {
   // Query: Search customers for promotion
   const {
     data: customersData,
-    isLoading: loadingCustomers,
-    refetch: refetchCustomers
+    isLoading: loadingCustomers
   } = useQuery({
     queryKey: ["customers-search", debouncedSearch],
     queryFn: () =>
@@ -96,13 +95,13 @@ export function Admins() {
   const isOnlyOneAdmin = admins.length === 1 && admins[0]?.id === currentUser?.id;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Users</h1>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full">
+            <span className="px-2.5 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-900 rounded-full border border-neutral-200">
               {admins.length} {admins.length === 1 ? "Admin" : "Admins"}
             </span>
           </div>
@@ -116,7 +115,7 @@ export function Admins() {
             setSearchQuery("");
             setPromoteModalOpen(true);
           }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl shadow-sm transition"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-black hover:bg-neutral-800 text-white font-semibold text-sm rounded-full shadow-xs transition"
         >
           <UserPlus className="w-4 h-4" />
           <span>Promote User</span>
@@ -125,11 +124,11 @@ export function Admins() {
 
       {/* Helper Banner when only 1 admin */}
       {isOnlyOneAdmin && !loadingAdmins && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3.5">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-2xl flex items-start gap-3.5">
+          <AlertCircle className="w-5 h-5 text-neutral-700 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-semibold text-amber-900">Only you are an admin</h4>
-            <p className="text-sm text-amber-700 mt-0.5">
+            <h4 className="text-sm font-semibold text-neutral-900">Only you are an admin</h4>
+            <p className="text-sm text-neutral-600 mt-0.5">
               Promote another user to help manage the store and avoid being locked out.
             </p>
           </div>
@@ -140,16 +139,16 @@ export function Admins() {
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         {loadingAdmins ? (
           <div className="py-20 flex flex-col items-center justify-center text-gray-400">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
+            <Loader2 className="w-8 h-8 animate-spin text-black mb-3" />
             <p className="text-sm font-medium text-gray-500">Loading admin users...</p>
           </div>
         ) : adminsError ? (
-          <div className="py-16 text-center text-rose-500">
-            <AlertCircle className="w-8 h-8 mx-auto mb-2 text-rose-500" />
+          <div className="py-16 text-center text-neutral-600">
+            <AlertCircle className="w-8 h-8 mx-auto mb-2 text-neutral-800" />
             <p className="font-semibold text-sm">Failed to load admin users</p>
             <button
               onClick={() => refetchAdmins()}
-              className="mt-3 px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="mt-3 px-4 py-1.5 text-xs font-semibold text-neutral-900 bg-neutral-100 rounded-lg hover:bg-neutral-200"
             >
               Retry
             </button>
@@ -189,14 +188,14 @@ export function Admins() {
                     <tr key={adm.id} className="hover:bg-gray-50/60 transition">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-black text-white font-semibold text-xs flex items-center justify-center shrink-0">
                             {adm.name ? adm.name.slice(0, 2).toUpperCase() : "AD"}
                           </div>
                           <div>
                             <div className="font-semibold text-gray-900 flex items-center gap-2">
                               <span>{adm.name || "Unnamed"}</span>
                               {isSelf && (
-                                <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
+                                <span className="px-2 py-0.5 text-[10px] font-bold bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-full">
                                   You
                                 </span>
                               )}
@@ -227,7 +226,7 @@ export function Admins() {
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
                             isSelf
                               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800"
+                              : "bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
                           }`}
                         >
                           Demote
@@ -260,8 +259,8 @@ export function Admins() {
 
       {/* Promote User Modal */}
       {promoteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[85vh]">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <div>
@@ -287,7 +286,7 @@ export function Admins() {
                   placeholder="Search registered customers..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black"
                   autoFocus
                 />
               </div>
@@ -297,7 +296,7 @@ export function Admins() {
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {loadingCustomers ? (
                 <div className="py-12 flex flex-col items-center justify-center text-gray-400">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-600 mb-2" />
+                  <Loader2 className="w-6 h-6 animate-spin text-black mb-2" />
                   <p className="text-xs">Searching users...</p>
                 </div>
               ) : !customersData?.data || customersData.data.length === 0 ? (
@@ -313,7 +312,7 @@ export function Admins() {
                   {customersData.data.map((usr) => (
                     <div
                       key={usr.id}
-                      className="p-3 border border-gray-100 rounded-xl hover:border-blue-200 hover:bg-blue-50/30 transition flex items-center justify-between gap-3"
+                      className="p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center justify-between gap-3"
                     >
                       <div className="min-w-0">
                         <div className="font-semibold text-sm text-gray-900 truncate">
@@ -329,7 +328,7 @@ export function Admins() {
                       <button
                         type="button"
                         onClick={() => setUserToPromote(usr)}
-                        className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 rounded-lg shrink-0 transition"
+                        className="px-3.5 py-1.5 text-xs font-bold text-white bg-black hover:bg-neutral-800 rounded-lg shrink-0 transition"
                       >
                         Promote
                       </button>
@@ -344,7 +343,7 @@ export function Admins() {
               <button
                 type="button"
                 onClick={() => setPromoteModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-lg transition"
+                className="px-4 py-2 text-xs font-semibold text-gray-700 hover:text-black bg-white border border-gray-200 rounded-lg transition"
               >
                 Close
               </button>

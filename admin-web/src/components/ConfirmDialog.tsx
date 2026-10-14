@@ -46,7 +46,7 @@ export function ConfirmDialog({
             className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
               confirmStyle === "danger"
                 ? "bg-rose-50 text-rose-600"
-                : "bg-blue-50 text-blue-600"
+                : "bg-neutral-100 text-neutral-900"
             }`}
           >
             <AlertTriangle className="w-5 h-5" />
@@ -88,7 +88,7 @@ export function ConfirmDialog({
             className={`px-5 py-2 text-sm font-medium text-white rounded-full transition disabled:opacity-50 ${
               confirmStyle === "danger"
                 ? "bg-rose-600 hover:bg-rose-700"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-black hover:bg-neutral-800"
             }`}
           >
             {loading ? "Processing..." : confirmText}

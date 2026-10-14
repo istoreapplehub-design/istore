@@ -14,7 +14,7 @@ export function StatCard({
   label,
   value,
   icon,
-  iconBg = "bg-blue-50 text-blue-600",
+  iconBg = "bg-neutral-100 text-neutral-900",
   trend,
   sublabel
 }: StatCardProps) {

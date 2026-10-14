@@ -332,7 +332,7 @@ export function ProductForm() {
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="px-6 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-full shadow-sm transition disabled:opacity-50"
+            className="px-6 py-2 text-sm font-semibold text-white bg-black hover:bg-neutral-800 rounded-full shadow-xs transition disabled:opacity-50"
           >
             {mutation.isPending ? "Saving..." : isEdit ? "Save Changes" : "Publish Product"}
           </button>
@@ -360,7 +360,7 @@ export function ProductForm() {
                   onBlur={handleNameBlur}
                   placeholder="e.g. iPhone 16 Pro Max 256GB"
                   className={`w-full rounded-xl border px-3.5 py-2 text-sm outline-none transition ${
-                    errors.name ? "border-rose-400" : "border-gray-200 focus:border-blue-500"
+                    errors.name ? "border-rose-400" : "border-gray-200 focus:border-black"
                   }`}
                 />
                 {errors.name && <p className="text-xs text-rose-600 mt-1">{errors.name}</p>}
@@ -376,7 +376,7 @@ export function ProductForm() {
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   placeholder="e.g. iphone-16-pro-max-256gb"
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-mono outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-mono outline-none focus:border-black transition"
                 />
               </div>
 
@@ -387,7 +387,7 @@ export function ProductForm() {
                 <select
                   value={category}
                   onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-700 outline-none focus:border-black transition"
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -407,7 +407,7 @@ export function ProductForm() {
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   placeholder="e.g. A3296"
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-black transition"
                 />
               </div>
 
@@ -423,7 +423,7 @@ export function ProductForm() {
                       onClick={() => setCondition(c)}
                       className={`flex-1 py-2 text-xs font-semibold rounded-xl border transition ${
                         condition === c
-                          ? "bg-blue-50 border-blue-600 text-blue-700"
+                          ? "bg-neutral-900 border-neutral-900 text-white"
                           : "border-gray-200 text-gray-600 hover:bg-gray-50"
                       }`}
                     >
@@ -455,7 +455,7 @@ export function ProductForm() {
                     value={priceGHS}
                     onChange={(e) => setPriceGHS(e.target.value)}
                     placeholder="0.00"
-                    className="w-full rounded-xl border border-gray-200 pl-8 pr-3.5 py-2 text-sm font-semibold outline-none focus:border-blue-500 transition"
+                    className="w-full rounded-xl border border-gray-200 pl-8 pr-3.5 py-2 text-sm font-semibold outline-none focus:border-black transition"
                   />
                 </div>
               </div>
@@ -474,7 +474,7 @@ export function ProductForm() {
                     value={compareAtPriceGHS}
                     onChange={(e) => setCompareAtPriceGHS(e.target.value)}
                     placeholder="MSRP"
-                    className="w-full rounded-xl border border-gray-200 pl-8 pr-3.5 py-2 text-sm outline-none focus:border-blue-500 transition"
+                    className="w-full rounded-xl border border-gray-200 pl-8 pr-3.5 py-2 text-sm outline-none focus:border-black transition"
                   />
                 </div>
               </div>
@@ -489,7 +489,7 @@ export function ProductForm() {
                   value={stock}
                   onChange={(e) => setStock(e.target.value)}
                   placeholder="10"
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-sm outline-none focus:border-black transition"
                 />
               </div>
             </div>
@@ -524,7 +524,7 @@ export function ProductForm() {
                   placeholder="e.g. 512GB"
                   value={storageInput}
                   onChange={(e) => setStorageInput(e.target.value)}
-                  className="flex-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500"
+                  className="flex-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs outline-none focus:border-black"
                 />
                 <button
                   type="button"
@@ -546,7 +546,7 @@ export function ProductForm() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detailed marketing description, hardware specs, box contents..."
-              className="w-full rounded-xl border border-gray-200 p-3.5 text-sm outline-none focus:border-blue-500 transition"
+              className="w-full rounded-xl border border-gray-200 p-3.5 text-sm outline-none focus:border-black transition"
             />
             {errors.description && (
               <p className="text-xs text-rose-600">{errors.description}</p>
@@ -563,7 +563,7 @@ export function ProductForm() {
               <button
                 type="button"
                 onClick={() => setSpecRows([...specRows, { key: "", value: "" }])}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-black hover:underline"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Row</span>
@@ -582,7 +582,7 @@ export function ProductForm() {
                       next[idx].key = e.target.value;
                       setSpecRows(next);
                     }}
-                    className="w-1/3 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium outline-none focus:border-blue-500"
+                    className="w-1/3 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-medium outline-none focus:border-black"
                   />
                   <input
                     type="text"
@@ -593,7 +593,7 @@ export function ProductForm() {
                       next[idx].value = e.target.value;
                       setSpecRows(next);
                     }}
-                    className="flex-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs outline-none focus:border-blue-500"
+                    className="flex-1 rounded-xl border border-gray-200 px-3 py-1.5 text-xs outline-none focus:border-black"
                   />
                   <button
                     type="button"
@@ -630,7 +630,7 @@ export function ProductForm() {
                     <X className="w-3 h-3" />
                   </button>
                   {idx === 0 && (
-                    <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded">
+                    <span className="absolute bottom-1 left-1 text-[9px] font-bold bg-black text-white px-1.5 py-0.5 rounded">
                       HERO
                     </span>
                   )}
@@ -639,9 +639,9 @@ export function ProductForm() {
 
               {/* Upload Tile */}
               {images.length < 6 && (
-                <label className="aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-blue-400 flex flex-col items-center justify-center cursor-pointer transition p-2 text-center bg-gray-50/50">
+                <label className="aspect-square rounded-xl border-2 border-dashed border-gray-200 hover:border-black flex flex-col items-center justify-center cursor-pointer transition p-2 text-center bg-gray-50/50">
                   <Upload className="w-5 h-5 text-gray-400 mb-1" />
-                  <span className="text-[11px] font-semibold text-blue-600">
+                  <span className="text-[11px] font-semibold text-black">
                     {uploadingImage ? "Uploading..." : "Add Image"}
                   </span>
                   <input
@@ -666,7 +666,7 @@ export function ProductForm() {
               <button
                 type="button"
                 onClick={handleAddColor}
-                className="text-xs font-semibold text-blue-600 hover:underline"
+                className="text-xs font-semibold text-black hover:underline"
               >
                 + Add Color
               </button>
@@ -718,7 +718,7 @@ export function ProductForm() {
                 value={warranty}
                 onChange={(e) => setWarranty(e.target.value)}
                 placeholder="1 Year Official Warranty"
-                className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-xs outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-xs outline-none focus:border-black"
               />
             </div>
 
@@ -729,7 +729,7 @@ export function ProductForm() {
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 placeholder="Apple, M4, Pro"
-                className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-xs outline-none focus:border-blue-500"
+                className="w-full rounded-xl border border-gray-200 px-3.5 py-2 text-xs outline-none focus:border-black"
               />
             </div>
 
@@ -743,7 +743,7 @@ export function ProductForm() {
                   type="checkbox"
                   checked={featured}
                   onChange={(e) => setFeatured(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-black accent-black rounded focus:ring-black"
                 />
               </label>
 
@@ -756,7 +756,7 @@ export function ProductForm() {
                   type="checkbox"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-black accent-black rounded focus:ring-black"
                 />
               </label>
             </div>
