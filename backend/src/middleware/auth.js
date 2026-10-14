@@ -1,58 +1,115 @@
 const { supabaseAdmin } = require("../utils/supabase");
 const prisma = require("../utils/prisma");
 
-async function requireAuth(req, res, next) {
-  try {
-    const header = req.headers.authorization;
-    let token = null;
+/**
+ * Extracts a Supabase access token from the request.
+ * Accepts an "Authorization: Bearer <token>" header first, then a ?token= query fallback.
+ * @returns {string|null} the raw token, or null when the caller presents no credentials
+ */
+function extractToken(req) {
+  const header = req.headers.authorization;
 
-    if (header && header.startsWith("Bearer ")) {
-      token = header.slice(7);
-    } else if (req.query && req.query.token) {
-      token = req.query.token;
-    }
+  if (header && header.startsWith("Bearer ")) {
+    return header.slice(7);
+  }
+  if (req.query && req.query.token) {
+    return req.query.token;
+  }
+  return null;
+}
 
-    if (!token) {
-      return res.status(401).json({
-        error: true,
-        message: "Authentication required",
-      });
-    }
+/**
+ * Shared token-resolution pipeline used by both requireAuth and optionalAuth.
+ * Never sends responses itself — the caller decides how an anonymous or invalid
+ * caller should be handled.
+ *
+ * @returns {Promise<{anonymous: true}|{status: number, message: string}|{user: object}>}
+ */
+async function resolveCaller(req) {
+  const token = extractToken(req);
 
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (!token) {
+    return { anonymous: true };
+  }
 
-    if (error || !data?.user) {
-      return res.status(401).json({
-        error: true,
-        message: "Invalid or expired token",
-      });
-    }
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
 
-    const user = await prisma.user.findUnique({
-      where: { supabaseId: data.user.id },
-    });
+  if (error || !data?.user) {
+    return { status: 401, message: "Invalid or expired token" };
+  }
 
-    if (!user) {
-      return res.status(401).json({
-        error: true,
-        message: "User not provisioned in this system",
-      });
-    }
+  const user = await prisma.user.findUnique({
+    where: { supabaseId: data.user.id }
+  });
 
-    if (!user.isActive) {
-      return res.status(403).json({
-        error: true,
-        message: "Account disabled",
-      });
-    }
+  if (!user) {
+    return { status: 401, message: "User not provisioned in this system" };
+  }
 
-    req.user = {
+  if (!user.isActive) {
+    return { status: 403, message: "Account disabled" };
+  }
+
+  return {
+    user: {
       id: user.id,
       role: user.role,
       phone: user.phone,
       email: user.email,
-      supabaseId: user.supabaseId,
-    };
+      supabaseId: user.supabaseId
+    }
+  };
+}
+
+async function requireAuth(req, res, next) {
+  try {
+    const result = await resolveCaller(req);
+
+    if (result.anonymous) {
+      return res.status(401).json({
+        error: true,
+        message: "Authentication required"
+      });
+    }
+
+    if (result.status) {
+      return res.status(result.status).json({
+        error: true,
+        message: result.message
+      });
+    }
+
+    req.user = result.user;
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Optional authentication for guest-capable endpoints.
+ * - No credentials at all → proceeds as a guest with req.user left undefined.
+ * - A token IS presented → validated exactly like requireAuth; an invalid,
+ *   expired, unprovisioned, or disabled caller gets the same 401/403 response
+ *   instead of being silently downgraded to a guest.
+ */
+async function optionalAuth(req, res, next) {
+  try {
+    const result = await resolveCaller(req);
+
+    if (result.anonymous) {
+      return next();
+    }
+
+    if (result.status) {
+      return res.status(result.status).json({
+        error: true,
+        message: result.message
+      });
+    }
+
+    req.user = result.user;
 
     next();
   } catch (err) {
@@ -79,4 +136,4 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, requireAdmin };
+module.exports = { requireAuth, requireAdmin, optionalAuth };

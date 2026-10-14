@@ -2,7 +2,7 @@ const { z } = require("zod");
 
 const colorSchema = z.object({
   name: z.string().min(1).max(50),
-  hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Hex color must be a valid 6-character hex code, e.g. #0071E3"),
+  hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Hex color must be a valid 6-character hex code, e.g. #171717"),
   images: z.array(z.string().url()).min(1).max(8)
 });
 

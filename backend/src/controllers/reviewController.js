@@ -1,7 +1,6 @@
 const { z } = require("zod");
-const { PrismaClient } = require("@prisma/client");
 
-const prisma = new PrismaClient();
+const prisma = require("../utils/prisma");
 
 const createReviewSchema = z.object({
   rating: z.number().int().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
@@ -98,8 +97,6 @@ async function createReview(req, res, next) {
     const { rating, title, body, authorName } = req.body;
     const userId = req.user.id;
 
-    // TODO: Rate-limit 1 review per user per product before production release
-
     const result = await prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
         where: { slug }
@@ -108,6 +105,16 @@ async function createReview(req, res, next) {
       if (!product || !product.isActive) {
         const err = new Error("Product not found");
         err.status = 404;
+        throw err;
+      }
+
+      const existing = await tx.review.findFirst({
+        where: { productId: product.id, userId }
+      });
+
+      if (existing) {
+        const err = new Error("You have already reviewed this product.");
+        err.status = 409;
         throw err;
       }
 

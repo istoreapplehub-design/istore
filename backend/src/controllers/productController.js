@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const { formatProduct } = require("../utils/json");
 const { parsePagination } = require("../utils/pagination");
 
-const prisma = new PrismaClient();
+const prisma = require("../utils/prisma");
 
 /**
  * Retrieves a paginated list of active products with filtering and sorting

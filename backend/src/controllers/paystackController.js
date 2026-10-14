@@ -1,10 +1,9 @@
 const crypto = require("crypto");
 const axios = require("axios");
 const { z } = require("zod");
-const { PrismaClient } = require("@prisma/client");
-const { formatOrder } = require("../utils/json");
+const { safeJsonParse, formatOrder } = require("../utils/json");
 
-const prisma = new PrismaClient();
+const prisma = require("../utils/prisma");
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
 const isSimulationEnv =
@@ -21,7 +20,10 @@ if (isSimulationEnv) {
 const PAYSTACK_BASE = "https://api.paystack.co";
 
 const initializePaymentSchema = z.object({
-  orderId: z.string().min(1, "Order ID is required")
+  orderId: z.string().min(1, "Order ID is required"),
+  // Only meaningful for guest orders (userId === null); ignored for account orders.
+  // Enforced in the handler because the requirement depends on the order owner.
+  email: z.string().trim().toLowerCase().email("A valid contact email is required").optional()
 });
 
 /**
@@ -70,12 +72,14 @@ async function applyPaymentSuccess(reference, channel) {
 }
 
 /**
- * Initializes a Paystack transaction for the total amount of a pending order
+ * Initializes a Paystack transaction for the total amount of a pending order.
+ * Works for account orders (Bearer token) and guest orders (userId === null,
+ * authenticated by the contact email persisted on the order).
  */
 async function initializePayment(req, res, next) {
   try {
-    const { orderId } = req.body;
-    const userId = req.user.id;
+    const { orderId, email } = req.body;
+    const userId = req.user?.id;
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -88,10 +92,42 @@ async function initializePayment(req, res, next) {
       return next(err);
     }
 
+    if (order.userId && !userId) {
+      const err = new Error("Authentication required to pay for this order");
+      err.status = 401;
+      return next(err);
+    }
+
     if (order.userId && order.userId !== userId) {
       const err = new Error("Forbidden: You cannot pay for an order belonging to another user");
       err.status = 403;
       return next(err);
+    }
+
+    // Guest order: the caller must prove knowledge of the order's contact email
+    let guestEmail = null;
+    if (!order.userId) {
+      const storedAddress = safeJsonParse(order.shippingAddress, {}) || {};
+      const storedEmail =
+        typeof storedAddress.email === "string"
+          ? storedAddress.email.trim().toLowerCase()
+          : null;
+
+      if (!email) {
+        const err = new Error(
+          "This is a guest order. Pass the contact email used when placing the order to pay for it."
+        );
+        err.status = 403;
+        return next(err);
+      }
+
+      if (!storedEmail || storedEmail !== email) {
+        const err = new Error("Forbidden: The email does not match this guest order");
+        err.status = 403;
+        return next(err);
+      }
+
+      guestEmail = email;
     }
 
     if (order.status !== "pending") {
@@ -125,14 +161,14 @@ async function initializePayment(req, res, next) {
       const paystackRes = await axios.post(
         `${PAYSTACK_BASE}/transaction/initialize`,
         {
-          email: req.user?.email || `order-${order.id}@istore.com.gh`,
+          email: req.user?.email || guestEmail || `order-${order.id}@istore.com.gh`,
           amount,
           currency: "GHS",
           reference,
           channels: ["mobile_money", "card", "bank"],
           metadata: {
             orderId: order.id,
-            userId,
+            userId: userId ?? null,
             custom_fields: [
               {
                 display_name: "Order ID",

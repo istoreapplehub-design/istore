@@ -1,6 +1,6 @@
-# GhanaApps Store - Backend API & Paystack Gateway
+# I-Store - Backend API & Paystack Gateway
 
-A localized Node.js & Express service handling digital products, Mobile Money (MTN MoMo, Vodafone Telecel Cash, AirtelTigo Money) and card processing via Paystack for the GhanaApps Store.
+A localized Node.js & Express service handling Apple hardware inventory, Mobile Money (MTN MoMo, Telecel Cash, AT Money) and card processing via Paystack for I-Store.
 
 ## Features
 - **Paystack Checkout Integration**: Initializes transactions in GHS pesewas (`POST /api/paystack/initialize`) and verifies payment references (`GET /api/paystack/verify/:reference`).

@@ -39,6 +39,7 @@ model Product {
   images            ProductImage[]
   reviews           Review[]
   orderItems        OrderItem[]
+  wishlistItems     WishlistItem[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -130,8 +131,22 @@ model User {
   isActive   Boolean  @default(true)
   addresses  String   @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
   orders     Order[]
+  wishlist   WishlistItem[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   @@index([role])
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
 }

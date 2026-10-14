@@ -23,7 +23,7 @@ const GHANAIAN_REVIEWERS = [
 const REVIEW_TEMPLATES = [
   {
     title: "Sealed box, lightning fast delivery in Accra",
-    body: "Ordered on Monday afternoon, delivered Wednesday morning right to East Legon. Sealed Apple box, genuine 1-year warranty verified online. Highly recommend GhanaApps Store!",
+    body: "Ordered on Monday afternoon, delivered Wednesday morning right to East Legon. Sealed Apple box, genuine 1-year warranty verified online. Highly recommend I-Store!",
     rating: 5
   },
   {
@@ -95,8 +95,8 @@ const PRODUCTS_DATA = [
         name: "Blue Titanium",
         hex: "#39434F",
         images: [
-          "https://placehold.co/800x800/39434F/FFFFFF?text=iPhone+15+Pro+Max+Blue+Front",
-          "https://placehold.co/800x800/2A313A/FFFFFF?text=iPhone+15+Pro+Max+Blue+Back"
+          "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Max+Blue+Front",
+          "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Max+Blue+Back"
         ]
       },
       {
@@ -118,7 +118,7 @@ const PRODUCTS_DATA = [
     ],
     images: [
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=iPhone+15+Pro+Max+Hero",
-      "https://placehold.co/800x800/39434F/FFFFFF?text=iPhone+15+Pro+Max+Angle",
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Max+Angle",
       "https://placehold.co/800x800/9E978E/FFFFFF?text=iPhone+15+Pro+Max+Camera",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+15+Pro+Max+Profile",
       "https://placehold.co/800x800/28292A/FFFFFF?text=iPhone+15+Pro+Max+Packaging"
@@ -159,7 +159,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/28292A/FFFFFF?text=iPhone+15+Pro+Front",
       "https://placehold.co/800x800/9E978E/FFFFFF?text=iPhone+15+Pro+Back",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+15+Pro+Action+Button",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=iPhone+15+Pro+Lifestyle"
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Lifestyle"
     ]
   },
   {
@@ -229,14 +229,14 @@ const PRODUCTS_DATA = [
     tags: "bestseller",
     displayOrder: 4,
     colors: [
-      { name: "Midnight", hex: "#1C232B", images: ["https://placehold.co/800x800/1C232B/FFFFFF?text=iPhone+14+Midnight+1", "https://placehold.co/800x800/1C232B/FFFFFF?text=iPhone+14+Midnight+2"] },
+      { name: "Midnight", hex: "#1C232B", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Midnight+2"] },
       { name: "Starlight", hex: "#F9F6EF", images: ["https://placehold.co/800x800/F9F6EF/1D1D1F?text=iPhone+14+Starlight+1", "https://placehold.co/800x800/F9F6EF/1D1D1F?text=iPhone+14+Starlight+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/1C232B/FFFFFF?text=iPhone+14+Midnight",
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Midnight",
       "https://placehold.co/800x800/F9F6EF/1D1D1F?text=iPhone+14+Starlight",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+14+Camera",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=iPhone+14+Lifestyle"
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Lifestyle"
     ]
   },
   {
@@ -267,14 +267,14 @@ const PRODUCTS_DATA = [
     tags: "deal,bestseller",
     displayOrder: 5,
     colors: [
-      { name: "Midnight", hex: "#1D232A", images: ["https://placehold.co/800x800/1D232A/FFFFFF?text=iPhone+13+Midnight+1", "https://placehold.co/800x800/1D232A/FFFFFF?text=iPhone+13+Midnight+2"] },
-      { name: "Blue", hex: "#2C5D88", images: ["https://placehold.co/800x800/2C5D88/FFFFFF?text=iPhone+13+Blue+1", "https://placehold.co/800x800/2C5D88/FFFFFF?text=iPhone+13+Blue+2"] }
+      { name: "Midnight", hex: "#1D232A", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Midnight+2"] },
+      { name: "Blue", hex: "#2C5D88", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Blue+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/1D232A/FFFFFF?text=iPhone+13+Front",
-      "https://placehold.co/800x800/2C5D88/FFFFFF?text=iPhone+13+Back",
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Front",
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Back",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+13+Angle",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=iPhone+13+InHand"
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+InHand"
     ]
   },
 
@@ -382,11 +382,11 @@ const PRODUCTS_DATA = [
     displayOrder: 3,
     colors: [
       { name: "Silver", hex: "#E3E4E5", images: ["https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+10+Silver+1", "https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+10+Silver+2"] },
-      { name: "Blue", hex: "#5B8FB9", images: ["https://placehold.co/800x800/5B8FB9/FFFFFF?text=iPad+10+Blue+1", "https://placehold.co/800x800/5B8FB9/FFFFFF?text=iPad+10+Blue+2"] },
+      { name: "Blue", hex: "#5B8FB9", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPad+10+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPad+10+Blue+2"] },
       { name: "Yellow", hex: "#F3DC74", images: ["https://placehold.co/800x800/F3DC74/1D1D1F?text=iPad+10+Yellow+1", "https://placehold.co/800x800/F3DC74/1D1D1F?text=iPad+10+Yellow+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/5B8FB9/FFFFFF?text=iPad+10th+Gen+Hero",
+      "https://placehold.co/800x800/171717/FFFFFF?text=iPad+10th+Gen+Hero",
       "https://placehold.co/800x800/F3DC74/1D1D1F?text=iPad+10th+Gen+Colors",
       "https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+10th+Gen+Back",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPad+10th+Gen+Lifestyle"
@@ -493,11 +493,11 @@ const PRODUCTS_DATA = [
     tags: "new,bestseller",
     displayOrder: 2,
     colors: [
-      { name: "Midnight", hex: "#1C242F", images: ["https://placehold.co/800x800/1C242F/FFFFFF?text=MBA15+Midnight+1", "https://placehold.co/800x800/1C242F/FFFFFF?text=MBA15+Midnight+2"] },
+      { name: "Midnight", hex: "#1C242F", images: ["https://placehold.co/800x800/171717/FFFFFF?text=MBA15+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=MBA15+Midnight+2"] },
       { name: "Starlight", hex: "#E8E2D6", images: ["https://placehold.co/800x800/E8E2D6/1D1D1F?text=MBA15+Starlight+1", "https://placehold.co/800x800/E8E2D6/1D1D1F?text=MBA15+Starlight+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/1C242F/FFFFFF?text=MacBook+Air+15+Hero",
+      "https://placehold.co/800x800/171717/FFFFFF?text=MacBook+Air+15+Hero",
       "https://placehold.co/800x800/E8E2D6/1D1D1F?text=MacBook+Air+15+Side",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MacBook+Air+15+Keyboard",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=MacBook+Air+15+SlimProfile"
@@ -531,10 +531,10 @@ const PRODUCTS_DATA = [
     colors: [
       { name: "Space Gray", hex: "#525357", images: ["https://placehold.co/800x800/525357/FFFFFF?text=MBA13+SpaceGray+1", "https://placehold.co/800x800/525357/FFFFFF?text=MBA13+SpaceGray+2"] },
       { name: "Silver", hex: "#E2E3E5", images: ["https://placehold.co/800x800/E2E3E5/1D1D1F?text=MBA13+Silver+1", "https://placehold.co/800x800/E2E3E5/1D1D1F?text=MBA13+Silver+2"] },
-      { name: "Midnight", hex: "#1C242F", images: ["https://placehold.co/800x800/1C242F/FFFFFF?text=MBA13+Midnight+1", "https://placehold.co/800x800/1C242F/FFFFFF?text=MBA13+Midnight+2"] }
+      { name: "Midnight", hex: "#1C242F", images: ["https://placehold.co/800x800/171717/FFFFFF?text=MBA13+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=MBA13+Midnight+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/1C242F/FFFFFF?text=MacBook+Air+13+Front",
+      "https://placehold.co/800x800/171717/FFFFFF?text=MacBook+Air+13+Front",
       "https://placehold.co/800x800/525357/FFFFFF?text=MacBook+Air+13+Profile",
       "https://placehold.co/800x800/E2E3E5/1D1D1F?text=MacBook+Air+13+Open",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MacBook+Air+13+Lifestyle"
@@ -565,12 +565,12 @@ const PRODUCTS_DATA = [
     tags: "desktop",
     displayOrder: 4,
     colors: [
-      { name: "Blue", hex: "#4D748E", images: ["https://placehold.co/800x800/4D748E/FFFFFF?text=iMac+Blue+1", "https://placehold.co/800x800/4D748E/FFFFFF?text=iMac+Blue+2"] },
+      { name: "Blue", hex: "#4D748E", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iMac+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=iMac+Blue+2"] },
       { name: "Green", hex: "#638A73", images: ["https://placehold.co/800x800/638A73/FFFFFF?text=iMac+Green+1", "https://placehold.co/800x800/638A73/FFFFFF?text=iMac+Green+2"] },
       { name: "Silver", hex: "#DCDDDF", images: ["https://placehold.co/800x800/DCDDDF/1D1D1F?text=iMac+Silver+1", "https://placehold.co/800x800/DCDDDF/1D1D1F?text=iMac+Silver+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/4D748E/FFFFFF?text=iMac+24+Hero",
+      "https://placehold.co/800x800/171717/FFFFFF?text=iMac+24+Hero",
       "https://placehold.co/800x800/638A73/FFFFFF?text=iMac+24+Side",
       "https://placehold.co/800x800/DCDDDF/1D1D1F?text=iMac+24+Back",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iMac+24+Accessories"
@@ -607,7 +607,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/E0E1E3/1D1D1F?text=Mac+mini+Front",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=Mac+mini+Ports",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Mac+mini+Top",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=Mac+mini+Setup"
+      "https://placehold.co/800x800/171717/FFFFFF?text=Mac+mini+Setup"
     ]
   },
 
@@ -674,15 +674,15 @@ const PRODUCTS_DATA = [
     tags: "featured,bestseller",
     displayOrder: 2,
     colors: [
-      { name: "Midnight", hex: "#1D232A", images: ["https://placehold.co/800x800/1D232A/FFFFFF?text=Watch9+Midnight+1", "https://placehold.co/800x800/1D232A/FFFFFF?text=Watch9+Midnight+2"] },
+      { name: "Midnight", hex: "#1D232A", images: ["https://placehold.co/800x800/171717/FFFFFF?text=Watch9+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=Watch9+Midnight+2"] },
       { name: "Starlight", hex: "#F3EDE2", images: ["https://placehold.co/800x800/F3EDE2/1D1D1F?text=Watch9+Starlight+1", "https://placehold.co/800x800/F3EDE2/1D1D1F?text=Watch9+Starlight+2"] },
       { name: "Silver", hex: "#E1E2E4", images: ["https://placehold.co/800x800/E1E2E4/1D1D1F?text=Watch9+Silver+1", "https://placehold.co/800x800/E1E2E4/1D1D1F?text=Watch9+Silver+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/1D232A/FFFFFF?text=Apple+Watch+Series+9+Hero",
+      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+Series+9+Hero",
       "https://placehold.co/800x800/F3EDE2/1D1D1F?text=Apple+Watch+Series+9+Display",
       "https://placehold.co/800x800/E1E2E4/1D1D1F?text=Apple+Watch+Series+9+Side",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=Apple+Watch+Series+9+Fitness"
+      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+Series+9+Fitness"
     ]
   },
   {
@@ -711,14 +711,14 @@ const PRODUCTS_DATA = [
     tags: "value,bestseller",
     displayOrder: 3,
     colors: [
-      { name: "Midnight", hex: "#1C2329", images: ["https://placehold.co/800x800/1C2329/FFFFFF?text=WatchSE+Midnight+1", "https://placehold.co/800x800/1C2329/FFFFFF?text=WatchSE+Midnight+2"] },
+      { name: "Midnight", hex: "#1C2329", images: ["https://placehold.co/800x800/171717/FFFFFF?text=WatchSE+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=WatchSE+Midnight+2"] },
       { name: "Starlight", hex: "#F3EDE0", images: ["https://placehold.co/800x800/F3EDE0/1D1D1F?text=WatchSE+Starlight+1", "https://placehold.co/800x800/F3EDE0/1D1D1F?text=WatchSE+Starlight+2"] }
     ],
     images: [
-      "https://placehold.co/800x800/1C2329/FFFFFF?text=Apple+Watch+SE+Front",
+      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+SE+Front",
       "https://placehold.co/800x800/F3EDE0/1D1D1F?text=Apple+Watch+SE+Back",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+Watch+SE+Band",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=Apple+Watch+SE+Workout"
+      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+SE+Workout"
     ]
   },
 
@@ -754,7 +754,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/FFFFFF/1D1D1F?text=AirPods+Pro+2+Hero",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=AirPods+Pro+2+Case+Open",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=AirPods+Pro+2+Earbuds",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=AirPods+Pro+2+InEar"
+      "https://placehold.co/800x800/171717/FFFFFF?text=AirPods+Pro+2+InEar"
     ]
   },
   {
@@ -788,7 +788,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/FAFAFA/1D1D1F?text=AirPods+3+Front",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=AirPods+3+Open",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=AirPods+3+Earbuds",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=AirPods+3+Case"
+      "https://placehold.co/800x800/171717/FFFFFF?text=AirPods+3+Case"
     ]
   },
   {
@@ -860,7 +860,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/1C1D1F/FFFFFF?text=Apple+TV+4K+Box",
       "https://placehold.co/800x800/333333/FFFFFF?text=Apple+TV+Siri+Remote",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+TV+Ports",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=Apple+TV+Setup"
+      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+TV+Setup"
     ]
   },
   {
@@ -895,7 +895,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/22252A/FFFFFF?text=HomePod+2+Midnight",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=HomePod+2+White",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=HomePod+2+TopSurface",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=HomePod+2+LivingRoom"
+      "https://placehold.co/800x800/171717/FFFFFF?text=HomePod+2+LivingRoom"
     ]
   },
   {
@@ -923,12 +923,12 @@ const PRODUCTS_DATA = [
     displayOrder: 3,
     colors: [
       { name: "Space Gray", hex: "#3B3C3E", images: ["https://placehold.co/800x800/3B3C3E/FFFFFF?text=Mini+Gray+1", "https://placehold.co/800x800/3B3C3E/FFFFFF?text=Mini+Gray+2"] },
-      { name: "Blue", hex: "#2B5270", images: ["https://placehold.co/800x800/2B5270/FFFFFF?text=Mini+Blue+1", "https://placehold.co/800x800/2B5270/FFFFFF?text=Mini+Blue+2"] },
+      { name: "Blue", hex: "#2B5270", images: ["https://placehold.co/800x800/171717/FFFFFF?text=Mini+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=Mini+Blue+2"] },
       { name: "White", hex: "#F3F4F5", images: ["https://placehold.co/800x800/F3F4F5/1D1D1F?text=Mini+White+1", "https://placehold.co/800x800/F3F4F5/1D1D1F?text=Mini+White+2"] }
     ],
     images: [
       "https://placehold.co/800x800/3B3C3E/FFFFFF?text=HomePod+mini+Hero",
-      "https://placehold.co/800x800/2B5270/FFFFFF?text=HomePod+mini+Blue",
+      "https://placehold.co/800x800/171717/FFFFFF?text=HomePod+mini+Blue",
       "https://placehold.co/800x800/F3F4F5/1D1D1F?text=HomePod+mini+White",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=HomePod+mini+Top"
     ]
@@ -965,7 +965,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/FFFFFF/1D1D1F?text=Apple+Pencil+Pro+Hero",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+Pencil+Pro+Tip",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=Apple+Pencil+Pro+on+iPad",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=Apple+Pencil+Pro+Packaging"
+      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Pencil+Pro+Packaging"
     ]
   },
   {
@@ -997,7 +997,7 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/EEEEEE/1D1D1F?text=MagSafe+Charger+Hero",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MagSafe+On+iPhone",
       "https://placehold.co/800x800/1D1D1F/FFFFFF?text=MagSafe+Coil",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=MagSafe+Box"
+      "https://placehold.co/800x800/171717/FFFFFF?text=MagSafe+Box"
     ]
   },
   {
@@ -1030,13 +1030,13 @@ const PRODUCTS_DATA = [
       "https://placehold.co/800x800/FFFFFF/1D1D1F?text=AirTag+4Pack+Box",
       "https://placehold.co/800x800/E3E3E3/1D1D1F?text=AirTag+Individual",
       "https://placehold.co/800x800/F5F5F7/1D1D1F?text=AirTag+With+Keys",
-      "https://placehold.co/800x800/0071E3/FFFFFF?text=AirTag+InBag"
+      "https://placehold.co/800x800/171717/FFFFFF?text=AirTag+InBag"
     ]
   }
 ];
 
 async function main() {
-  console.log("🇬🇭 Starting GhanaApps Store physical Apple hardware seed...");
+  console.log("🇬🇭 Starting I-Store physical Apple hardware seed...");
 
   let productsCount = 0;
   let reviewsCount = 0;

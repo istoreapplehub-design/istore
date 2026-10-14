@@ -7,12 +7,14 @@ const {
   initializePaymentSchema
 } = require("../controllers/paystackController");
 const { validate } = require("../middleware/validate");
-const { requireAuth } = require("../middleware/auth");
+const { optionalAuth } = require("../middleware/auth");
 
-// POST /api/paystack/initialize - Initialize Paystack checkout for an order (Authenticated)
+// POST /api/paystack/initialize - Initialize Paystack checkout for an order
+// (Optional auth: authenticated users pay their own orders; guests pay a null-userId
+//  order by passing the contact email stored on the order — invalid tokens still 401)
 router.post(
   "/initialize",
-  requireAuth,
+  optionalAuth,
   validate({ body: initializePaymentSchema }),
   initializePayment
 );

@@ -7,6 +7,7 @@ const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const productsRouter = require("./routes/products");
 const categoriesRouter = require("./routes/categories");
+const userRouter = require("./routes/user");
 const reviewsRouter = require("./routes/reviews");
 const ordersRouter = require("./routes/orders");
 const paystackRouter = require("./routes/paystack");
@@ -47,6 +48,7 @@ app.use("/api/admin/settings", adminSettingsRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/products", reviewsRouter); // Sub-routes mounted at /:slug/reviews
 app.use("/api/categories", categoriesRouter);
+app.use("/api/user", userRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/paystack", paystackRouter);
 

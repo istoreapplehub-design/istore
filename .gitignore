@@ -42,3 +42,10 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+# Local build artifacts (APK, simulator builds, web exports)
+builds/
+
+# Editor
+.idea/
+.vscode/

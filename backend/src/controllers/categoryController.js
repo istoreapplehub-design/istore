@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 
-const prisma = new PrismaClient();
+const prisma = require("../utils/prisma");
 
 const CATEGORIES_METADATA = [
   {
@@ -12,13 +11,13 @@ const CATEGORIES_METADATA = [
   {
     name: "iPad",
     slug: "ipad",
-    image: "https://placehold.co/800x800/5B8FB9/FFFFFF?text=iPad",
+    image: "https://placehold.co/800x800/171717/FFFFFF?text=iPad",
     displayOrder: 2
   },
   {
     name: "Mac",
     slug: "mac",
-    image: "https://placehold.co/800x800/1C242F/FFFFFF?text=Mac",
+    image: "https://placehold.co/800x800/171717/FFFFFF?text=Mac",
     displayOrder: 3
   },
   {
@@ -36,7 +35,7 @@ const CATEGORIES_METADATA = [
   {
     name: "TV & Home",
     slug: "tv-and-home",
-    image: "https://placehold.co/800x800/22252A/FFFFFF?text=TV+%26+Home",
+    image: "https://placehold.co/800x800/171717/FFFFFF?text=TV+%26+Home",
     displayOrder: 6
   },
   {
