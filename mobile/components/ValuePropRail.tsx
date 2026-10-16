@@ -70,7 +70,7 @@ export function ValuePropRail() {
           }}
         >
           <View style={styles.iconCircle}>
-            <Ionicons name={item.icon} size={20} color={colors.text} />
+            <Ionicons name={item.icon} size={20} color={colors.brandRed} />
           </View>
           <Text style={styles.eyebrow}>{item.eyebrow.toUpperCase()}</Text>
           <Text style={styles.title}>{item.title}</Text>
@@ -78,7 +78,7 @@ export function ValuePropRail() {
           {item.href ? (
             <View style={styles.linkRow}>
               <Text style={styles.linkText}>Find out more</Text>
-              <Ionicons name="chevron-forward" size={12} color={colors.accent} />
+              <Ionicons name="chevron-forward" size={12} color={colors.brandRed} />
             </View>
           ) : null}
         </Pressable>
@@ -104,16 +104,18 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: radius.full,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 14
   },
   eyebrow: {
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: 1.1,
-    color: colors.textTertiary
+    color: colors.brandRed
   },
   title: {
     fontSize: 19,
@@ -136,8 +138,8 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 13,
-    fontWeight: "600",
-    color: colors.accent
+    fontWeight: "700",
+    color: colors.brandRed
   }
 });
 

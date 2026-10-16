@@ -18,6 +18,8 @@ import { useCartStore } from "../store/useCartStore";
 import { useWishlistStore } from "../store/useWishlistStore";
 import { getMyOrders } from "../services/api";
 import { getPreferences } from "../lib/preferences";
+import { checkHasUnreadNotifications } from "../lib/notifications";
+import { AppHaptics } from "../lib/haptics";
 
 function Row({
   icon,
@@ -84,18 +86,18 @@ export default function AccountScreen() {
   const refresh = async () => {
     if (!session) return;
     const userId = useUserStore.getState().userId;
-    const [orders, prefs, lastSeen] = await Promise.all([
+    const [orders, prefs, unread] = await Promise.all([
       userId
         ? getMyOrders(userId, { page: 1, limit: 1 })
             .then((res) => res.meta?.total ?? 0)
             .catch(() => null)
         : Promise.resolve(null),
       getPreferences(),
-      AsyncStorage.getItem("istore-notifications-last-seen")
+      userId ? checkHasUnreadNotifications(userId) : Promise.resolve(false)
     ]);
     setOrderCount(orders);
     setDefaultRegion(prefs.defaultRegion);
-    setHasUnread(!lastSeen);
+    setHasUnread(unread);
   };
 
   const onPullRefresh = async () => {

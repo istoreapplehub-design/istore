@@ -16,6 +16,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -30,6 +31,7 @@ import { SectionHeader } from "../components/SectionHeader";
 const RECENT_SEARCHES_KEY = "ghanaapps_recent_searches";
 
 export default function SearchScreen() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -150,11 +152,31 @@ export default function SearchScreen() {
     setResults([]);
   };
 
+  const handleCancel = () => {
+    Haptics.selectionAsync();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 1. Header & Sticky Search Bar */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Search</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.headerTitle}>Search</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close search"
+            hitSlop={10}
+            onPress={handleCancel}
+            style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.6 }]}
+          >
+            <Text style={styles.cancelBtnText}>Cancel</Text>
+          </Pressable>
+        </View>
         <View style={styles.searchBar}>
           <Ionicons
             name="search"
@@ -298,12 +320,26 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 10
   },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8
+  },
   headerTitle: {
     fontSize: 34,
     fontWeight: "700",
     letterSpacing: -0.6,
-    color: colors.text,
-    marginBottom: 8
+    color: colors.text
+  },
+  cancelBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 4
+  },
+  cancelBtnText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.accent
   },
   searchBar: {
     height: 44,

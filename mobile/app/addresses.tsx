@@ -74,7 +74,7 @@ export default function AddressesScreen() {
 
   if (!session) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.guestState}>
           <Ionicons name="location-outline" size={44} color={colors.textTertiary} />
           <Text style={typography.h3}>Sign in required</Text>

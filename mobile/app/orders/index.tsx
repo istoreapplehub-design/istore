@@ -128,7 +128,7 @@ export default function OrdersIndexScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.skeletonList}>
           {Array.from({ length: 4 }).map((_, i) => (
             <View key={i} style={styles.skeletonCard}>
@@ -154,7 +154,7 @@ export default function OrdersIndexScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       {orders.length === 0 ? (
         error ? (
           <ErrorState

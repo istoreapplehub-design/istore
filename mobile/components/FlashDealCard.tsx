@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     left: 10,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandRed,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: radius.full
@@ -149,17 +149,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 10,
     right: 10,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: radius.full
   },
   scarcePillText: {
-    color: colors.text,
+    color: colors.brandRed,
     fontSize: 10,
-    fontWeight: "700"
+    fontWeight: "800"
   },
   body: {
     padding: 12
@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
   },
   saved: {
     fontSize: 12,
-    fontWeight: "600",
-    color: colors.accent,
+    fontWeight: "700",
+    color: colors.brandRed,
     marginTop: 2
   },
   track: {
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   fill: {
     height: "100%",
     borderRadius: radius.full,
-    backgroundColor: colors.accent
+    backgroundColor: colors.brandRed
   },
   stockCaption: {
     fontSize: 11,

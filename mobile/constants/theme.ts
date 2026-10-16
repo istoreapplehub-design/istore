@@ -4,20 +4,24 @@ export const colors = {
   background: "#FFFFFF",
   surface: "#F5F5F7",
   surfaceElevated: "#FFFFFF",
-  text: "#1D1D1F",
-  textSecondary: "#6E6E73",
+  text: "#111111",
+  textSecondary: "#52525B",
   textTertiary: "#86868B",
-  accent: "#171717",     // Luxury monochrome ink (matches Admin portal)
-  accentDark: "#000000",
-  success: "#171717",    // Confirmed/paid states render as solid ink
-  danger: "#171717",     // Destructive actions: black pill, white label
-  badge: "#171717",
-  gold: "#171717",
+  accent: "#111111",          // Obsidian black primary ink
+  accentDark: "#0A0A0A",      // Deep carbon stage
+  brandRed: "#E11D48",        // Signature Apple (PRODUCT)RED crimson
+  brandRedDark: "#BE123C",    // Deep crimson press state
+  brandRedSoft: "rgba(225, 29, 72, 0.10)", // Soft crimson tint for pills/badges
+  brandRedBorder: "rgba(225, 29, 72, 0.25)",
+  success: "#111111",
+  danger: "#E11D48",          // Crimson alert/destructive accent
+  badge: "#E11D48",           // Live crimson badges & notification dots
+  gold: "#E11D48",
   border: "#E5E5EA",
   cardShadow: "rgba(0, 0, 0, 0.06)",
   tabInactive: "#8E8E93",
-  star: "#171717",
-  gradientBottom: "rgba(0, 0, 0, 0.75)",
+  star: "#E11D48",            // Crimson rating stars
+  gradientBottom: "rgba(0, 0, 0, 0.78)",
   gradientTop: "rgba(0, 0, 0, 0)",
   imageBg: "#F5F5F7"
 } as const;

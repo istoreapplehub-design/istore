@@ -27,8 +27,16 @@ const baseCreateOrderSchema = z.object({
     gpsAddress: z.string().trim().optional(),
     landmark: z.string().trim().optional()
   }),
-  notes: z.string().trim().max(500, "Notes cannot exceed 500 characters").optional()
+  notes: z.string().trim().max(500, "Notes cannot exceed 500 characters").optional(),
+  promoCode: z.string().trim().max(32, "Promo code cannot exceed 32 characters").optional()
 });
+
+const PROMO_DISCOUNTS = {
+  APPLEGH: 10,
+  WELCOME10: 10,
+  VIP10: 10,
+  SAVE5: 5
+};
 
 // Authenticated checkout: identity comes from the token, email is never taken from the body
 const createOrderSchema = baseCreateOrderSchema;
@@ -66,8 +74,9 @@ const updateStatusSchema = z.object({
  * @param {Array} params.items
  * @param {object} params.shippingAddress already-validated address (guest email included)
  * @param {string|null} [params.notes]
+ * @param {string|null} [params.promoCode]
  */
-async function persistOrder({ userId, items, shippingAddress, notes }) {
+async function persistOrder({ userId, items, shippingAddress, notes, promoCode }) {
   return prisma.$transaction(async (tx) => {
     const productIds = items.map((i) => i.productId);
 
@@ -124,8 +133,12 @@ async function persistOrder({ userId, items, shippingAddress, notes }) {
       };
     });
 
+    const normalizedPromo = typeof promoCode === "string" ? promoCode.trim().toUpperCase() : "";
+    const discountPct = PROMO_DISCOUNTS[normalizedPromo] || 0;
+    const discountAmountGHS = discountPct > 0 ? Math.round((subtotalGHS * discountPct) / 100) : 0;
+
     const deliveryFeeGHS = getDeliveryFee(shippingAddress.region);
-    const totalGHS = subtotalGHS + deliveryFeeGHS;
+    const totalGHS = Math.max(0, subtotalGHS - discountAmountGHS + deliveryFeeGHS);
 
     // 4. Create Order and nested OrderItems
     const newOrder = await tx.order.create({
@@ -156,10 +169,10 @@ async function persistOrder({ userId, items, shippingAddress, notes }) {
  */
 async function createOrder(req, res, next) {
   try {
-    const { items, shippingAddress, notes } = req.body;
+    const { items, shippingAddress, notes, promoCode } = req.body;
     const userId = req.user.id;
 
-    const createdOrder = await persistOrder({ userId, items, shippingAddress, notes });
+    const createdOrder = await persistOrder({ userId, items, shippingAddress, notes, promoCode });
 
     res.status(201).json(formatOrder(createdOrder));
   } catch (err) {
@@ -174,7 +187,7 @@ async function createOrder(req, res, next) {
  */
 async function createGuestOrder(req, res, next) {
   try {
-    const { items, shippingAddress, notes, email } = req.body;
+    const { items, shippingAddress, notes, email, promoCode } = req.body;
 
     const guestShippingAddress = { ...shippingAddress, email };
 
@@ -182,7 +195,8 @@ async function createGuestOrder(req, res, next) {
       userId: null,
       items,
       shippingAddress: guestShippingAddress,
-      notes
+      notes,
+      promoCode
     });
 
     res.status(201).json(formatOrder(createdOrder));

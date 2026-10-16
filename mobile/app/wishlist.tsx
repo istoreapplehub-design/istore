@@ -10,7 +10,8 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -26,6 +27,10 @@ import SkeletonLoader from "../components/SkeletonLoader";
 
 export default function WishlistScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const containerWidth = Math.min(width, 820);
+  const numColumns = containerWidth >= 680 ? 3 : 2;
+  const cardWidth = Math.floor((containerWidth - 32 - 12 * (numColumns - 1)) / numColumns);
   const { items: wishlistIds, toggle } = useWishlistStore();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -78,10 +83,10 @@ export default function WishlistScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.skeletonGrid}>
           {Array.from({ length: 4 }).map((_, i) => (
-            <View key={i} style={styles.skeletonCard}>
+            <View key={i} style={[styles.skeletonCard, { width: cardWidth }]}>
               <SkeletonLoader height={160} radius={16} />
               <SkeletonLoader height={18} width="85%" style={{ marginTop: 10 }} />
               <SkeletonLoader height={14} width="50%" style={{ marginTop: 6 }} />
@@ -93,7 +98,7 @@ export default function WishlistScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       {products.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons
@@ -121,9 +126,10 @@ export default function WishlistScreen() {
         </View>
       ) : (
         <FlatList
+          key={`wishlist-cols-${numColumns}`}
           data={products}
           keyExtractor={(item) => item.id}
-          numColumns={2}
+          numColumns={numColumns}
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -144,7 +150,7 @@ export default function WishlistScreen() {
               layout={Layout.springify()}
               entering={FadeIn}
               exiting={FadeOut.duration(200)}
-              style={styles.cardWrapper}
+              style={[styles.cardWrapper, { width: cardWidth, maxWidth: cardWidth }]}
             >
               <ProductCard
                 product={item}

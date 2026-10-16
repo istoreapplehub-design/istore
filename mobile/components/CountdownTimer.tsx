@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
     minWidth: 38,
     paddingVertical: 6,
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.14)",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(225, 29, 72, 0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(225, 29, 72, 0.45)",
     alignItems: "center",
     justifyContent: "center"
   },
@@ -110,37 +110,43 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "700",
     letterSpacing: 1,
-    color: "rgba(255,255,255,0.55)",
+    color: "rgba(255,255,255,0.65)",
     marginTop: 5
   },
   blockValue: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#FFFFFF",
     fontVariant: ["tabular-nums"],
     letterSpacing: 0.5
   },
   colon: {
     fontSize: 15,
-    fontWeight: "700",
-    color: "rgba(255,255,255,0.55)",
+    fontWeight: "800",
+    color: colors.brandRed,
     marginHorizontal: 5,
     marginTop: 8
   },
   inlineRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6
+    gap: 6,
+    backgroundColor: "rgba(225, 29, 72, 0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(225, 29, 72, 0.45)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999
   },
   inlineLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.textSecondary
+    fontSize: 11,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.75)"
   },
   inlineValue: {
     fontSize: 13,
-    fontWeight: "700",
-    color: colors.accent,
+    fontWeight: "800",
+    color: "#FFFFFF",
     fontVariant: ["tabular-nums"]
   },
   expired: {

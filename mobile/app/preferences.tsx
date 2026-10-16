@@ -1,7 +1,7 @@
 /**
  * Haptics Audit:
- * - Haptics.selectionAsync() on option rows
- * - Haptics.notificationAsync("success") when the default region is saved
+ * - AppHaptics.selection() on option rows and toggles
+ * - AppHaptics.success() when the default region is saved
  */
 import React, { useEffect, useState } from "react";
 import {
@@ -9,30 +9,66 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { colors, typography } from "../constants/theme";
 import { GHANA_REGIONS } from "../constants/config";
 import { getPreferences, savePreferences } from "../lib/preferences";
+import { AppHaptics, setHapticsEnabled } from "../lib/haptics";
 
 export default function PreferencesScreen() {
   const [defaultRegion, setDefaultRegion] = useState("");
+  const [orderNotifications, setOrderNotifications] = useState(true);
+  const [promotionsNotifications, setPromotionsNotifications] = useState(false);
+  const [hapticFeedback, setHapticFeedback] = useState(true);
   const [regionPickerVisible, setRegionPickerVisible] = useState(false);
 
   useEffect(() => {
-    getPreferences().then((p) => setDefaultRegion(p.defaultRegion));
+    getPreferences().then((p) => {
+      setDefaultRegion(p.defaultRegion || "");
+      if (typeof p.orderNotifications === "boolean") {
+        setOrderNotifications(p.orderNotifications);
+      }
+      if (typeof p.promotionsNotifications === "boolean") {
+        setPromotionsNotifications(p.promotionsNotifications);
+      }
+      if (typeof p.hapticFeedback === "boolean") {
+        setHapticFeedback(p.hapticFeedback);
+      }
+    });
   }, []);
 
   const handleSelectRegion = async (region: string) => {
-    Haptics.selectionAsync();
+    AppHaptics.selection();
     setDefaultRegion(region);
     setRegionPickerVisible(false);
     await savePreferences({ defaultRegion: region });
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    AppHaptics.success();
+  };
+
+  const handleToggleOrderNotifications = async (val: boolean) => {
+    AppHaptics.selection();
+    setOrderNotifications(val);
+    await savePreferences({ orderNotifications: val });
+  };
+
+  const handleTogglePromotions = async (val: boolean) => {
+    AppHaptics.selection();
+    setPromotionsNotifications(val);
+    await savePreferences({ promotionsNotifications: val });
+  };
+
+  const handleToggleHaptics = async (val: boolean) => {
+    setHapticsEnabled(val);
+    setHapticFeedback(val);
+    if (val) {
+      AppHaptics.selection();
+    }
+    await savePreferences({ hapticFeedback: val });
   };
 
   return (
@@ -40,8 +76,61 @@ export default function PreferencesScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.pageHeader}>
           <Text style={typography.bodySmall}>
-            How I-Store speaks, prices and delivers to you.
+            How I-Store speaks, alerts, prices and delivers to you.
           </Text>
+        </View>
+
+        {/* NOTIFICATIONS */}
+        <Text style={styles.sectionLabel}>NOTIFICATIONS</Text>
+        <View style={styles.groupContainer}>
+          <View style={styles.optionRow}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.optionLabel}>Order & Delivery Updates</Text>
+              <Text style={styles.optionSub}>
+                Updates when your devices are confirmed, packed, shipped and delivered.
+              </Text>
+            </View>
+            <Switch
+              value={orderNotifications}
+              onValueChange={handleToggleOrderNotifications}
+              trackColor={{ false: colors.border, true: "rgba(23, 23, 23, 0.35)" }}
+              thumbColor={orderNotifications ? colors.accent : "#FFFFFF"}
+            />
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.optionRow}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.optionLabel}>Flash Sales & Drops</Text>
+              <Text style={styles.optionSub}>
+                Alerts when new daily flash deals go live at midnight.
+              </Text>
+            </View>
+            <Switch
+              value={promotionsNotifications}
+              onValueChange={handleTogglePromotions}
+              trackColor={{ false: colors.border, true: "rgba(23, 23, 23, 0.35)" }}
+              thumbColor={promotionsNotifications ? colors.accent : "#FFFFFF"}
+            />
+          </View>
+        </View>
+
+        {/* FEEDBACK & HAPTICS */}
+        <Text style={styles.sectionLabel}>TACTILE FEEDBACK</Text>
+        <View style={styles.groupContainer}>
+          <View style={styles.optionRow}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.optionLabel}>Haptic Feedback</Text>
+              <Text style={styles.optionSub}>
+                Subtle micro-vibrations for taps, button presses, variant picks and state changes.
+              </Text>
+            </View>
+            <Switch
+              value={hapticFeedback}
+              onValueChange={handleToggleHaptics}
+              trackColor={{ false: colors.border, true: "rgba(23, 23, 23, 0.35)" }}
+              thumbColor={hapticFeedback ? colors.accent : "#FFFFFF"}
+            />
+          </View>
         </View>
 
         {/* LANGUAGE & CURRENCY */}
@@ -59,8 +148,7 @@ export default function PreferencesScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.optionLabel}>Ghana Cedi — ₵ (GHS)</Text>
               <Text style={styles.optionSub}>
-                Every price, delivery fee and MoMo charge is in cedis. There is no other
-                currency to switch to.
+                Every price, delivery fee and MoMo charge is in cedis.
               </Text>
             </View>
             <Ionicons name="checkmark" size={20} color={colors.accent} />
@@ -73,7 +161,7 @@ export default function PreferencesScreen() {
           <Pressable
             style={({ pressed }) => [styles.optionRow, pressed && styles.rowPressed]}
             onPress={() => {
-              Haptics.selectionAsync();
+              AppHaptics.selection();
               setRegionPickerVisible(true);
             }}
           >
@@ -145,11 +233,7 @@ const styles = StyleSheet.create({
     paddingBottom: 48
   },
   pageHeader: {
-    marginBottom: 20
-  },
-  pageTitle: {
-    ...typography.h1,
-    marginBottom: 6
+    marginBottom: 8
   },
   sectionLabel: {
     fontSize: 11,
@@ -185,7 +269,8 @@ const styles = StyleSheet.create({
   optionSub: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginTop: 3
+    marginTop: 3,
+    lineHeight: 16
   },
   valueText: {
     fontSize: 15,

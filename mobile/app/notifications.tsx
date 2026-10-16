@@ -22,8 +22,8 @@ import { Order } from "../types";
 import { getMyOrders } from "../services/api";
 import { useUserStore } from "../store/useUserStore";
 import ErrorState from "../components/ErrorState";
-
-const LAST_SEEN_KEY = "istore-notifications-last-seen";
+import { NOTIFICATIONS_LAST_SEEN_KEY, markNotificationsAsSeen } from "../lib/notifications";
+import { AppHaptics } from "../lib/haptics";
 
 interface NotificationEvent {
   id: string;
@@ -139,7 +139,7 @@ export default function NotificationsScreen() {
       return;
     }
     load();
-    AsyncStorage.getItem(LAST_SEEN_KEY).then((v) => {
+    AsyncStorage.getItem(NOTIFICATIONS_LAST_SEEN_KEY).then((v) => {
       if (v) setLastSeen(Number(v));
     });
   }, [session, load]);
@@ -147,7 +147,7 @@ export default function NotificationsScreen() {
   const markSeen = useCallback(async () => {
     const now = Date.now();
     setLastSeen(now);
-    await AsyncStorage.setItem(LAST_SEEN_KEY, String(now));
+    await markNotificationsAsSeen();
   }, []);
 
   if (!session) {
@@ -241,7 +241,7 @@ export default function NotificationsScreen() {
             <Pressable
               style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
               onPress={() => {
-                Haptics.selectionAsync();
+                AppHaptics.selection();
                 markSeen();
                 router.push(`/orders/${item.orderId}`);
               }}

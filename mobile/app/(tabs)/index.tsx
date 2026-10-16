@@ -122,11 +122,14 @@ export default function HomeScreen() {
             router.push("/(tabs)/flash");
           }}
         >
-          <Ionicons name="flash" size={13} color={colors.text} />
+          <View style={styles.livePill}>
+            <View style={styles.liveDot} />
+            <Text style={styles.livePillText}>LIVE</Text>
+          </View>
           <Text style={styles.stripText}>
             New flash deals updated daily at midnight
           </Text>
-          <Ionicons name="chevron-forward" size={13} color={colors.textTertiary} />
+          <Ionicons name="chevron-forward" size={13} color={colors.brandRed} />
         </Pressable>
 
         {/* Editorial hero */}
@@ -142,7 +145,9 @@ export default function HomeScreen() {
           <Animated.View entering={FadeInDown.duration(420)} style={styles.flashBand}>
             <View style={styles.flashBandHead}>
               <View style={styles.flashTitleRow}>
-                <Ionicons name="flash" size={17} color="#FFFFFF" />
+                <View style={styles.flashIconCircle}>
+                  <Ionicons name="flash" size={14} color="#FFFFFF" />
+                </View>
                 <Text style={styles.flashTitle}>Flash Sales</Text>
               </View>
               <CountdownTimer endsAt={endsAt} variant="inline" />
@@ -187,6 +192,9 @@ export default function HomeScreen() {
             contentContainerStyle={styles.editorialContent}
             renderItem={({ item }) => {
               const image = getProductImage(item);
+              const isSale = Boolean(
+                item.compareAtPriceGHS && item.compareAtPriceGHS > item.priceGHS
+              );
 
               return (
                 <Pressable
@@ -197,11 +205,22 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={styles.editorialCopy}>
-                    <Text style={styles.editorialEyebrow}>
-                      {item.compareAtPriceGHS && item.compareAtPriceGHS > item.priceGHS
-                        ? "On sale now"
-                        : "Just landed"}
-                    </Text>
+                    <View style={styles.editorialEyebrowRow}>
+                      <View
+                        style={[
+                          styles.editorialEyebrowDot,
+                          { backgroundColor: isSale ? colors.brandRed : colors.accent }
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.editorialEyebrow,
+                          isSale && { color: colors.brandRed }
+                        ]}
+                      >
+                        {isSale ? "On sale now" : "Just landed"}
+                      </Text>
+                    </View>
                     <Text style={styles.editorialTitle} numberOfLines={2}>
                       {item.name}
                     </Text>
@@ -212,7 +231,7 @@ export default function HomeScreen() {
                       <View style={styles.editorialPill}>
                         <Text style={styles.editorialPillText}>Buy</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={14} color={colors.accent} />
+                      <Ionicons name="chevron-forward" size={14} color={colors.brandRed} />
                     </View>
                   </View>
 
@@ -313,15 +332,36 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 8,
     paddingVertical: 9,
     backgroundColor: colors.background,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border
   },
+  livePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.brandRed,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: radius.full
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#FFFFFF"
+  },
+  livePillText: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    color: "#FFFFFF"
+  },
   stripText: {
     fontSize: 12.5,
-    fontWeight: "500",
+    fontWeight: "600",
     color: colors.text,
     letterSpacing: -0.1
   },
@@ -333,7 +373,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     backgroundColor: colors.accentDark,
     borderRadius: radius.xl,
-    paddingTop: 18
+    borderWidth: 1,
+    borderColor: "rgba(225, 29, 72, 0.35)",
+    paddingTop: 18,
+    overflow: "hidden"
   },
   flashBandHead: {
     flexDirection: "row",
@@ -345,11 +388,19 @@ const styles = StyleSheet.create({
   flashTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7
+    gap: 8
+  },
+  flashIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.brandRed,
+    alignItems: "center",
+    justifyContent: "center"
   },
   flashTitle: {
     fontSize: 21,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#FFFFFF",
     letterSpacing: -0.5
   },
@@ -365,13 +416,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 7,
     paddingVertical: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(255,255,255,0.16)"
+    backgroundColor: colors.brandRed
   },
   flashSeeAllText: {
     color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "700"
   },
   editorialContent: {
     paddingHorizontal: 16,
@@ -388,11 +438,21 @@ const styles = StyleSheet.create({
   editorialCopy: {
     padding: 18
   },
+  editorialEyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6
+  },
+  editorialEyebrowDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3
+  },
   editorialEyebrow: {
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: 0.8,
-    color: colors.textTertiary,
+    color: colors.textSecondary,
     textTransform: "uppercase"
   },
   editorialTitle: {
@@ -416,7 +476,7 @@ const styles = StyleSheet.create({
     marginTop: 12
   },
   editorialPill: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandRed,
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: radius.full
@@ -424,7 +484,7 @@ const styles = StyleSheet.create({
   editorialPillText: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "600"
+    fontWeight: "700"
   },
   editorialImage: {
     width: "100%",

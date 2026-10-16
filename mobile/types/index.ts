@@ -95,6 +95,8 @@ export interface Order {
   paymentReference?: string | null;
   paymentChannel?: string | null;
   status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
+  courier?: string | null;
+  trackingNumber?: string | null;
   notes?: string | null;
   paidAt?: string | null;
   shippedAt?: string | null;

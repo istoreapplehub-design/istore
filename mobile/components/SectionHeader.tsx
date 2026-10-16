@@ -42,7 +42,10 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
   return (
     <View style={styles.container}>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.titleRow}>
+          <View style={styles.accentBar} />
+          <Text style={styles.title}>{title}</Text>
+        </View>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
 
@@ -58,7 +61,7 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
           <Ionicons
             name="chevron-forward"
             size={16}
-            color={colors.accent}
+            color={colors.brandRed}
             style={styles.chevron}
           />
         </AnimatedPressable>
@@ -79,6 +82,17 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  accentBar: {
+    width: 3.5,
+    height: 18,
+    borderRadius: 2,
+    backgroundColor: colors.brandRed
+  },
   title: {
     fontSize: 22,
     fontWeight: "700",
@@ -89,6 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     marginTop: 2,
+    marginLeft: 11.5,
     fontWeight: "400"
   },
   seeAllButton: {
@@ -97,8 +112,8 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 15,
-    fontWeight: "500",
-    color: colors.accent
+    fontWeight: "600",
+    color: colors.brandRed
   },
   chevron: {
     marginLeft: 2

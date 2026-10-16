@@ -24,7 +24,7 @@ const SLIDE_HEIGHT = 470;
 export function HeroCarousel({ products }: HeroCarouselProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const carouselWidth = Math.min(width, 768);
+  const carouselWidth = Math.min(width, 820);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const slides = useMemo(
@@ -60,8 +60,14 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
           return (
             <View style={[styles.slide, { width: carouselWidth }]}>
               <View style={styles.copy}>
-                <Animated.View entering={FadeInDown.delay(index * 60).duration(420)}>
-                  <Text style={styles.eyebrow}>{item.category.toUpperCase()}</Text>
+                <Animated.View
+                  entering={FadeInDown.delay(index * 60).duration(420)}
+                  style={{ alignItems: "center" }}
+                >
+                  <View style={styles.eyebrowPill}>
+                    <View style={styles.eyebrowDot} />
+                    <Text style={styles.eyebrow}>{item.category.toUpperCase()}</Text>
+                  </View>
                   <Text style={styles.title} numberOfLines={2}>
                     {item.name}
                   </Text>
@@ -78,7 +84,7 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
                     style={({ pressed }) => [styles.buyPill, pressed && { opacity: 0.85 }]}
                     onPress={() => open(item)}
                   >
-                    <Text style={styles.buyPillText}>Buy</Text>
+                    <Text style={styles.buyPillText}>Buy Now</Text>
                   </Pressable>
                   <Pressable
                     style={({ pressed }) => [styles.learnMore, pressed && { opacity: 0.6 }]}
@@ -143,25 +149,42 @@ const styles = StyleSheet.create({
   },
   copy: {
     alignItems: "center",
-    paddingTop: 26
+    paddingTop: 22
+  },
+  eyebrowPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.full
+  },
+  eyebrowDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.brandRed
   },
   eyebrow: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.4,
-    color: colors.textTertiary
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    color: colors.brandRed
   },
   title: {
     fontSize: 34,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.text,
     letterSpacing: -1,
     textAlign: "center",
-    marginTop: 6,
+    marginTop: 8,
     lineHeight: 40
   },
   tagline: {
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textSecondary,
     textAlign: "center",
     marginTop: 4
@@ -169,19 +192,24 @@ const styles = StyleSheet.create({
   ctaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 22,
+    gap: 20,
     marginTop: 14
   },
   buyPill: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandRed,
     paddingHorizontal: 24,
     paddingVertical: 10,
-    borderRadius: radius.full
+    borderRadius: radius.full,
+    shadowColor: colors.brandRed,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3
   },
   buyPillText: {
     color: "#FFFFFF",
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "700",
     letterSpacing: -0.2
   },
   learnMore: {
@@ -230,9 +258,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3
   },
   dealChip: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.brandRedSoft,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.brandRedBorder,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.full
@@ -240,7 +268,7 @@ const styles = StyleSheet.create({
   dealChipText: {
     fontSize: 12,
     fontWeight: "700",
-    color: colors.accent
+    color: colors.brandRed
   },
   pagination: {
     position: "absolute",
@@ -256,8 +284,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.full
   },
   dotActive: {
-    width: 18,
-    backgroundColor: colors.accent
+    width: 20,
+    backgroundColor: colors.brandRed
   },
   dotIdle: {
     width: 6,

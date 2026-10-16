@@ -2,12 +2,13 @@ import React from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radius } from "../constants/theme";
 import { Badge } from "./Badge";
 import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
+import { checkHasUnreadNotifications } from "../lib/notifications";
+import { AppHaptics } from "../lib/haptics";
 
 interface AppHeaderProps {
   /** Drives the hairline separator + frosted background once the screen is scrolled. */
@@ -34,11 +35,27 @@ export function AppHeader({
   const cartItemCount = useCartStore((state) => state.getItemCount());
   const name = useUserStore((state) => state.user?.name);
   const signedIn = useUserStore((state) => !!state.session);
+  const userId = useUserStore((state) => state.userId);
+  const [hasUnread, setHasUnread] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    if (signedIn && userId) {
+      checkHasUnreadNotifications(userId).then((unread) => {
+        if (active) setHasUnread(unread);
+      });
+    } else {
+      setHasUnread(false);
+    }
+    return () => {
+      active = false;
+    };
+  }, [signedIn, userId]);
 
   const initial = name ? name.trim().charAt(0).toUpperCase() : "";
 
   const press = (action: () => void) => {
-    Haptics.selectionAsync();
+    AppHaptics.selection();
     action();
   };
 
@@ -56,8 +73,15 @@ export function AppHeader({
           onPress={() => press(() => router.push("/(tabs)"))}
           style={styles.brand}
         >
-          <Ionicons name="logo-apple" size={22} color={colors.text} />
-          <Text style={styles.wordmark}>I-Store</Text>
+          <View style={styles.logoMark}>
+            <Ionicons name="logo-apple" size={16} color="#FFFFFF" />
+          </View>
+          <Text style={styles.wordmark}>
+            I-Store<Text style={styles.wordmarkDot}>.</Text>
+          </Text>
+          <View style={styles.hubPill}>
+            <Text style={styles.hubPillText}>HUB</Text>
+          </View>
         </Pressable>
 
         {showActions ? (
@@ -94,6 +118,7 @@ export function AppHeader({
               {signedIn ? (
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{initial || "?"}</Text>
+                  {hasUnread && <View style={styles.avatarUnreadDot} />}
                 </View>
               ) : (
                 <Ionicons name="person-outline" size={22} color={colors.text} />
@@ -138,13 +163,39 @@ const styles = StyleSheet.create({
   brand: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6
+    gap: 7
+  },
+  logoMark: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center"
   },
   wordmark: {
     fontSize: 19,
-    fontWeight: "700",
-    letterSpacing: -0.5,
+    fontWeight: "800",
+    letterSpacing: -0.6,
     color: colors.text
+  },
+  wordmarkDot: {
+    color: colors.brandRed,
+    fontWeight: "900"
+  },
+  hubPill: {
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6
+  },
+  hubPillText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    color: colors.brandRed
   },
   actions: {
     flexDirection: "row",
@@ -167,6 +218,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center"
+  },
+  avatarUnreadDot: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.badge,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF"
   },
   avatarText: {
     fontSize: 13,

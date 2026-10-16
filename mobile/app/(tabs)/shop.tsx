@@ -13,15 +13,18 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, typography } from "../../constants/theme";
+import { AppHaptics } from "../../lib/haptics";
 import { Product } from "../../types";
 import { getProducts } from "../../services/api";
 import AppHeader from "../../components/AppHeader";
@@ -51,6 +54,10 @@ const SORT_LABELS: Record<SortOption, string> = {
 
 export default function ShopScreen() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const containerWidth = Math.min(width, 820);
+  const numColumns = containerWidth >= 680 ? 3 : 2;
+  const cardWidth = Math.floor((containerWidth - 32 - 12 * (numColumns - 1)) / numColumns);
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string; sort?: string }>();
 
@@ -69,12 +76,20 @@ export default function ShopScreen() {
   );
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   // Temporary filter sheet state
   const [draftSortBy, setDraftSortBy] = useState<SortOption>(sortBy);
   const [draftMinPrice, setDraftMinPrice] = useState<string>(minPrice);
   const [draftMaxPrice, setDraftMaxPrice] = useState<string>(maxPrice);
+  const [draftInStockOnly, setDraftInStockOnly] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Active filters count
+  const activeFiltersCount =
+    (sortBy !== "newest" ? 1 : 0) +
+    (minPrice || maxPrice ? 1 : 0) +
+    (inStockOnly ? 1 : 0);
 
   // Data fetching state
   const [products, setProducts] = useState<Product[]>([]);
@@ -95,7 +110,7 @@ export default function ShopScreen() {
           setLoadingMore(true);
         }
 
-        const queryParams: Record<string, string | number | undefined> = {
+        const queryParams: Record<string, string | number | boolean | undefined> = {
           page: targetPage,
           limit: 10,
           sort: sortBy
@@ -111,6 +126,10 @@ export default function ShopScreen() {
 
         if (maxPrice && !isNaN(Number(maxPrice))) {
           queryParams.maxPrice = Number(maxPrice);
+        }
+
+        if (inStockOnly) {
+          queryParams.inStock = true;
         }
 
         const res = await getProducts(queryParams);
@@ -132,7 +151,7 @@ export default function ShopScreen() {
         setRefreshing(false);
       }
     },
-    [selectedCategory, sortBy, minPrice, maxPrice]
+    [selectedCategory, sortBy, minPrice, maxPrice, inStockOnly]
   );
 
   // Trigger on filter / category changes
@@ -159,29 +178,33 @@ export default function ShopScreen() {
   };
 
   const openFilterModal = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    AppHaptics.impactLight();
     setDraftSortBy(sortBy);
     setDraftMinPrice(minPrice);
     setDraftMaxPrice(maxPrice);
+    setDraftInStockOnly(inStockOnly);
     setShowFilterModal(true);
   };
 
   const applyFilters = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    AppHaptics.impactMedium();
     setSortBy(draftSortBy);
     setMinPrice(draftMinPrice);
     setMaxPrice(draftMaxPrice);
+    setInStockOnly(draftInStockOnly);
     setShowFilterModal(false);
   };
 
   const resetFilters = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    AppHaptics.impactLight();
     setDraftSortBy("newest");
     setDraftMinPrice("");
     setDraftMaxPrice("");
+    setDraftInStockOnly(false);
     setSortBy("newest");
     setMinPrice("");
     setMaxPrice("");
+    setInStockOnly(false);
     setShowFilterModal(false);
   };
 
@@ -201,7 +224,7 @@ export default function ShopScreen() {
             <Pressable
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               onPress={() => {
-                Haptics.selectionAsync();
+                AppHaptics.selection();
                 router.push("/search");
               }}
               style={({ pressed }) => [styles.filterBtn, pressed && { opacity: 0.6 }]}
@@ -215,7 +238,14 @@ export default function ShopScreen() {
               style={({ pressed }) => [styles.filterBtn, pressed && { opacity: 0.6 }]}
               accessibilityLabel="Sort and filter"
             >
-              <Ionicons name="options-outline" size={24} color={colors.text} />
+              <View style={{ position: "relative" }}>
+                <Ionicons name="options-outline" size={24} color={colors.text} />
+                {activeFiltersCount > 0 && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
+                  </View>
+                )}
+              </View>
             </Pressable>
           </View>
         }
@@ -258,7 +288,7 @@ export default function ShopScreen() {
       {loading ? (
         <View style={styles.skeletonGrid}>
           {Array.from({ length: 6 }).map((_, i) => (
-            <View key={i} style={styles.skeletonCard}>
+            <View key={i} style={[styles.skeletonCard, { width: cardWidth }]}>
               <SkeletonLoader height={160} radius={16} />
               <SkeletonLoader height={18} width="85%" style={{ marginTop: 10 }} />
               <SkeletonLoader height={14} width="50%" style={{ marginTop: 6 }} />
@@ -280,9 +310,10 @@ export default function ShopScreen() {
         )
       ) : (
         <FlatList
+          key={`shop-cols-${numColumns}`}
           data={products}
           keyExtractor={(item) => item.id}
-          numColumns={2}
+          numColumns={numColumns}
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -301,7 +332,11 @@ export default function ShopScreen() {
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.4}
           renderItem={({ item }) => (
-            <ProductCard product={item} variant="grid" style={styles.gridCard} />
+            <ProductCard
+              product={item}
+              variant="grid"
+              style={[styles.gridCard, { width: cardWidth, maxWidth: cardWidth }]}
+            />
           )}
           ListFooterComponent={
             <View style={styles.footerContainer}>
@@ -405,6 +440,26 @@ export default function ShopScreen() {
                   onChangeText={setDraftMaxPrice}
                 />
               </View>
+            </View>
+
+            <View style={styles.sheetDivider} />
+
+            {/* Availability */}
+            <Text style={styles.filterSectionLabel}>Availability</Text>
+            <View style={styles.toggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.toggleLabel}>In Stock Only</Text>
+                <Text style={styles.toggleSub}>Hide out-of-stock items</Text>
+              </View>
+              <Switch
+                value={draftInStockOnly}
+                onValueChange={(v) => {
+                  AppHaptics.selection();
+                  setDraftInStockOnly(v);
+                }}
+                trackColor={{ false: colors.border, true: "rgba(23, 23, 23, 0.35)" }}
+                thumbColor={draftInStockOnly ? colors.accent : "#FFFFFF"}
+              />
             </View>
 
             <View style={styles.sheetDivider} />
@@ -636,5 +691,38 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 15,
     fontWeight: "500"
+  },
+  filterBadge: {
+    position: "absolute",
+    top: -4,
+    right: -6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3
+  },
+  filterBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700"
+  },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: colors.text
+  },
+  toggleSub: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2
   }
 });

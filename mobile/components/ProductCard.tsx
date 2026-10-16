@@ -114,6 +114,10 @@ export function ProductCard({
     );
   }
 
+  const isOnSale = Boolean(
+    product.compareAtPriceGHS && product.compareAtPriceGHS > product.priceGHS
+  );
+
   // ─── VARIANT "GRID" ───────────────────────────────────────────────────────
   return (
     <AnimatedPressable
@@ -137,9 +141,20 @@ export function ProductCard({
         ) : (
           <ProductVisual category={product.category} glyphSize={54} />
         )}
+
+        {isOnSale ? (
+          <View style={styles.saleBadge}>
+            <Text style={styles.saleBadgeText}>SALE</Text>
+          </View>
+        ) : product.featured ? (
+          <View style={styles.featuredBadge}>
+            <Text style={styles.featuredBadgeText}>HOT</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.gridContent}>
+        <Text style={styles.gridCategory}>{product.category.toUpperCase()}</Text>
         <Text style={styles.gridTitle} numberOfLines={2}>
           {product.name}
         </Text>
@@ -161,6 +176,8 @@ const styles = StyleSheet.create({
     width: 168,
     backgroundColor: "#FFFFFF",
     borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadow.card,
     overflow: "hidden"
   },
@@ -176,8 +193,45 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%"
   },
+  saleBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: colors.brandRed,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radius.pill
+  },
+  saleBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.6
+  },
+  featuredBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: colors.accent,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radius.pill
+  },
+  featuredBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.6
+  },
   gridContent: {
     padding: spacing.sm + 4
+  },
+  gridCategory: {
+    fontSize: 9.5,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    color: colors.brandRed,
+    marginBottom: 2
   },
   gridTitle: {
     fontSize: 14,
@@ -232,7 +286,9 @@ const styles = StyleSheet.create({
     marginTop: 4
   },
   rowPill: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radius.pill
@@ -240,7 +296,7 @@ const styles = StyleSheet.create({
   rowPillText: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.accent
+    color: colors.brandRed
   },
   rowSeparator: {
     height: StyleSheet.hairlineWidth,

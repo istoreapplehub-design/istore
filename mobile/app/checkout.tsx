@@ -24,7 +24,6 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
 import { getPreferences } from "../lib/preferences";
@@ -36,7 +35,8 @@ import {
   initializePayment,
   verifyPayment
 } from "../services/api";
-import { Order } from "../types";
+import { Order, ShippingAddress } from "../types";
+import { AppHaptics } from "../lib/haptics";
 import PaystackCheckoutModal from "../components/PaystackCheckoutModal";
 import { ProductVisual, getStoredImage } from "../components/ProductVisual";
 
@@ -100,7 +100,14 @@ export default function CheckoutScreen() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showRegionModal, setShowRegionModal] = useState(false);
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; percent: number } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
 
   // Paystack state
   const [showPaystack, setShowPaystack] = useState(false);
@@ -110,9 +117,12 @@ export default function CheckoutScreen() {
   } | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
-  // Delivery fee & Total
+  // Delivery fee & Total calculations
   const deliveryFee = region ? REGION_FEE_MAP[region] || 55.0 : null;
-  const totalGHS = subtotalGHS + (deliveryFee || 0);
+  const discountAmount = appliedDiscount
+    ? Math.round((subtotalGHS * appliedDiscount.percent) / 100)
+    : 0;
+  const totalGHS = Math.max(0, subtotalGHS - discountAmount + (deliveryFee || 0));
 
   // Validation
   const cleanPhone = phone.replace(/[\s-]/g, "");
@@ -140,15 +150,47 @@ export default function CheckoutScreen() {
   };
 
   const handleSelectRegion = (selected: string) => {
-    Haptics.selectionAsync();
+    AppHaptics.selection();
     setRegion(selected);
     setShowRegionModal(false);
     setTouched((prev) => ({ ...prev, region: true }));
   };
 
+  const handleSelectSavedAddress = (addr: ShippingAddress) => {
+    AppHaptics.selection();
+    setFullName(addr.fullName);
+    setPhone(addr.phone);
+    setRegion(addr.region);
+    setCity(addr.city);
+    setGpsAddress(addr.gpsAddress || "");
+    setLandmark(addr.landmark || "");
+    setShowAddressPicker(false);
+    setTouched({});
+  };
+
+  const handleApplyPromo = () => {
+    const clean = promoCode.trim().toUpperCase();
+    if (!clean) return;
+    if (clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
+      AppHaptics.success();
+      setAppliedDiscount({ code: clean, percent: 10 });
+      setPromoSuccess("10% discount applied!");
+      setPromoError(null);
+    } else if (clean === "SAVE5") {
+      AppHaptics.success();
+      setAppliedDiscount({ code: clean, percent: 5 });
+      setPromoSuccess("5% discount applied!");
+      setPromoError(null);
+    } else {
+      AppHaptics.warning();
+      setPromoError("Promo code is invalid or has expired.");
+      setPromoSuccess(null);
+    }
+  };
+
   const handleCheckout = async () => {
     if (!isFormValid || submitting) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      AppHaptics.warning();
       setTouched({
         fullName: true,
         phone: true,
@@ -165,7 +207,7 @@ export default function CheckoutScreen() {
     }
 
     setSubmitting(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    AppHaptics.impactMedium();
 
     const cleanEmail = email.trim().toLowerCase();
 
@@ -185,7 +227,8 @@ export default function CheckoutScreen() {
           gpsAddress: gpsAddress.trim() || undefined,
           landmark: landmark.trim() || undefined
         },
-        notes: notes.trim() || undefined
+        notes: notes.trim() || undefined,
+        promoCode: appliedDiscount?.code || undefined
       };
 
       const order = needsGuestEmail
@@ -302,7 +345,7 @@ export default function CheckoutScreen() {
               key={lane.key}
               style={({ pressed }) => [styles.laneCard, pressed && styles.laneCardPressed]}
               onPress={() => {
-                Haptics.selectionAsync();
+                AppHaptics.selection();
                 if (lane.key === "guest") {
                   setCheckoutMode("guest");
                   return;
@@ -370,7 +413,7 @@ export default function CheckoutScreen() {
               <Pressable
                 hitSlop={10}
                 onPress={() => {
-                  Haptics.selectionAsync();
+                  AppHaptics.selection();
                   router.push("/(auth)/login?returnTo=checkout");
                 }}
               >
@@ -381,6 +424,36 @@ export default function CheckoutScreen() {
 
           {/* 1. SHIPPING ADDRESS */}
           <Text style={styles.sectionTitle}>Shipping Address</Text>
+
+          {addresses.length > 0 && !needsGuestEmail && (
+            <View style={styles.savedAddressCard}>
+              <View style={styles.savedAddressInfo}>
+                <View style={styles.savedAddressBadge}>
+                  <Ionicons name="location-outline" size={14} color={colors.accent} />
+                  <Text style={styles.savedAddressBadgeText}>Saved Address</Text>
+                </View>
+                <Text style={styles.savedAddressName} numberOfLines={1}>
+                  {fullName || "Recipient"}
+                </Text>
+                <Text style={styles.savedAddressDetail} numberOfLines={1}>
+                  {city ? `${city}, ${region}` : region || "Select delivery details"}
+                </Text>
+              </View>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.savedAddressSwitchBtn,
+                  pressed && { opacity: 0.7 }
+                ]}
+                onPress={() => {
+                  AppHaptics.selection();
+                  setShowAddressPicker(true);
+                }}
+              >
+                <Text style={styles.savedAddressSwitchText}>Switch</Text>
+                <Ionicons name="chevron-down" size={13} color={colors.accent} />
+              </Pressable>
+            </View>
+          )}
 
           {needsGuestEmail && (
             <View style={styles.fieldGroup}>
@@ -471,7 +544,7 @@ export default function CheckoutScreen() {
                 touched.region && !isRegionValid && styles.textInputError
               ]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                AppHaptics.impactLight();
                 setShowRegionModal(true);
               }}
             >
@@ -561,6 +634,42 @@ export default function CheckoutScreen() {
             />
           </View>
 
+          {/* Promo code drawer */}
+          <View style={styles.promoContainer}>
+            <Text style={styles.promoHeaderTitle}>Promo or Gift Card</Text>
+            <View style={styles.promoInputRow}>
+              <TextInput
+                style={[
+                  styles.promoInput,
+                  promoError ? styles.textInputError : undefined
+                ]}
+                placeholder="Enter promo code (e.g. APPLEGH)"
+                placeholderTextColor={colors.textTertiary}
+                autoCapitalize="characters"
+                value={promoCode}
+                onChangeText={(t) => {
+                  setPromoCode(t);
+                  setPromoError(null);
+                }}
+              />
+              <Pressable
+                style={({ pressed }) => [
+                  styles.promoApplyBtn,
+                  pressed && { opacity: 0.8 }
+                ]}
+                onPress={handleApplyPromo}
+              >
+                <Text style={styles.promoApplyText}>Apply</Text>
+              </Pressable>
+            </View>
+            {promoSuccess ? (
+              <Text style={styles.promoSuccessText}>✓ {promoSuccess}</Text>
+            ) : null}
+            {promoError ? (
+              <Text style={styles.promoErrorText}>{promoError}</Text>
+            ) : null}
+          </View>
+
           {/* 2. ORDER SUMMARY */}
           <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Order Summary</Text>
           <View style={styles.summaryCard}>
@@ -606,6 +715,17 @@ export default function CheckoutScreen() {
               <Text style={styles.breakdownLabel}>Subtotal</Text>
               <Text style={styles.breakdownValue}>{formatGHS(subtotalGHS)}</Text>
             </View>
+
+            {discountAmount > 0 && (
+              <View style={[styles.breakdownRow, { marginTop: 8 }]}>
+                <Text style={[styles.breakdownLabel, { color: colors.accent, fontWeight: "600" }]}>
+                  Discount ({appliedDiscount?.code})
+                </Text>
+                <Text style={[styles.breakdownValue, { color: colors.accent, fontWeight: "600" }]}>
+                  -{formatGHS(discountAmount)}
+                </Text>
+              </View>
+            )}
 
             <View style={[styles.breakdownRow, { marginTop: 8 }]}>
               <Text style={styles.breakdownLabel}>Delivery</Text>
@@ -703,6 +823,71 @@ export default function CheckoutScreen() {
 
                   {isSelected && (
                     <Ionicons name="checkmark-circle" size={22} color={colors.accent} />
+                  )}
+                </Pressable>
+              );
+            }}
+          />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Saved Address Selection Modal */}
+      <Modal
+        visible={showAddressPicker}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowAddressPicker(false)}
+      >
+        <SafeAreaView style={styles.regionModalSafeArea} edges={["top", "bottom"]}>
+          <View style={styles.regionModalHeader}>
+            <Text style={styles.regionModalTitle}>Choose Saved Address</Text>
+            <Pressable
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              onPress={() => setShowAddressPicker(false)}
+            >
+              <Ionicons name="close-circle" size={26} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+
+          <FlatList
+            data={addresses}
+            keyExtractor={(_, idx) => `saved-addr-${idx}`}
+            contentContainerStyle={{ padding: 16, gap: 12 }}
+            renderItem={({ item }) => {
+              const isSelected =
+                item.fullName === fullName &&
+                item.phone === phone &&
+                item.region === region &&
+                item.city === city;
+
+              return (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.addressPickerItem,
+                    isSelected && styles.addressPickerItemSelected,
+                    pressed && { opacity: 0.8 }
+                  ]}
+                  onPress={() => handleSelectSavedAddress(item)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <Text style={styles.addressPickerName}>{item.fullName}</Text>
+                      {item.isDefault && (
+                        <View style={styles.addressPickerDefaultBadge}>
+                          <Text style={styles.addressPickerDefaultText}>Default</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.addressPickerSub}>{item.phone}</Text>
+                    <Text style={styles.addressPickerSub}>
+                      {item.city}, {item.region}
+                    </Text>
+                    {item.gpsAddress ? (
+                      <Text style={styles.addressPickerSub}>GPS: {item.gpsAddress}</Text>
+                    ) : null}
+                  </View>
+                  {isSelected && (
+                    <Ionicons name="checkmark-circle" size={24} color={colors.accent} />
                   )}
                 </Pressable>
               );
@@ -1060,5 +1245,139 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     marginTop: 5,
     marginLeft: 2
+  },
+  savedAddressCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16
+  },
+  savedAddressInfo: {
+    flex: 1,
+    paddingRight: 10
+  },
+  savedAddressBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 4
+  },
+  savedAddressBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.accent
+  },
+  savedAddressName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text
+  },
+  savedAddressDetail: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  savedAddressSwitchBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  savedAddressSwitchText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.accent
+  },
+  promoContainer: {
+    marginTop: 20,
+    marginBottom: 8
+  },
+  promoHeaderTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+    marginBottom: 8
+  },
+  promoInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  promoInput: {
+    flex: 1,
+    height: 48,
+    paddingHorizontal: 14,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    fontSize: 14,
+    color: colors.text
+  },
+  promoApplyBtn: {
+    height: 48,
+    paddingHorizontal: 20,
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  promoApplyText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600"
+  },
+  promoSuccessText: {
+    fontSize: 13,
+    color: colors.accent,
+    fontWeight: "600",
+    marginTop: 6
+  },
+  promoErrorText: {
+    fontSize: 12,
+    color: colors.danger,
+    marginTop: 4
+  },
+  addressPickerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: "transparent"
+  },
+  addressPickerItemSelected: {
+    borderColor: colors.accent,
+    backgroundColor: "rgba(23, 23, 23, 0.04)"
+  },
+  addressPickerName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text
+  },
+  addressPickerSub: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  addressPickerDefaultBadge: {
+    backgroundColor: "rgba(23, 23, 23, 0.08)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 980
+  },
+  addressPickerDefaultText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.accent
   }
 });

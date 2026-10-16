@@ -20,11 +20,19 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, formatGHS, typography } from "../../constants/theme";
 import { Order } from "../../types";
-import { cancelOrder, getOrder, ApiError } from "../../services/api";
+import {
+  cancelOrder,
+  getOrder,
+  initializePayment,
+  verifyPayment,
+  ApiError
+} from "../../services/api";
 import { useUserStore } from "../../store/useUserStore";
 import SkeletonLoader from "../../components/SkeletonLoader";
 import ErrorState from "../../components/ErrorState";
+import PaystackCheckoutModal from "../../components/PaystackCheckoutModal";
 import { ProductVisual, getStoredImage } from "../../components/ProductVisual";
+import { AppHaptics } from "../../lib/haptics";
 
 function formatTimestamp(isoString?: string | null): string {
   if (!isoString) return "";
@@ -76,6 +84,63 @@ export default function OrderDetailsScreen() {
   };
 
   const [cancelling, setCancelling] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [showPaystack, setShowPaystack] = useState(false);
+  const [paystackData, setPaystackData] = useState<{
+    authorization_url: string;
+    reference: string;
+  } | null>(null);
+
+  const handlePayNow = async () => {
+    if (!order || paying) return;
+    AppHaptics.impactMedium();
+    setPaying(true);
+    try {
+      const paymentInit = await initializePayment(order.id, { userId });
+      if (paymentInit.simulation) {
+        const verifyRes = await verifyPayment(paymentInit.reference);
+        if (verifyRes.success) {
+          setOrder(verifyRes.order);
+          AppHaptics.success();
+          Alert.alert("Payment Confirmed", "Your order has been paid and is now being prepared.");
+        } else {
+          throw new Error("Payment verification failed.");
+        }
+      } else {
+        setPaystackData({
+          authorization_url: paymentInit.authorization_url,
+          reference: paymentInit.reference
+        });
+        setShowPaystack(true);
+      }
+    } catch (err: unknown) {
+      Alert.alert(
+        "Payment Failed",
+        err instanceof Error ? err.message : "Could not initialize payment."
+      );
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handlePaystackSuccess = async () => {
+    setShowPaystack(false);
+    if (!paystackData?.reference) return;
+    try {
+      setPaying(true);
+      const verifyRes = await verifyPayment(paystackData.reference);
+      if (verifyRes.order) {
+        setOrder(verifyRes.order);
+      } else {
+        await fetchDetail();
+      }
+      AppHaptics.success();
+    } catch {
+      await fetchDetail();
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const handleCancelOrder = () => {
     if (!order) return;
@@ -109,7 +174,7 @@ export default function OrderDetailsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={["top"]}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={{ padding: 16 }}>
           <View style={{ alignItems: "center", marginBottom: 20 }}>
             <SkeletonLoader width={100} height={16} />
@@ -141,7 +206,7 @@ export default function OrderDetailsScreen() {
   if (!order) {
     if (error) {
       return (
-        <SafeAreaView style={styles.notFoundContainer} edges={["top"]}>
+        <SafeAreaView style={styles.notFoundContainer} edges={["bottom"]}>
           <ErrorState
             error={error}
             primaryActionLabel={
@@ -163,7 +228,7 @@ export default function OrderDetailsScreen() {
       );
     }
     return (
-      <SafeAreaView style={styles.notFoundContainer} edges={["top"]}>
+      <SafeAreaView style={styles.notFoundContainer} edges={["bottom"]}>
         <Ionicons name="alert-circle-outline" size={64} color={colors.danger} />
         <Text style={styles.notFoundTitle}>Order Not Found</Text>
         <Pressable
@@ -214,8 +279,10 @@ export default function OrderDetailsScreen() {
     return order.paymentChannel.toUpperCase();
   })();
 
+  const discountGHS = Math.max(0, order.subtotalGHS + order.deliveryFeeGHS - order.totalGHS);
+
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -314,6 +381,24 @@ export default function OrderDetailsScreen() {
                 </View>
               );
             })}
+
+            {(order.courier || order.trackingNumber) && (
+              <View style={styles.courierBox}>
+                <Ionicons name="cube-outline" size={18} color={colors.text} />
+                <View style={{ flex: 1 }}>
+                  {order.courier ? (
+                    <Text style={styles.courierTitle}>
+                      Courier: {order.courier}
+                    </Text>
+                  ) : null}
+                  {order.trackingNumber ? (
+                    <Text style={styles.courierTracking}>
+                      Tracking #: {order.trackingNumber}
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            )}
           </View>
         )}
 
@@ -393,6 +478,16 @@ export default function OrderDetailsScreen() {
               {formatGHS(order.subtotalGHS)}
             </Text>
           </View>
+          {discountGHS > 0 && (
+            <View style={[styles.summaryRow, { marginTop: 8 }]}>
+              <Text style={[styles.summaryLabel, { color: colors.success }]}>
+                Promo Discount
+              </Text>
+              <Text style={[styles.summaryValue, { color: colors.success, fontWeight: "700" }]}>
+                -{formatGHS(discountGHS)}
+              </Text>
+            </View>
+          )}
           <View style={[styles.summaryRow, { marginTop: 8 }]}>
             <Text style={styles.summaryLabel}>Delivery</Text>
             <Text style={styles.summaryValue}>
@@ -408,7 +503,11 @@ export default function OrderDetailsScreen() {
           </View>
 
           <Text style={styles.paidWithText}>
-            Paid with {displayPaymentMethod}
+            {order.status === "pending"
+              ? `Payment pending · ${displayPaymentMethod}`
+              : order.status === "cancelled" && !order.paidAt
+              ? "Order cancelled before payment"
+              : `Paid with ${displayPaymentMethod}`}
           </Text>
 
           {order.paymentReference ? (
@@ -418,7 +517,30 @@ export default function OrderDetailsScreen() {
           ) : null}
         </View>
 
-        {/* 7. Help Section */}
+        {/* 7. Actions & Help Section */}
+        {order.status === "pending" && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.payNowBtn,
+              pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
+              paying && { opacity: 0.6 }
+            ]}
+            disabled={paying || cancelling}
+            onPress={handlePayNow}
+          >
+            {paying ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Ionicons name="lock-closed" size={16} color="#FFFFFF" />
+                <Text style={styles.payNowBtnText}>
+                  Pay {formatGHS(order.totalGHS)} with Paystack
+                </Text>
+              </>
+            )}
+          </Pressable>
+        )}
+
         {["pending", "paid"].includes(order.status) && (
           <Pressable
             style={({ pressed }) => [
@@ -426,7 +548,7 @@ export default function OrderDetailsScreen() {
               pressed && { opacity: 0.7 },
               cancelling && { opacity: 0.5 }
             ]}
-            disabled={cancelling}
+            disabled={cancelling || paying}
             onPress={() => {
               Haptics.selectionAsync();
               handleCancelOrder();
@@ -454,6 +576,16 @@ export default function OrderDetailsScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      {paystackData && (
+        <PaystackCheckoutModal
+          visible={showPaystack}
+          authorizationUrl={paystackData.authorization_url}
+          reference={paystackData.reference}
+          onSuccess={handlePaystackSuccess}
+          onCancel={() => setShowPaystack(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -621,6 +753,26 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4
   },
+  courierBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 4
+  },
+  courierTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.text
+  },
+  courierTracking: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontFamily: "monospace",
+    marginTop: 2
+  },
   sectionHeader: {
     fontSize: 17,
     fontWeight: "700",
@@ -738,14 +890,31 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     marginTop: 4
   },
+  payNowBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 24,
+    paddingVertical: 15,
+    borderRadius: 980,
+    backgroundColor: colors.accent
+  },
+  payNowBtnText: {
+    ...typography.body,
+    color: "#FFFFFF",
+    fontWeight: "700"
+  },
   cancelOrderBtn: {
     alignItems: "center",
+    marginHorizontal: 16,
     paddingVertical: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 980,
     backgroundColor: "#FFFFFF",
-    marginTop: 24
+    marginTop: 12
   },
   cancelOrderText: {
     ...typography.body,

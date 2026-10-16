@@ -38,6 +38,7 @@ export interface CreateOrderPayload {
     landmark?: string;
   };
   notes?: string;
+  promoCode?: string;
 }
 
 export interface CreateReviewPayload {

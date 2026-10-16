@@ -4,9 +4,17 @@ const PREFS_KEY = "istore-preferences";
 
 export interface AppPreferences {
   defaultRegion: string;
+  orderNotifications: boolean;
+  promotionsNotifications: boolean;
+  hapticFeedback: boolean;
 }
 
-const DEFAULTS: AppPreferences = { defaultRegion: "" };
+const DEFAULTS: AppPreferences = {
+  defaultRegion: "",
+  orderNotifications: true,
+  promotionsNotifications: false,
+  hapticFeedback: true
+};
 
 export async function getPreferences(): Promise<AppPreferences> {
   try {
@@ -19,7 +27,8 @@ export async function getPreferences(): Promise<AppPreferences> {
 }
 
 export async function savePreferences(patch: Partial<AppPreferences>): Promise<AppPreferences> {
-  const next = { ...(await getPreferences()), ...patch };
+  const current = await getPreferences();
+  const next = { ...current, ...patch };
   await AsyncStorage.setItem(PREFS_KEY, JSON.stringify(next));
   return next;
 }

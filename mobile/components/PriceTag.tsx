@@ -93,16 +93,16 @@ const styles = StyleSheet.create({
     fontWeight: "400"
   },
   savePill: {
-    backgroundColor: colors.success,
-    paddingHorizontal: spacing.xs + 2,
+    backgroundColor: colors.brandRed,
+    paddingHorizontal: spacing.xs + 3,
     paddingVertical: 2,
     borderRadius: radius.pill
   },
   saveText: {
     color: "#FFFFFF",
     fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.2
+    fontWeight: "800",
+    letterSpacing: 0.3
   }
 });
 

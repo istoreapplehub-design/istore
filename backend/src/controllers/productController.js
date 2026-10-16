@@ -16,12 +16,17 @@ async function listProducts(req, res, next) {
       minPrice,
       maxPrice,
       condition,
-      sort
+      sort,
+      inStock
     } = req.query;
 
     const where = {
       isActive: true
     };
+
+    if (inStock === "true" || inStock === true) {
+      where.stock = { gt: 0 };
+    }
 
     if (category) {
       where.category = {

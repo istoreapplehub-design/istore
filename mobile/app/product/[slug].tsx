@@ -61,7 +61,7 @@ export default function ProductDetailScreen() {
   const insets = useSafeAreaInsets();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { width } = useWindowDimensions();
-  const carouselWidth = Math.min(width, 768);
+  const carouselWidth = Math.min(width, 820);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -193,15 +193,19 @@ export default function ProductDetailScreen() {
     if (!product) return [];
     if (product.storage) {
       if (product.category === "iPhone" || product.category === "iPad") {
-        return ["128GB", "256GB", "512GB", "1TB"].filter((s) => s >= product.storage!);
+        const tiers = ["128GB", "256GB", "512GB", "1TB"];
+        const idx = tiers.indexOf(product.storage);
+        return idx >= 0 ? tiers.slice(idx) : [product.storage];
       }
       return [product.storage];
     }
     return [];
   }, [product]);
 
+  const isOutOfStock = product ? product.stock <= 0 : false;
+
   const handleAddToCart = () => {
-    if (!product || addingToCart) return;
+    if (!product || addingToCart || product.stock <= 0) return;
     setAddingToCart(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -225,6 +229,7 @@ export default function ProductDetailScreen() {
   };
 
   const handleBuyNow = () => {
+    if (!product || product.stock <= 0) return;
     handleAddToCart();
     router.push("/checkout");
   };
@@ -540,28 +545,40 @@ export default function ProductDetailScreen() {
           <View style={styles.ctaWrapper}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={addedSuccess ? "Added to Bag" : "Add to Bag"}
-              disabled={addingToCart}
+              accessibilityLabel={
+                isOutOfStock
+                  ? "Out of Stock"
+                  : addedSuccess
+                  ? "Added to Bag"
+                  : "Add to Bag"
+              }
+              disabled={addingToCart || isOutOfStock}
               style={[
                 styles.addBagBtn,
                 addedSuccess && { backgroundColor: colors.success },
-                addingToCart && { opacity: 0.75 }
+                (addingToCart || isOutOfStock) && { opacity: 0.5 }
               ]}
               onPress={handleAddToCart}
             >
               <Text style={styles.addBagText}>
-                {addedSuccess ? "✓ Added to Bag" : "Add to Bag"}
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : addedSuccess
+                  ? "✓ Added to Bag"
+                  : "Add to Bag"}
               </Text>
             </Pressable>
 
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Buy Now"
-              style={styles.buyNowBtn}
-              onPress={handleBuyNow}
-            >
-              <Text style={styles.buyNowText}>Buy Now</Text>
-            </Pressable>
+            {!isOutOfStock && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Buy Now"
+                style={styles.buyNowBtn}
+                onPress={handleBuyNow}
+              >
+                <Text style={styles.buyNowText}>Buy Now</Text>
+              </Pressable>
+            )}
           </View>
 
           {/* ─── 7. SPECIFICATIONS TABLE ────────────────────────────────── */}
@@ -728,8 +745,14 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        <Pressable style={styles.stickyCta} onPress={handleAddToCart}>
-          <Text style={styles.stickyCtaText}>Add to Bag</Text>
+        <Pressable
+          style={[styles.stickyCta, isOutOfStock && { opacity: 0.5 }]}
+          disabled={isOutOfStock}
+          onPress={handleAddToCart}
+        >
+          <Text style={styles.stickyCtaText}>
+            {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+          </Text>
         </Pressable>
       </Animated.View>
 
@@ -892,8 +915,8 @@ const styles = StyleSheet.create({
     borderRadius: 3
   },
   dotActive: {
-    width: 18,
-    backgroundColor: colors.text
+    width: 20,
+    backgroundColor: colors.brandRed
   },
   dotInactive: {
     width: 6,
@@ -906,8 +929,8 @@ const styles = StyleSheet.create({
   categoryEyebrow: {
     fontSize: 11,
     letterSpacing: 1.5,
-    fontWeight: "700",
-    color: colors.textSecondary
+    fontWeight: "800",
+    color: colors.brandRed
   },
   productTitle: {
     fontSize: 28,
@@ -945,16 +968,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(23, 23, 23, 0.08)",
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
     paddingVertical: 10,
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
     marginTop: spacing.md
   },
   toastText: {
-    color: colors.success,
+    color: colors.brandRed,
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "700"
   },
   ctaWrapper: {
     marginTop: 28,
@@ -973,18 +998,21 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   buyNowBtn: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1.5,
-    borderColor: colors.accent,
+    backgroundColor: colors.brandRed,
     height: 52,
     borderRadius: radius.pill,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    shadowColor: colors.brandRed,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3
   },
   buyNowText: {
-    color: colors.accent,
+    color: "#FFFFFF",
     fontSize: 17,
-    fontWeight: "600"
+    fontWeight: "700"
   },
   detailsBlock: {
     marginTop: 32

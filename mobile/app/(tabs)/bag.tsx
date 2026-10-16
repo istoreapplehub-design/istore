@@ -6,6 +6,7 @@
  */
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -28,7 +29,7 @@ export default function BagScreen() {
   const insets = useSafeAreaInsets();
   const [editMode, setEditMode] = useState(false);
 
-  const { items, updateQty, removeItem, getSubtotalGHS } = useCartStore();
+  const { items, updateQty, removeItem, clearCart, getSubtotalGHS } = useCartStore();
   const subtotalGHS = getSubtotalGHS();
 
   const handleStartShopping = () => {
@@ -39,6 +40,22 @@ export default function BagScreen() {
   const handleToggleEdit = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setEditMode(!editMode);
+  };
+
+  const handleClearBag = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert("Clear Bag", "Remove all items from your bag?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Clear All",
+        style: "destructive",
+        onPress: () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          clearCart();
+          setEditMode(false);
+        }
+      }
+    ]);
   };
 
   const handleCheckout = () => {
@@ -52,13 +69,24 @@ export default function BagScreen() {
       <View style={[styles.header, { paddingTop: 8 }]}>
         <Text style={styles.headerTitle}>Bag</Text>
         {items.length > 0 && (
-          <Pressable
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            onPress={handleToggleEdit}
-            style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.6 }]}
-          >
-            <Text style={styles.editText}>{editMode ? "Done" : "Edit"}</Text>
-          </Pressable>
+          <View style={styles.headerRightRow}>
+            {editMode && (
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={handleClearBag}
+                style={({ pressed }) => [styles.clearBagBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={styles.clearBagText}>Clear All</Text>
+              </Pressable>
+            )}
+            <Pressable
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              onPress={handleToggleEdit}
+              style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={styles.editText}>{editMode ? "Done" : "Edit"}</Text>
+            </Pressable>
+          </View>
         )}
       </View>
 
@@ -194,6 +222,7 @@ export default function BagScreen() {
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     style={({ pressed }) => [
                       styles.removeBtn,
+                      editMode && styles.removeBtnEdit,
                       pressed && { opacity: 0.5 }
                     ]}
                     onPress={() => {
@@ -202,9 +231,9 @@ export default function BagScreen() {
                     }}
                   >
                     <Ionicons
-                      name="trash-outline"
+                      name={editMode ? "trash" : "trash-outline"}
                       size={20}
-                      color={colors.textSecondary}
+                      color={editMode ? "#DC2626" : colors.textSecondary}
                     />
                   </Pressable>
                 </Animated.View>
@@ -284,13 +313,29 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     color: colors.text
   },
+  headerRightRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  clearBagBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 980,
+    backgroundColor: "rgba(220, 38, 38, 0.08)"
+  },
+  clearBagText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#DC2626"
+  },
   editBtn: {
     paddingVertical: 6,
     paddingHorizontal: 8
   },
   editText: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "600",
     color: colors.accent
   },
   emptyContainer: {
@@ -402,7 +447,11 @@ const styles = StyleSheet.create({
   },
   removeBtn: {
     padding: 6,
-    marginLeft: 8
+    marginLeft: 8,
+    borderRadius: 18
+  },
+  removeBtnEdit: {
+    backgroundColor: "rgba(220, 38, 38, 0.08)"
   },
   summaryCard: {
     margin: 16,

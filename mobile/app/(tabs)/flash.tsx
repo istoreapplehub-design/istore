@@ -4,7 +4,7 @@
  * - Haptics.impactAsync("light") on pull to refresh
  */
 import React, { useMemo, useState } from "react";
-import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,6 +28,10 @@ const SORTS: { key: SortKey; label: string }[] = [
 
 export default function FlashSalesScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const containerWidth = Math.min(width, 820);
+  const numColumns = containerWidth >= 680 ? 3 : 2;
+  const tileWidth = Math.floor((containerWidth - 32 - 12 * (numColumns - 1)) / numColumns);
   const { deals, endsAt, loading, error, refetch } = useFlashDeals();
   const [sort, setSort] = useState<SortKey>("best");
   const [refreshing, setRefreshing] = useState(false);
@@ -103,7 +107,7 @@ export default function FlashSalesScreen() {
         {loading && deals.length === 0 ? (
           <View style={styles.grid}>
             {[0, 1, 2, 3].map((i) => (
-              <View key={i} style={{ width: "48%" }}>
+              <View key={i} style={{ width: tileWidth }}>
                 <SkeletonProductCard />
               </View>
             ))}
@@ -122,7 +126,12 @@ export default function FlashSalesScreen() {
         ) : (
           <View style={styles.grid}>
             {sorted.map((product) => (
-              <FlashDealCard key={product.id} product={product} variant="tile" style={styles.gridItem} />
+              <FlashDealCard
+                key={product.id}
+                product={product}
+                variant="tile"
+                style={{ width: tileWidth, flexBasis: tileWidth }}
+              />
             ))}
           </View>
         )}
@@ -154,6 +163,8 @@ const styles = StyleSheet.create({
   band: {
     backgroundColor: colors.accentDark,
     borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: "rgba(225, 29, 72, 0.35)",
     padding: spacing.lg,
     marginTop: 4
   },
@@ -164,10 +175,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md
   },
   bandIconWrap: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: radius.full,
-    backgroundColor: "rgba(255,255,255,0.16)",
+    backgroundColor: colors.brandRed,
     alignItems: "center",
     justifyContent: "center"
   },
@@ -182,7 +193,7 @@ const styles = StyleSheet.create({
   },
   bandSub: {
     fontSize: 13,
-    color: "rgba(255,255,255,0.72)",
+    color: "rgba(255,255,255,0.78)",
     marginTop: 2
   },
   chipRow: {
@@ -200,8 +211,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   chipActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent
+    backgroundColor: colors.brandRed,
+    borderColor: colors.brandRed
   },
   chipText: {
     fontSize: 13,
@@ -214,11 +225,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.md - 4,
-    justifyContent: "space-between"
-  },
-  gridItem: {
-    width: "48.5%"
+    gap: 12
   },
   browseBtn: {
     marginTop: spacing.xl,
