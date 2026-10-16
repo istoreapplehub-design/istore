@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Image,
@@ -38,12 +38,18 @@ const EDITORIAL_GAP = 14;
 export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const editorialWidth = Math.min(Math.max(width - 56, 260), 380);
+  const stageWidth = Math.min(width, 820);
+  const numCols = stageWidth >= 680 ? 3 : 2;
+  const gridGap = 12;
+  const cardWidth = Math.floor((stageWidth - 32 - gridGap * (numCols - 1)) / numCols);
+  const editorialWidth = Math.min(Math.max(stageWidth - 64, 270), 340);
+
   const { featured, newArrivals, bestSellers, loading, error, refetch } = useHomeData();
   const { deals, products, endsAt, error: flashError } = useFlashDeals();
 
   const [scrolled, setScrolled] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const scrolledFlag = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
@@ -66,10 +72,28 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
+  const allCatalog = useMemo(() => {
+    if (products && products.length > 0) return products;
+    const map = new Map<string, (typeof newArrivals)[0]>();
+    [...featured, ...newArrivals, ...bestSellers].forEach((p) => map.set(p.id, p));
+    return Array.from(map.values());
+  }, [products, featured, newArrivals, bestSellers]);
+
+  const filteredCurated = useMemo(() => {
+    const pool =
+      selectedCategory === "All"
+        ? bestSellers.length > 0
+          ? bestSellers
+          : allCatalog
+        : allCatalog.filter(
+            (p) => p.category.toLowerCase() === selectedCategory.toLowerCase()
+          );
+    return pool.slice(0, numCols * 3);
+  }, [selectedCategory, bestSellers, allCatalog, numCols]);
+
   const heroProducts = featured.length > 0 ? featured : newArrivals.slice(0, 5);
   const editorial = newArrivals.slice(0, 6);
 
-  // With no catalog to show, say why instead of rendering an empty-looking store.
   const nothingLoaded =
     !loading && heroProducts.length === 0 && editorial.length === 0 && bestSellers.length === 0;
 
@@ -109,46 +133,154 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.accent}
-            colors={[colors.accent]}
+            tintColor={colors.brandRed}
+            colors={[colors.brandRed]}
           />
         }
       >
-        {/* Announcement strip */}
-        <Pressable
-          style={({ pressed }) => [styles.strip, pressed && { opacity: 0.7 }]}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.push("/(tabs)/flash");
-          }}
-        >
-          <View style={styles.livePill}>
-            <View style={styles.liveDot} />
-            <Text style={styles.livePillText}>LIVE</Text>
-          </View>
-          <Text style={styles.stripText}>
-            New flash deals updated daily at midnight
-          </Text>
-          <Ionicons name="chevron-forward" size={13} color={colors.brandRed} />
-        </Pressable>
+        {/* Dribbble Tactile Search & Quick-Filter Bar */}
+        <View style={styles.searchRow}>
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/search");
+            }}
+            style={({ pressed }) => [
+              styles.searchPill,
+              pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }
+            ]}
+          >
+            <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
+            <Text style={styles.searchPlaceholder} numberOfLines={1}>
+              Search iPhone 15 Pro, M3 MacBook, Watch...
+            </Text>
+            <View style={styles.searchKbd}>
+              <Ionicons name="sparkles" size={11} color={colors.brandRed} />
+            </View>
+          </Pressable>
 
-        {/* Editorial hero */}
-        <HeroCarousel products={heroProducts} />
-
-        {/* Category rail */}
-        <View style={styles.ribbonWrap}>
-          <AppleCategoryRibbon products={products} />
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/(tabs)/shop");
+            }}
+            style={({ pressed }) => [
+              styles.filterBtn,
+              pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] }
+            ]}
+            accessibilityLabel="Browse full catalog and filters"
+          >
+            <Ionicons name="options-outline" size={19} color="#FFFFFF" />
+            <View style={styles.filterBtnDot} />
+          </Pressable>
         </View>
 
-        {/* Flash sales band */}
+        {/* Split-Stage Obsidian Titanium Bento Hero */}
+        <HeroCarousel products={heroProducts} />
+
+        {/* Express Assurance Mini-Bento Strip */}
+        <View style={styles.assuranceRow}>
+          <Pressable
+            style={styles.assuranceCard}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/(tabs)/shop");
+            }}
+          >
+            <View style={styles.assuranceIconWrap}>
+              <Ionicons name="flash" size={14} color={colors.brandRed} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.assuranceTitle} numberOfLines={1}>
+                Same-Day Delivery
+              </Text>
+              <Text style={styles.assuranceSub} numberOfLines={1}>
+                Accra & Kumasi Express
+              </Text>
+            </View>
+          </Pressable>
+
+          <Pressable
+            style={styles.assuranceCard}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/help");
+            }}
+          >
+            <View style={styles.assuranceIconWrap}>
+              <Ionicons name="shield-checkmark" size={14} color="#0D0D12" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.assuranceTitle} numberOfLines={1}>
+                1-Yr Apple Care
+              </Text>
+              <Text style={styles.assuranceSub} numberOfLines={1}>
+                100% Sealed & Verified
+              </Text>
+            </View>
+          </Pressable>
+        </View>
+
+        {/* Interactive Category Capsule Rail */}
+        <View style={styles.ribbonWrap}>
+          <AppleCategoryRibbon
+            products={allCatalog}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+        </View>
+
+        {/* Curated Studio Grid (Live Filtered by Category) */}
+        <Animated.View entering={FadeInDown.duration(380)}>
+          <SectionHeader
+            title={
+              selectedCategory === "All" ? "Popular Flagships" : `${selectedCategory} Lineup`
+            }
+            subtitle={
+              selectedCategory === "All"
+                ? "Tap + on any device to add directly to your bag"
+                : `Authorized ${selectedCategory} models ready to ship`
+            }
+            onSeeAll={() =>
+              router.push(
+                selectedCategory === "All"
+                  ? "/(tabs)/shop"
+                  : `/(tabs)/shop?category=${encodeURIComponent(selectedCategory)}`
+              )
+            }
+          />
+
+          {loading && filteredCurated.length === 0 ? (
+            <View style={styles.skeletonRow}>
+              <SkeletonProductCard />
+              <SkeletonProductCard />
+            </View>
+          ) : (
+            <View style={styles.bentoGrid}>
+              {filteredCurated.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  product={item}
+                  variant="grid"
+                  style={{ width: cardWidth }}
+                />
+              ))}
+            </View>
+          )}
+        </Animated.View>
+
+        {/* Flash Drops Dark Bento Band */}
         {deals.length > 0 && (
-          <Animated.View entering={FadeInDown.duration(420)} style={styles.flashBand}>
+          <Animated.View entering={FadeInDown.delay(60).duration(420)} style={styles.flashBand}>
             <View style={styles.flashBandHead}>
               <View style={styles.flashTitleRow}>
                 <View style={styles.flashIconCircle}>
                   <Ionicons name="flash" size={14} color="#FFFFFF" />
                 </View>
-                <Text style={styles.flashTitle}>Flash Sales</Text>
+                <View>
+                  <Text style={styles.flashEyebrow}>LIMITED TIME DROPS</Text>
+                  <Text style={styles.flashTitle}>Flash Sales</Text>
+                </View>
               </View>
               <CountdownTimer endsAt={endsAt} variant="inline" />
             </View>
@@ -169,18 +301,18 @@ export default function HomeScreen() {
                 router.push("/(tabs)/flash");
               }}
             >
-              <Text style={styles.flashSeeAllText}>See all {deals.length} deals</Text>
+              <Text style={styles.flashSeeAllText}>Explore all {deals.length} live drops</Text>
               <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
             </Pressable>
           </Animated.View>
         )}
 
-        {/* The latest — editorial cards */}
-        <Animated.View entering={FadeInDown.delay(60).duration(420)}>
+        {/* The Latest — Studio Pedestal Editorial Cards */}
+        <Animated.View entering={FadeInDown.delay(100).duration(420)}>
           <SectionHeader
-            title="The latest"
-            subtitle="Take a look at what's new right now"
-            onSeeAll={() => router.push("/(tabs)/shop")}
+            title="New Arrivals"
+            subtitle="Freshly unboxed in our Accra showroom"
+            onSeeAll={() => router.push("/(tabs)/shop?sort=newest")}
           />
           <FlatList
             horizontal
@@ -198,92 +330,78 @@ export default function HomeScreen() {
 
               return (
                 <Pressable
-                  style={[styles.editorialCard, { width: editorialWidth }]}
+                  style={({ pressed }) => [
+                    styles.editorialCard,
+                    { width: editorialWidth },
+                    pressed && { transform: [{ scale: 0.98 }] }
+                  ]}
                   onPress={() => {
                     Haptics.selectionAsync();
                     router.push(`/product/${item.slug}`);
                   }}
                 >
-                  <View style={styles.editorialCopy}>
-                    <View style={styles.editorialEyebrowRow}>
+                  <View style={styles.editorialStage}>
+                    <View style={styles.editorialTopRow}>
                       <View
                         style={[
-                          styles.editorialEyebrowDot,
-                          { backgroundColor: isSale ? colors.brandRed : colors.accent }
-                        ]}
-                      />
-                      <Text
-                        style={[
-                          styles.editorialEyebrow,
-                          isSale && { color: colors.brandRed }
+                          styles.editorialBadge,
+                          isSale ? styles.editorialBadgeSale : styles.editorialBadgeNew
                         ]}
                       >
-                        {isSale ? "On sale now" : "Just landed"}
+                        <Text style={styles.editorialBadgeText}>
+                          {isSale ? "SPECIAL OFFER" : "JUST LANDED"}
+                        </Text>
+                      </View>
+                      <Text style={styles.editorialStorageTag}>
+                        {item.storage || item.category}
                       </Text>
                     </View>
-                    <Text style={styles.editorialTitle} numberOfLines={2}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.editorialPrice}>
-                      From {formatGHS(item.priceGHS)}
-                    </Text>
-                    <View style={styles.editorialLinkRow}>
-                      <View style={styles.editorialPill}>
-                        <Text style={styles.editorialPillText}>Buy</Text>
+
+                    {image ? (
+                      <Image
+                        source={{ uri: image }}
+                        style={styles.editorialImage}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View style={styles.editorialImageFallback}>
+                        <ProductVisual category={item.category} glyphSize={54} />
                       </View>
-                      <Ionicons name="chevron-forward" size={14} color={colors.brandRed} />
-                    </View>
+                    )}
                   </View>
 
-                  {image ? (
-                    <Image source={{ uri: image }} style={styles.editorialImage} resizeMode="cover" />
-                  ) : (
-                    <View style={styles.editorialImageFallback}>
-                      <ProductVisual category={item.category} glyphSize={54} />
+                  <View style={styles.editorialFooter}>
+                    <View style={{ flex: 1, marginRight: 10 }}>
+                      <Text style={styles.editorialTitle} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.editorialPrice}>
+                        {formatGHS(item.priceGHS)}
+                      </Text>
                     </View>
-                  )}
+                    <View style={styles.editorialPill}>
+                      <Text style={styles.editorialPillText}>Buy</Text>
+                      <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
+                    </View>
+                  </View>
                 </Pressable>
               );
             }}
           />
         </Animated.View>
 
-        {/* Most loved */}
-        <Animated.View entering={FadeInDown.delay(120).duration(420)}>
-          <SectionHeader
-            title="Most loved devices"
-            subtitle="What our customers keep coming back for"
-            onSeeAll={() => router.push("/(tabs)/shop?sort=popular")}
-          />
-          {loading && bestSellers.length === 0 ? (
-            <View style={styles.skeletonRow}>
-              <SkeletonProductCard />
-              <SkeletonProductCard />
-            </View>
-          ) : (
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={bestSellers}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.productRowContent}
-              renderItem={({ item }) => <ProductCard product={item} variant="grid" />}
-            />
-          )}
-        </Animated.View>
-
         {/* Why I-Store */}
-        <Animated.View entering={FadeInDown.delay(180).duration(420)}>
+        <Animated.View entering={FadeInDown.delay(140).duration(420)}>
           <SectionHeader
-            title="Why I-Store is the best place to shop Apple."
-            subtitle="The parts that matter when it's ₵20,000 on the line"
+            title="The I-Store Standard"
+            subtitle="Engineered for peace of mind on every order"
           />
           <ValuePropRail />
         </Animated.View>
 
         {/* Guest-safe footer links */}
         <View style={styles.footer}>
-          <Text style={styles.footerHeading}>Help is always available</Text>
+          <Text style={styles.footerHeading}>Need specialist advice?</Text>
           <View style={styles.footerLinks}>
             <Pressable
               onPress={() => {
@@ -291,7 +409,7 @@ export default function HomeScreen() {
                 router.push("/help");
               }}
             >
-              <Text style={styles.footerLink}>Help Center</Text>
+              <Text style={styles.footerLink}>Concierge Support</Text>
             </Pressable>
             <View style={styles.footerDot} />
             <Pressable
@@ -313,7 +431,7 @@ export default function HomeScreen() {
             </Pressable>
           </View>
           <Ionicons name="logo-apple" size={18} color={colors.textTertiary} />
-          <Text style={styles.footerBrand}>I-Store Apple Hub · Worldwide</Text>
+          <Text style={styles.footerBrand}>I-Store Apple Hub · Official Retailer</Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -323,60 +441,136 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: "#F6F7FB"
   },
   scrollContent: {
-    paddingBottom: 40
+    paddingBottom: 110
   },
-  strip: {
+  searchRow: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 6
+  },
+  searchPill: {
+    flex: 1,
+    height: 46,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.06)",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    gap: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.035,
+    shadowRadius: 10,
+    elevation: 2
+  },
+  searchPlaceholder: {
+    flex: 1,
+    fontSize: 13.5,
+    fontWeight: "500",
+    color: colors.textSecondary
+  },
+  searchKbd: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: colors.brandRedSoft,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  filterBtn: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    backgroundColor: "#0D0D12",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 9,
-    backgroundColor: colors.background,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border
+    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 3
   },
-  livePill: {
+  filterBtnDot: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.brandRed
+  },
+  assuranceRow: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 16,
+    marginTop: 12
+  },
+  assuranceCard: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: colors.brandRed,
-    paddingHorizontal: 7,
-    paddingVertical: 2.5,
-    borderRadius: radius.full
+    gap: 10,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)"
   },
-  liveDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "#FFFFFF"
+  assuranceIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: "#F4F5F9",
+    alignItems: "center",
+    justifyContent: "center"
   },
-  livePillText: {
-    fontSize: 9.5,
+  assuranceTitle: {
+    fontSize: 12,
     fontWeight: "800",
-    letterSpacing: 0.6,
-    color: "#FFFFFF"
+    color: "#0D0D12",
+    letterSpacing: -0.2
   },
-  stripText: {
-    fontSize: 12.5,
-    fontWeight: "600",
-    color: colors.text,
-    letterSpacing: -0.1
+  assuranceSub: {
+    fontSize: 10.5,
+    fontWeight: "500",
+    color: colors.textSecondary,
+    marginTop: 1
   },
   ribbonWrap: {
-    paddingVertical: spacing.lg
+    paddingTop: 14,
+    paddingBottom: 4
+  },
+  bentoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 16,
+    gap: 12
   },
   flashBand: {
     marginHorizontal: 16,
-    marginBottom: spacing.lg,
-    backgroundColor: colors.accentDark,
-    borderRadius: radius.xl,
+    marginTop: 24,
+    marginBottom: 8,
+    backgroundColor: "#0D0D12",
+    borderRadius: 26,
     borderWidth: 1,
     borderColor: "rgba(225, 29, 72, 0.35)",
     paddingTop: 18,
-    overflow: "hidden"
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 6
   },
   flashBandHead: {
     flexDirection: "row",
@@ -388,18 +582,24 @@ const styles = StyleSheet.create({
   flashTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8
+    gap: 10
   },
   flashIconCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 32,
+    height: 32,
+    borderRadius: 11,
     backgroundColor: colors.brandRed,
     alignItems: "center",
     justifyContent: "center"
   },
+  flashEyebrow: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1,
+    color: colors.brandRed
+  },
   flashTitle: {
-    fontSize: 21,
+    fontSize: 20,
     fontWeight: "800",
     color: "#FFFFFF",
     letterSpacing: -0.5
@@ -420,88 +620,106 @@ const styles = StyleSheet.create({
   },
   flashSeeAllText: {
     color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700"
+    fontSize: 13.5,
+    fontWeight: "800",
+    letterSpacing: -0.1
   },
   editorialContent: {
     paddingHorizontal: 16,
     gap: EDITORIAL_GAP
   },
   editorialCard: {
-    height: 380,
-    borderRadius: radius.xl,
-    backgroundColor: colors.surface,
+    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
+    padding: 10,
     borderWidth: 1,
-    borderColor: colors.border,
-    overflow: "hidden"
+    borderColor: "rgba(0,0,0,0.06)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    elevation: 3
   },
-  editorialCopy: {
-    padding: 18
+  editorialStage: {
+    height: 190,
+    borderRadius: 18,
+    backgroundColor: "#F4F5F9",
+    padding: 12,
+    justifyContent: "space-between"
   },
-  editorialEyebrowRow: {
+  editorialTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6
+    justifyContent: "space-between"
   },
-  editorialEyebrowDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3
-  },
-  editorialEyebrow: {
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    color: colors.textSecondary,
-    textTransform: "uppercase"
-  },
-  editorialTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-    color: colors.text,
-    marginTop: 4,
-    lineHeight: 27
-  },
-  editorialPrice: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-    marginTop: 5
-  },
-  editorialLinkRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 12
-  },
-  editorialPill: {
-    backgroundColor: colors.brandRed,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
+  editorialBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: radius.full
   },
-  editorialPillText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700"
+  editorialBadgeSale: {
+    backgroundColor: colors.brandRed
+  },
+  editorialBadgeNew: {
+    backgroundColor: "#0D0D12"
+  },
+  editorialBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.7,
+    color: "#FFFFFF"
+  },
+  editorialStorageTag: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.textSecondary
   },
   editorialImage: {
     width: "100%",
-    flex: 1,
-    marginTop: 4
+    height: 135,
+    alignSelf: "center"
   },
   editorialImageFallback: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center"
   },
+  editorialFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 6,
+    paddingTop: 12,
+    paddingBottom: 4
+  },
+  editorialTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: -0.4,
+    color: "#0D0D12"
+  },
+  editorialPrice: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.brandRed,
+    marginTop: 2
+  },
+  editorialPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#0D0D12",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.full
+  },
+  editorialPillText: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "800"
+  },
   skeletonRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    gap: 14
-  },
-  productRowContent: {
     paddingHorizontal: 16,
     gap: 14
   },
@@ -511,10 +729,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24
   },
   footerHeading: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "800",
     letterSpacing: -0.3,
-    color: colors.text
+    color: "#0D0D12"
   },
   footerLinks: {
     flexDirection: "row",
@@ -540,3 +758,4 @@ const styles = StyleSheet.create({
     marginTop: 6
   }
 });
+

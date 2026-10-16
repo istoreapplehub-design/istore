@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Image, Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -13,12 +13,14 @@ import {
 } from "@expo-google-fonts/inter";
 import { colors, typography } from "../constants/theme";
 import ErrorBoundary from "../components/ErrorBoundary";
+import { AnimatedSplash } from "../components/AnimatedSplash";
 import { useUserStore } from "../store/useUserStore";
 import { useWishlistStore } from "../store/useWishlistStore";
 
 /**
  * Root Application Layout
- * Provides GestureHandler, SafeAreas, Inter typography, ErrorBoundary, Supabase session hydration, and Expo Router stack configuration.
+ * Provides GestureHandler, SafeAreas, Inter typography, ErrorBoundary, Supabase session hydration,
+ * cinematic AnimatedSplash sequence, and Expo Router stack configuration.
  */
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -29,6 +31,7 @@ export default function RootLayout() {
   });
 
   const [hydrated, setHydrated] = useState(false);
+  const [splashFinished, setSplashFinished] = useState(false);
 
   useEffect(() => {
     useUserStore
@@ -42,30 +45,20 @@ export default function RootLayout() {
       });
   }, []);
 
-  if (!fontsLoaded || !hydrated) {
-    return (
-      <View style={styles.splashContainer}>
-        <Image
-          source={require("../assets/images/splash-icon.png")}
-          style={styles.splashIcon}
-          resizeMode="contain"
-        />
-        <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 24 }} />
-      </View>
-    );
-  }
+  const appReady = Boolean(fontsLoaded && hydrated);
 
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
         <SafeAreaProvider>
           <View style={styles.webContainer}>
-            <StatusBar style="dark" />
-            <Stack
-              initialRouteName="(tabs)"
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.background },
+            <StatusBar style={splashFinished ? "dark" : "light"} />
+            {appReady && (
+              <Stack
+                initialRouteName="(tabs)"
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: colors.background },
                 animation: "slide_from_right",
                 headerStyle: { backgroundColor: colors.background },
                 headerTintColor: colors.text,
@@ -185,7 +178,14 @@ export default function RootLayout() {
                 headerBackTitle: "Account"
               }}
             />
-            </Stack>
+              </Stack>
+            )}
+            {!splashFinished && (
+              <AnimatedSplash
+                ready={appReady}
+                onFinish={() => setSplashFinished(true)}
+              />
+            )}
           </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
@@ -200,21 +200,6 @@ const styles = StyleSheet.create({
     maxWidth: 820,
     alignSelf: "center",
     backgroundColor: colors.background
-  },
-  splashContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.background,
-    padding: 24
-  },
-  splashIcon: {
-    width: 140,
-    height: 140
-  },
-  brandTitle: {
-    ...typography.h2,
-    color: colors.text,
-    letterSpacing: -0.5
   }
 });
+

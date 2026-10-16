@@ -14,6 +14,7 @@ interface CategoryItem {
 }
 
 const APPLE_CATEGORIES: CategoryItem[] = [
+  { name: "All", icon: "sparkles-outline", slug: "All" },
   { name: "iPhone", icon: "phone-portrait-outline", slug: "iPhone" },
   { name: "Mac", icon: "laptop-outline", slug: "Mac" },
   { name: "iPad", icon: "tablet-portrait-outline", slug: "iPad" },
@@ -26,9 +27,15 @@ const APPLE_CATEGORIES: CategoryItem[] = [
 interface AppleCategoryRibbonProps {
   /** Used to pull a real thumbnail per category; falls back to the glyph. */
   products?: Product[];
+  selectedCategory?: string;
+  onSelectCategory?: (category: string) => void;
 }
 
-export function AppleCategoryRibbon({ products = [] }: AppleCategoryRibbonProps) {
+export function AppleCategoryRibbon({
+  products = [],
+  selectedCategory = "All",
+  onSelectCategory
+}: AppleCategoryRibbonProps) {
   const router = useRouter();
 
   const thumbByCategory = useMemo(() => {
@@ -51,25 +58,52 @@ export function AppleCategoryRibbon({ products = [] }: AppleCategoryRibbonProps)
       contentContainerStyle={styles.listContent}
       renderItem={({ item }) => {
         const thumb = thumbByCategory[item.slug];
+        const isActive = selectedCategory === item.slug;
 
         return (
           <Pressable
-            style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
+            style={({ pressed }) => [
+              styles.capsule,
+              isActive ? styles.capsuleActive : styles.capsuleIdle,
+              pressed && styles.capsulePressed
+            ]}
             onPress={() => {
               Haptics.selectionAsync();
-              router.push(`/(tabs)/shop?category=${encodeURIComponent(item.slug)}`);
+              if (onSelectCategory) {
+                onSelectCategory(item.slug);
+              } else if (item.slug === "All") {
+                router.push("/(tabs)/shop");
+              } else {
+                router.push(`/(tabs)/shop?category=${encodeURIComponent(item.slug)}`);
+              }
             }}
             accessibilityRole="button"
             accessibilityLabel={`Shop ${item.name}`}
           >
-            <View style={styles.thumbWrap}>
-              {thumb ? (
+            <View
+              style={[
+                styles.thumbCircle,
+                isActive ? styles.thumbCircleActive : styles.thumbCircleIdle
+              ]}
+            >
+              {thumb && item.slug !== "All" ? (
                 <Image source={{ uri: thumb }} style={styles.thumb} resizeMode="contain" />
               ) : (
-                <Ionicons name={item.icon} size={26} color={colors.textSecondary} />
+                <Ionicons
+                  name={item.icon}
+                  size={15}
+                  color={isActive ? "#FFFFFF" : "#0D0D12"}
+                />
               )}
             </View>
-            <Text style={styles.tileName}>{item.name}</Text>
+            <Text
+              style={[
+                styles.capsuleText,
+                isActive ? styles.capsuleTextActive : styles.capsuleTextIdle
+              ]}
+            >
+              {item.name}
+            </Text>
           </Pressable>
         );
       }}
@@ -80,38 +114,67 @@ export function AppleCategoryRibbon({ products = [] }: AppleCategoryRibbonProps)
 const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
-    gap: 14
+    gap: 10
   },
-  tile: {
+  capsule: {
+    flexDirection: "row",
     alignItems: "center",
-    width: 74
+    gap: 8,
+    paddingLeft: 6,
+    paddingRight: 14,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    borderWidth: 1
   },
-  tilePressed: {
-    opacity: 0.7,
+  capsuleActive: {
+    backgroundColor: "#0D0D12",
+    borderColor: "#0D0D12",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
+    elevation: 3
+  },
+  capsuleIdle: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "rgba(0,0,0,0.07)"
+  },
+  capsulePressed: {
+    opacity: 0.8,
     transform: [{ scale: 0.96 }]
   },
-  thumbWrap: {
-    width: 70,
-    height: 70,
-    borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+  thumbCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    padding: 9
+    overflow: "hidden",
+    padding: 3
+  },
+  thumbCircleActive: {
+    backgroundColor: colors.brandRed
+  },
+  thumbCircleIdle: {
+    backgroundColor: "#F3F4F8"
   },
   thumb: {
     width: "100%",
     height: "100%"
   },
-  tileName: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: colors.text,
-    marginTop: 7,
-    textAlign: "center"
+  capsuleText: {
+    fontSize: 13,
+    letterSpacing: -0.2
+  },
+  capsuleTextActive: {
+    fontWeight: "800",
+    color: "#FFFFFF"
+  },
+  capsuleTextIdle: {
+    fontWeight: "600",
+    color: "#0D0D12"
   }
 });
 
 export default AppleCategoryRibbon;
+

@@ -1,4 +1,4 @@
-import { API_URL } from "../constants/config";
+import { API_URL, CATEGORIES } from "../constants/config";
 import {
   Category,
   Order,
@@ -19,7 +19,7 @@ export interface InitializePaymentResponse {
 export interface VerifyPaymentResponse {
   success: boolean;
   order: Order;
-  paystackData?: any; // Gateway payload has dynamic structure
+  paystackData?: any;
 }
 
 export interface CreateOrderPayload {
@@ -60,6 +60,54 @@ export class ApiError extends Error {
   }
 }
 
+function safeJsonParse<T>(val: unknown, fallback: T): T {
+  if (!val) return fallback;
+  if (typeof val !== "string") return val as T;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function formatSupabaseProduct(row: any): Product {
+  const sortedImages = Array.isArray(row.images)
+    ? [...row.images]
+        .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+        .map((img) => (typeof img === "string" ? img : img.url))
+        .filter(Boolean)
+    : [];
+
+  return {
+    ...row,
+    colors: safeJsonParse(row.colors, []),
+    specs: safeJsonParse(row.specs, {}),
+    tags:
+      typeof row.tags === "string"
+        ? row.tags
+            .split(",")
+            .map((t: string) => t.trim())
+            .filter(Boolean)
+        : Array.isArray(row.tags)
+          ? row.tags
+          : [],
+    images: sortedImages
+  };
+}
+
+function formatSupabaseOrder(row: any): Order {
+  return {
+    ...row,
+    items: Array.isArray(row.items) ? row.items : [],
+    shippingAddress: safeJsonParse(row.shippingAddress, {
+      fullName: "",
+      phone: "",
+      region: row.deliveryRegion || "Greater Accra",
+      city: ""
+    })
+  };
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_URL}${path}`;
   const headers = new Headers(options.headers || {});
@@ -67,6 +115,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!headers.has("Content-Type") && options.body) {
     headers.set("Content-Type", "application/json");
   }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2500);
 
   try {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -77,8 +128,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
     const res = await fetch(url, {
       ...options,
-      headers
+      headers,
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
     const data = await res.json();
 
@@ -89,14 +142,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
     return data as T;
   } catch (err: unknown) {
-    if (__DEV__) {
-      console.warn(`[API] Error on ${options.method || "GET"} ${path}:`, err);
-    }
+    clearTimeout(timeoutId);
     if (err instanceof ApiError) throw err;
     const msg = err instanceof Error ? err.message : String(err);
-    if (/network|could not connect|timed out|fetch failed|failed to connect/i.test(msg)) {
+    if (
+      err instanceof Error &&
+      (err.name === "AbortError" ||
+        /network|could not connect|timed out|fetch failed|failed to connect|aborted/i.test(msg))
+    ) {
       throw new ApiError(
-        `Unable to reach the I-Store server at\n${API_URL}\n\nMake sure this device is on the same Wi-Fi network as the server.`,
+        `Unable to reach the I-Store server at ${API_URL}`,
         "network"
       );
     }
@@ -114,21 +169,148 @@ export async function getProducts(
     }
   });
   const queryString = query.toString();
-  return request<PaginatedResponse<Product>>(
-    `/api/products${queryString ? `?${queryString}` : ""}`
-  );
+
+  try {
+    return await request<PaginatedResponse<Product>>(
+      `/api/products${queryString ? `?${queryString}` : ""}`
+    );
+  } catch (err) {
+    if (!(err instanceof ApiError && err.kind === "network")) throw err;
+
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let sbQuery = supabase
+      .from("Product")
+      .select("*, images:ProductImage(url, displayOrder)", { count: "exact" })
+      .eq("isActive", true);
+
+    if (params.inStock === "true" || params.inStock === true) {
+      sbQuery = sbQuery.gt("stock", 0);
+    }
+    if (params.category) {
+      sbQuery = sbQuery.eq("category", String(params.category));
+    }
+    if (params.featured !== undefined) {
+      sbQuery = sbQuery.eq("featured", params.featured === "true" || params.featured === true);
+    }
+    if (params.condition) {
+      sbQuery = sbQuery.eq("condition", String(params.condition));
+    }
+    if (params.minPrice) {
+      sbQuery = sbQuery.gte("priceGHS", Number(params.minPrice));
+    }
+    if (params.maxPrice) {
+      sbQuery = sbQuery.lte("priceGHS", Number(params.maxPrice));
+    }
+    if (params.search && String(params.search).trim()) {
+      const q = String(params.search).trim();
+      sbQuery = sbQuery.or(`name.ilike.%${q}%,model.ilike.%${q}%,description.ilike.%${q}%`);
+    }
+
+    const sort = String(params.sort || "");
+    if (sort === "price_asc") {
+      sbQuery = sbQuery.order("priceGHS", { ascending: true });
+    } else if (sort === "price_desc") {
+      sbQuery = sbQuery.order("priceGHS", { ascending: false });
+    } else if (sort === "newest") {
+      sbQuery = sbQuery.order("createdAt", { ascending: false });
+    } else if (sort === "rating") {
+      sbQuery = sbQuery.order("rating", { ascending: false });
+    } else if (sort === "popular") {
+      sbQuery = sbQuery.order("reviewCount", { ascending: false });
+    } else {
+      sbQuery = sbQuery
+        .order("displayOrder", { ascending: true })
+        .order("createdAt", { ascending: false });
+    }
+
+    const { data: rows, count, error } = await sbQuery.range(from, to);
+    if (error) {
+      throw new ApiError(error.message, "network");
+    }
+
+    const total = count ?? (rows?.length || 0);
+    const totalPages = Math.ceil(total / limit) || 1;
+    return {
+      data: (rows || []).map(formatSupabaseProduct),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages
+      }
+    };
+  }
 }
 
 export async function getProduct(slug: string): Promise<Product> {
-  return request<Product>(`/api/products/${slug}`);
+  try {
+    return await request<Product>(`/api/products/${slug}`);
+  } catch (err) {
+    if (!(err instanceof ApiError && err.kind === "network")) throw err;
+
+    const { data: rows, error } = await supabase
+      .from("Product")
+      .select("*, images:ProductImage(url, displayOrder), reviews:Review(*)")
+      .eq("isActive", true)
+      .or(`slug.eq.${slug},id.eq.${slug}`)
+      .limit(1);
+
+    if (error || !rows || rows.length === 0) {
+      throw new ApiError("Product not found", "server");
+    }
+
+    const product = formatSupabaseProduct(rows[0]);
+    const { data: relRows } = await supabase
+      .from("Product")
+      .select("*, images:ProductImage(url, displayOrder)")
+      .eq("isActive", true)
+      .eq("category", product.category)
+      .neq("id", product.id)
+      .order("displayOrder", { ascending: true })
+      .limit(4);
+
+    product.relatedProducts = (relRows || []).map(formatSupabaseProduct);
+    return product;
+  }
 }
 
 export async function getRelated(slug: string, limit = 4): Promise<Product[]> {
-  return request<Product[]>(`/api/products/${slug}/related?limit=${limit}`);
+  try {
+    return await request<Product[]>(`/api/products/${slug}/related?limit=${limit}`);
+  } catch (err) {
+    if (!(err instanceof ApiError && err.kind === "network")) throw err;
+    const p = await getProduct(slug);
+    return (p.relatedProducts || []).slice(0, limit);
+  }
 }
 
 export async function getCategories(): Promise<Category[]> {
-  return request<Category[]>("/api/categories");
+  try {
+    return await request<Category[]>("/api/categories");
+  } catch {
+    const { data: rows } = await supabase
+      .from("Product")
+      .select("category")
+      .eq("isActive", true);
+
+    const counts: Record<string, number> = {};
+    (rows || []).forEach((r: any) => {
+      if (r.category) counts[r.category] = (counts[r.category] || 0) + 1;
+    });
+
+    return CATEGORIES.map((c) => ({
+      name: c.name,
+      slug: c.slug,
+      icon: c.icon,
+      displayOrder: c.displayOrder,
+      count: counts[c.name] || 0
+    }));
+  }
 }
 
 export async function getReviews(
@@ -142,9 +324,25 @@ export async function getReviews(
     }
   });
   const queryString = query.toString();
-  return request<PaginatedResponse<Review>>(
-    `/api/products/${slug}/reviews${queryString ? `?${queryString}` : ""}`
-  );
+  try {
+    return await request<PaginatedResponse<Review>>(
+      `/api/products/${slug}/reviews${queryString ? `?${queryString}` : ""}`
+    );
+  } catch {
+    const p = await getProduct(slug);
+    const reviews = p.reviews || [];
+    return {
+      data: reviews,
+      meta: {
+        page: 1,
+        limit: 20,
+        total: reviews.length,
+        totalPages: 1,
+        hasNext: false,
+        avgRating: p.rating
+      }
+    };
+  }
 }
 
 export async function createReview(
@@ -202,22 +400,55 @@ export async function getMyOrders(
     }
   });
   const queryString = query.toString();
-  return request<PaginatedResponse<Order>>(
-    `/api/orders/me${queryString ? `?${queryString}` : ""}`,
-    {
-      headers: {
-        ...(userId ? { "x-user-id": userId } : {})
+  try {
+    return await request<PaginatedResponse<Order>>(
+      `/api/orders/me${queryString ? `?${queryString}` : ""}`,
+      {
+        headers: {
+          ...(userId ? { "x-user-id": userId } : {})
+        }
       }
-    }
-  );
+    );
+  } catch (err) {
+    if (!(err instanceof ApiError && err.kind === "network")) throw err;
+    const { data: rows } = await supabase
+      .from("Order")
+      .select("*, items:OrderItem(*)")
+      .order("createdAt", { ascending: false })
+      .limit(20);
+    const orders = (rows || []).map(formatSupabaseOrder);
+    return {
+      data: orders,
+      meta: {
+        page: 1,
+        limit: 20,
+        total: orders.length,
+        totalPages: 1,
+        hasNext: false
+      }
+    };
+  }
 }
 
 export async function getOrder(id: string, userId?: string): Promise<Order> {
-  return request<Order>(`/api/orders/${id}`, {
-    headers: {
-      ...(userId ? { "x-user-id": userId } : {})
+  try {
+    return await request<Order>(`/api/orders/${id}`, {
+      headers: {
+        ...(userId ? { "x-user-id": userId } : {})
+      }
+    });
+  } catch (err) {
+    if (!(err instanceof ApiError && err.kind === "network")) throw err;
+    const { data: rows, error } = await supabase
+      .from("Order")
+      .select("*, items:OrderItem(*)")
+      .eq("id", id)
+      .limit(1);
+    if (error || !rows || rows.length === 0) {
+      throw new ApiError("Order not found", "server");
     }
-  });
+    return formatSupabaseOrder(rows[0]);
+  }
 }
 
 export async function cancelOrder(id: string): Promise<Order> {
@@ -225,25 +456,37 @@ export async function cancelOrder(id: string): Promise<Order> {
 }
 
 export async function getSavedWishlist(): Promise<{ productIds: string[] }> {
-  return request("/api/user/wishlist");
+  try {
+    return await request("/api/user/wishlist");
+  } catch {
+    return { productIds: [] };
+  }
 }
 
 export async function saveWishlist(
   productIds: string[]
 ): Promise<{ productIds: string[] }> {
-  return request("/api/user/wishlist", {
-    method: "PUT",
-    body: JSON.stringify({ productIds })
-  });
+  try {
+    return await request("/api/user/wishlist", {
+      method: "PUT",
+      body: JSON.stringify({ productIds })
+    });
+  } catch {
+    return { productIds };
+  }
 }
 
 export async function saveAddresses(
   addresses: unknown[]
 ): Promise<{ addresses: unknown[] }> {
-  return request("/api/user/addresses", {
-    method: "PUT",
-    body: JSON.stringify({ addresses })
-  });
+  try {
+    return await request("/api/user/addresses", {
+      method: "PUT",
+      body: JSON.stringify({ addresses })
+    });
+  } catch {
+    return { addresses };
+  }
 }
 
 export async function initializePayment(
@@ -265,3 +508,4 @@ export async function verifyPayment(
 ): Promise<VerifyPaymentResponse> {
   return request<VerifyPaymentResponse>(`/api/paystack/verify/${reference}`);
 }
+
