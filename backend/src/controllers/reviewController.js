@@ -95,7 +95,7 @@ async function createReview(req, res, next) {
   try {
     const { slug } = req.params;
     const { rating, title, body, authorName } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id || null;
 
     const result = await prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
@@ -108,24 +108,26 @@ async function createReview(req, res, next) {
         throw err;
       }
 
-      const existing = await tx.review.findFirst({
-        where: { productId: product.id, userId }
-      });
+      if (userId) {
+        const existing = await tx.review.findFirst({
+          where: { productId: product.id, userId }
+        });
 
-      if (existing) {
-        const err = new Error("You have already reviewed this product.");
-        err.status = 409;
-        throw err;
+        if (existing) {
+          const err = new Error("You have already reviewed this product.");
+          err.status = 409;
+          throw err;
+        }
       }
 
       const review = await tx.review.create({
         data: {
           productId: product.id,
           userId,
-          authorName,
+          authorName: authorName.trim(),
           rating,
-          title,
-          body
+          title: title.trim(),
+          body: body.trim()
         }
       });
 

@@ -10,7 +10,8 @@ import {
   Check,
   AlertCircle,
   Package,
-  Layers
+  Layers,
+  Image as ImageIcon
 } from "lucide-react";
 import {
   getAdminProductById,
@@ -193,6 +194,35 @@ export function ProductForm() {
 
   const handleRemoveColor = (index: number) => {
     setColors((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleColorImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      toast.loading("Uploading color image...", { id: `color-img-${index}` });
+      const res = await uploadAdminImage(file);
+      if (res?.url) {
+        setColors((prev) => {
+          const next = [...prev];
+          next[index] = { ...next[index], images: [res.url] };
+          return next;
+        });
+        toast.success("Color image attached!", { id: `color-img-${index}` });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload color image", { id: `color-img-${index}` });
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleUpdateColorImageUrl = (index: number, url: string) => {
+    setColors((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], images: url.trim() ? [url.trim()] : [] };
+      return next;
+    });
   };
 
   // Storage Chips handlers
@@ -662,7 +692,10 @@ export function ProductForm() {
           {/* Card: Colors */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-gray-900">Color Finishes</h2>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Color Finishes</h2>
+                <p className="text-xs text-gray-400">Assign specific images to each finish</p>
+              </div>
               <button
                 type="button"
                 onClick={handleAddColor}
@@ -672,35 +705,80 @@ export function ProductForm() {
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              {colors.map((c, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl"
-                >
-                  <input
-                    type="color"
-                    value={c.hex}
-                    onChange={(e) => handleUpdateColor(idx, "hex", e.target.value)}
-                    className="w-7 h-7 rounded-lg border-0 cursor-pointer p-0 bg-transparent"
-                  />
-                  <input
-                    type="text"
-                    value={c.name}
-                    onChange={(e) => handleUpdateColor(idx, "name", e.target.value)}
-                    placeholder="Color title"
-                    className="flex-1 text-xs bg-transparent border-0 outline-none font-semibold text-gray-900"
-                  />
-                  <span className="text-[11px] font-mono text-gray-400">{c.hex}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveColor(idx)}
-                    className="p-1 text-gray-400 hover:text-rose-600"
+            <div className="space-y-3">
+              {colors.map((c, idx) => {
+                const colorImg = Array.isArray(c.images) && c.images.length > 0 ? c.images[0] : "";
+                return (
+                  <div
+                    key={idx}
+                    className="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2.5"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={c.hex}
+                        onChange={(e) => handleUpdateColor(idx, "hex", e.target.value)}
+                        className="w-7 h-7 rounded-lg border-0 cursor-pointer p-0 bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={c.name}
+                        onChange={(e) => handleUpdateColor(idx, "name", e.target.value)}
+                        placeholder="Color title"
+                        className="flex-1 text-xs bg-transparent border-0 outline-none font-semibold text-gray-900"
+                      />
+                      <span className="text-[11px] font-mono text-gray-400">{c.hex}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveColor(idx)}
+                        className="p-1 text-gray-400 hover:text-rose-600"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Per-Color Finish Image */}
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-200/60">
+                      {colorImg ? (
+                        <div className="relative w-10 h-10 rounded-lg bg-white border border-gray-200 overflow-hidden flex-shrink-0">
+                          <img src={colorImg} alt={c.name} className="w-full h-full object-contain p-0.5" />
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateColorImageUrl(idx, "")}
+                            className="absolute inset-0 bg-black/50 text-white opacity-0 hover:opacity-100 flex items-center justify-center transition"
+                            title="Remove image"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-gray-200/60 border border-dashed border-gray-300 flex items-center justify-center flex-shrink-0 text-gray-400">
+                          <ImageIcon className="w-4 h-4" />
+                        </div>
+                      )}
+
+                      <input
+                        type="url"
+                        value={colorImg}
+                        onChange={(e) => handleUpdateColorImageUrl(idx, e.target.value)}
+                        placeholder="Image URL or upload..."
+                        className="flex-1 text-[11px] bg-white rounded-lg border border-gray-200 px-2 py-1.5 outline-none focus:border-black font-mono text-gray-600"
+                      />
+
+                      <label className="px-2.5 py-1.5 bg-black hover:bg-gray-800 text-white text-[11px] font-medium rounded-lg cursor-pointer transition flex items-center gap-1">
+                        <Upload className="w-3 h-3" />
+                        <span>Upload</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleColorImageUpload(idx, e)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

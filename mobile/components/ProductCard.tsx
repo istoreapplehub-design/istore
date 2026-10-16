@@ -132,6 +132,22 @@ export function ProductCard({
           <View style={styles.rowPill}>
             <Text style={styles.rowPillText}>{pillText}</Text>
           </View>
+
+          <Pressable
+            hitSlop={10}
+            onPress={handleToggleWishlist}
+            accessibilityLabel={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            style={({ pressed }) => [
+              styles.rowHeartBtn,
+              pressed && { opacity: 0.6 }
+            ]}
+          >
+            <Ionicons
+              name={isWishlisted ? "heart" : "heart-outline"}
+              size={18}
+              color={isWishlisted ? colors.brandRed : colors.textTertiary}
+            />
+          </Pressable>
         </View>
 
         <View style={styles.rowSeparator} />
@@ -495,6 +511,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     color: colors.brandRed
+  },
+  rowHeartBtn: {
+    marginLeft: 6,
+    padding: 6
   },
   rowSeparator: {
     height: StyleSheet.hairlineWidth,

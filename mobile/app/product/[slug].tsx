@@ -80,6 +80,7 @@ export default function ProductDetailScreen() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewTitle, setReviewTitle] = useState("");
   const [reviewBody, setReviewBody] = useState("");
+  const [guestReviewName, setGuestReviewName] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const { userId, name: userName } = useUserStore();
@@ -177,17 +178,27 @@ export default function ProductDetailScreen() {
   const activeImages = useMemo(() => {
     if (!product) return [];
     const colorObj = selectedColor
-      ? product.colors?.find((c) => c.name === selectedColor)
+      ? product.colors?.find(
+          (c) => c.name.trim().toLowerCase() === selectedColor.trim().toLowerCase()
+        )
       : undefined;
-    const raw = colorObj?.images?.length ? colorObj.images : product.images || [];
+
+    let colorImgs: string[] = [];
+    if (Array.isArray(colorObj?.images) && colorObj.images.length > 0) {
+      colorImgs = colorObj.images;
+    } else if ((colorObj as any)?.image && typeof (colorObj as any).image === "string") {
+      colorImgs = [(colorObj as any).image];
+    }
+
+    const raw = colorImgs.length > 0 ? colorImgs : product.images || [];
     return raw.filter((url) => url && !url.includes("placehold.co"));
   }, [product, selectedColor]);
 
   // When color changes, reset image carousel to first slide
   useEffect(() => {
     setActiveImageIndex(0);
-    imageFlatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [selectedColor]);
+    imageFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [selectedColor, activeImages]);
 
   const storageOptions = useMemo(() => {
     if (!product) return [];
@@ -235,7 +246,13 @@ export default function ProductDetailScreen() {
   };
 
   const handleSubmitReview = async () => {
-    if (!product || !userId) return;
+    if (!product) return;
+
+    const author = (userId ? userName : guestReviewName.trim()) || "Guest Customer";
+    if (!userId && guestReviewName.trim().length < 2) {
+      Alert.alert("Name Required", "Please enter your name to post a review.");
+      return;
+    }
 
     setSubmittingReview(true);
     try {
@@ -245,9 +262,9 @@ export default function ProductDetailScreen() {
           rating: reviewRating,
           title: reviewTitle.trim(),
           body: reviewBody.trim(),
-          authorName: userName || "Verified Customer"
+          authorName: author
         },
-        userId
+        userId || undefined
       );
 
       setProduct((prev) =>
@@ -274,6 +291,7 @@ export default function ProductDetailScreen() {
       setShowReviewSheet(false);
       setReviewTitle("");
       setReviewBody("");
+      setGuestReviewName("");
       setReviewRating(5);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err: unknown) {
@@ -579,6 +597,25 @@ export default function ProductDetailScreen() {
                 <Text style={styles.buyNowText}>Buy Now</Text>
               </Pressable>
             )}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              style={[styles.wishlistCtaBtn, isWishlisted && styles.wishlistCtaBtnActive]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                toggleWishlist(product.id);
+              }}
+            >
+              <Ionicons
+                name={isWishlisted ? "heart" : "heart-outline"}
+                size={20}
+                color={isWishlisted ? colors.brandRed : colors.text}
+              />
+              <Text style={[styles.wishlistCtaText, isWishlisted && styles.wishlistCtaTextActive]}>
+                {isWishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
+              </Text>
+            </Pressable>
           </View>
 
           {/* ─── 7. SPECIFICATIONS TABLE ────────────────────────────────── */}
@@ -632,10 +669,6 @@ export default function ProductDetailScreen() {
                 hitSlop={8}
                 onPress={() => {
                   Haptics.selectionAsync();
-                  if (!userId) {
-                    router.push(`/(auth)/login?returnTo=product/${product.slug}`);
-                    return;
-                  }
                   setShowReviewSheet(true);
                 }}
                 style={({ pressed }) => [styles.writeReviewBtn, pressed && { opacity: 0.7 }]}
@@ -745,15 +778,33 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        <Pressable
-          style={[styles.stickyCta, isOutOfStock && { opacity: 0.5 }]}
-          disabled={isOutOfStock}
-          onPress={handleAddToCart}
-        >
-          <Text style={styles.stickyCtaText}>
-            {isOutOfStock ? "Out of Stock" : "Add to Bag"}
-          </Text>
-        </Pressable>
+        <View style={styles.stickyRightActions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+            style={[styles.stickyWishlistBtn, isWishlisted && styles.stickyWishlistBtnActive]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toggleWishlist(product.id);
+            }}
+          >
+            <Ionicons
+              name={isWishlisted ? "heart" : "heart-outline"}
+              size={20}
+              color={isWishlisted ? colors.brandRed : colors.text}
+            />
+          </Pressable>
+
+          <Pressable
+            style={[styles.stickyCta, isOutOfStock && { opacity: 0.5 }]}
+            disabled={isOutOfStock}
+            onPress={handleAddToCart}
+          >
+            <Text style={styles.stickyCtaText}>
+              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+            </Text>
+          </Pressable>
+        </View>
       </Animated.View>
 
       {/* ─── 12. REVIEW COMPOSER SHEET ─────────────────────────────────── */}
@@ -801,6 +852,20 @@ export default function ProductDetailScreen() {
               ))}
             </View>
 
+            {!userId && (
+              <>
+                <Text style={styles.sheetLabel}>Your Name</Text>
+                <TextInput
+                  style={styles.sheetInput}
+                  placeholder="e.g. Kwame Mensah"
+                  placeholderTextColor={colors.textTertiary}
+                  value={guestReviewName}
+                  onChangeText={setGuestReviewName}
+                  maxLength={50}
+                />
+              </>
+            )}
+
             <Text style={styles.sheetLabel}>Title</Text>
             <TextInput
               style={styles.sheetInput}
@@ -826,13 +891,17 @@ export default function ProductDetailScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.sheetSubmitBtn,
-                (submittingReview || reviewTitle.trim().length < 3 || reviewBody.trim().length < 10) && { opacity: 0.5 },
+                (submittingReview ||
+                  reviewTitle.trim().length < 3 ||
+                  reviewBody.trim().length < 10 ||
+                  (!userId && guestReviewName.trim().length < 2)) && { opacity: 0.5 },
                 pressed && { transform: [{ scale: 0.99 }] }
               ]}
               disabled={
                 submittingReview ||
                 reviewTitle.trim().length < 3 ||
-                reviewBody.trim().length < 10
+                reviewBody.trim().length < 10 ||
+                (!userId && guestReviewName.trim().length < 2)
               }
               onPress={handleSubmitReview}
             >
@@ -1014,6 +1083,30 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700"
   },
+  wishlistCtaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 52,
+    borderRadius: radius.pill,
+    backgroundColor: "#F5F5F7",
+    borderWidth: 1,
+    borderColor: "#E5E5EA"
+  },
+  wishlistCtaBtnActive: {
+    backgroundColor: "#FFF1F2",
+    borderColor: "#FECDD3"
+  },
+  wishlistCtaText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text
+  },
+  wishlistCtaTextActive: {
+    color: colors.brandRed,
+    fontWeight: "700"
+  },
   detailsBlock: {
     marginTop: 32
   },
@@ -1187,6 +1280,25 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "600"
+  },
+  stickyRightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  stickyWishlistBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    backgroundColor: "#F5F5F7",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E5E5EA"
+  },
+  stickyWishlistBtnActive: {
+    backgroundColor: "#FFF1F2",
+    borderColor: "#FECDD3"
   },
   errorContainer: {
     flex: 1,

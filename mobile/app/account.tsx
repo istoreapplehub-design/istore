@@ -161,6 +161,20 @@ export default function AccountScreen() {
               Just looking around? Flash Sales, the full store and guest checkout are all
               available without an account.
             </Text>
+
+            <View style={styles.gateSupportLinks}>
+              <Pressable onPress={() => router.push("/help")}>
+                <Text style={styles.gateSupportLink}>Concierge Support</Text>
+              </Pressable>
+              <Text style={styles.gateSupportDot}>·</Text>
+              <Pressable onPress={() => router.push("/legal?type=terms")}>
+                <Text style={styles.gateSupportLink}>Terms</Text>
+              </Pressable>
+              <Text style={styles.gateSupportDot}>·</Text>
+              <Pressable onPress={() => router.push("/legal?type=privacy")}>
+                <Text style={styles.gateSupportLink}>Privacy</Text>
+              </Pressable>
+            </View>
           </Animated.View>
         </View>
       </SafeAreaView>
@@ -330,7 +344,13 @@ export default function AccountScreen() {
           />
         </Group>
 
-        <Group title="SUPPORT">
+        <Group title="SUPPORT & SPECIALIST ADVICE">
+          <Row
+            icon="chatbubbles-outline"
+            label="Concierge Support & Specialist Advice"
+            onPress={() => router.push("/help")}
+          />
+          <View style={styles.divider} />
           <Row
             icon="help-circle-outline"
             label="Help Center & Contact"
@@ -601,5 +621,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: spacing.lg,
     lineHeight: 19
+  },
+  gateSupportLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 16
+  },
+  gateSupportLink: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.accent
+  },
+  gateSupportDot: {
+    fontSize: 13,
+    color: colors.textTertiary
   }
 });

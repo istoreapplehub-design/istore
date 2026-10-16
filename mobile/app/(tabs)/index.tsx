@@ -390,49 +390,14 @@ export default function HomeScreen() {
           />
         </Animated.View>
 
-        {/* Why I-Store */}
-        <Animated.View entering={FadeInDown.delay(140).duration(420)}>
+        {/* Why I-Store — The I-Store Standard as the final section */}
+        <Animated.View entering={FadeInDown.delay(140).duration(420)} style={{ marginBottom: 24 }}>
           <SectionHeader
             title="The I-Store Standard"
             subtitle="Engineered for peace of mind on every order"
           />
           <ValuePropRail />
         </Animated.View>
-
-        {/* Guest-safe footer links */}
-        <View style={styles.footer}>
-          <Text style={styles.footerHeading}>Need specialist advice?</Text>
-          <View style={styles.footerLinks}>
-            <Pressable
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push("/help");
-              }}
-            >
-              <Text style={styles.footerLink}>Concierge Support</Text>
-            </Pressable>
-            <View style={styles.footerDot} />
-            <Pressable
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push("/legal?type=terms");
-              }}
-            >
-              <Text style={styles.footerLink}>Terms</Text>
-            </Pressable>
-            <View style={styles.footerDot} />
-            <Pressable
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push("/legal?type=privacy");
-              }}
-            >
-              <Text style={styles.footerLink}>Privacy</Text>
-            </Pressable>
-          </View>
-          <Ionicons name="logo-apple" size={18} color={colors.textTertiary} />
-          <Text style={styles.footerBrand}>I-Store Apple Hub · Official Retailer</Text>
-        </View>
       </Animated.ScrollView>
     </View>
   );
@@ -722,40 +687,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     gap: 14
-  },
-  footer: {
-    marginTop: spacing.xl,
-    alignItems: "center",
-    paddingHorizontal: 24
-  },
-  footerHeading: {
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: -0.3,
-    color: "#0D0D12"
-  },
-  footerLinks: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 10,
-    marginBottom: spacing.lg
-  },
-  footerLink: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.accent
-  },
-  footerDot: {
-    width: 3,
-    height: 3,
-    borderRadius: radius.full,
-    backgroundColor: colors.border
-  },
-  footerBrand: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    marginTop: 6
   }
 });
 
