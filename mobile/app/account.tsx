@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
@@ -165,10 +165,14 @@ export default function AccountScreen() {
     );
   }
 
+  const isAdmin = user?.role === "admin";
+  if (isAdmin) {
+    return <Redirect href="/admin" />;
+  }
+
   const name = user?.name || "There";
   const email = user?.email || "";
   const phone = user?.phone || "";
-  const isAdmin = user?.role === "admin";
   const initial = name.trim().charAt(0).toUpperCase();
 
   const handleSignOut = () => {

@@ -64,11 +64,11 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#ebebe9] shadow-xs flex flex-col">
+    <div className="bg-white/85 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-neutral-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] transition-all duration-300 flex flex-col">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
-          {subtitle ? <div className="text-[11px] text-gray-400 mt-0.5">{subtitle}</div> : null}
+          <h3 className="font-extrabold text-neutral-900 text-sm tracking-tight">{title}</h3>
+          {subtitle ? <div className="text-[11px] text-neutral-400 mt-0.5 font-medium">{subtitle}</div> : null}
         </div>
         {action}
       </div>
@@ -236,22 +236,24 @@ export function Dashboard() {
           return (
             <div
               key={metric.label}
-              className="bg-white rounded-2xl p-5 border border-[#ebebe9] shadow-xs flex flex-col justify-between min-h-[132px]"
+              className="bg-white/85 backdrop-blur-md rounded-2xl p-5 border border-neutral-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-neutral-300/90 transition-all duration-300 group flex flex-col justify-between min-h-[140px]"
             >
               <div className="flex items-start justify-between">
-                <span className="text-xs font-semibold text-gray-500">{metric.label}</span>
-                <Icon className="w-4 h-4 text-gray-400" />
+                <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">{metric.label}</span>
+                <div className="w-8 h-8 rounded-xl bg-neutral-100/90 flex items-center justify-center text-neutral-800 transition-transform group-hover:scale-105 duration-300">
+                  <Icon className="w-4 h-4" />
+                </div>
               </div>
-              <div className="mt-2 text-2xl font-black text-gray-900 tracking-tight">
+              <div className="mt-2 text-3xl font-extrabold text-neutral-900 tracking-tight">
                 {loadingRev && metric.label !== "Live products" ? "…" : metric.value}
               </div>
               <div className="mt-2 flex items-end justify-between gap-2">
-                <span className="text-[11px] text-gray-400 font-medium leading-tight">
+                <span className="text-[11px] text-neutral-400 font-medium leading-tight">
                   {metric.sub}
                 </span>
                 {path ? (
                   <svg className="w-20 h-6 overflow-visible shrink-0" viewBox="0 0 80 22">
-                    <path d={path} stroke="#171717" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    <path d={path} stroke="#171717" strokeWidth="2.2" strokeLinecap="round" fill="none" />
                   </svg>
                 ) : null}
               </div>

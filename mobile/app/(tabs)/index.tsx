@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import {
-  Dimensions,
   FlatList,
   Image,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,12 +33,12 @@ import { useHomeData } from "../../hooks/useHomeData";
 import { useFlashDeals } from "../../hooks/useFlashDeals";
 import { colors, formatGHS, radius, spacing } from "../../constants/theme";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const EDITORIAL_WIDTH = SCREEN_WIDTH - 96;
 const EDITORIAL_GAP = 14;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const editorialWidth = Math.min(Math.max(width - 56, 260), 380);
   const { featured, newArrivals, bestSellers, loading, error, refetch } = useHomeData();
   const { deals, products, endsAt, error: flashError } = useFlashDeals();
 
@@ -124,7 +124,7 @@ export default function HomeScreen() {
         >
           <Ionicons name="flash" size={13} color={colors.text} />
           <Text style={styles.stripText}>
-            New flash prices every midnight Ghana time
+            New flash deals updated daily at midnight
           </Text>
           <Ionicons name="chevron-forward" size={13} color={colors.textTertiary} />
         </Pressable>
@@ -182,7 +182,7 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             data={editorial}
             keyExtractor={(item) => item.id}
-            snapToInterval={EDITORIAL_WIDTH + EDITORIAL_GAP}
+            snapToInterval={editorialWidth + EDITORIAL_GAP}
             decelerationRate="fast"
             contentContainerStyle={styles.editorialContent}
             renderItem={({ item }) => {
@@ -190,7 +190,7 @@ export default function HomeScreen() {
 
               return (
                 <Pressable
-                  style={styles.editorialCard}
+                  style={[styles.editorialCard, { width: editorialWidth }]}
                   onPress={() => {
                     Haptics.selectionAsync();
                     router.push(`/product/${item.slug}`);
@@ -232,7 +232,7 @@ export default function HomeScreen() {
         {/* Most loved */}
         <Animated.View entering={FadeInDown.delay(120).duration(420)}>
           <SectionHeader
-            title="Most loved in Ghana"
+            title="Most loved devices"
             subtitle="What our customers keep coming back for"
             onSeeAll={() => router.push("/(tabs)/shop?sort=popular")}
           />
@@ -294,7 +294,7 @@ export default function HomeScreen() {
             </Pressable>
           </View>
           <Ionicons name="logo-apple" size={18} color={colors.textTertiary} />
-          <Text style={styles.footerBrand}>I-Store Ghana · Accra</Text>
+          <Text style={styles.footerBrand}>I-Store Apple Hub · Worldwide</Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -378,7 +378,6 @@ const styles = StyleSheet.create({
     gap: EDITORIAL_GAP
   },
   editorialCard: {
-    width: EDITORIAL_WIDTH,
     height: 380,
     borderRadius: radius.xl,
     backgroundColor: colors.surface,

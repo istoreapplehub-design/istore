@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { colors, theme } from "../../constants/theme";
+import { colors, radius, theme } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 import {
   AdminStats,
@@ -32,6 +32,7 @@ export default function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const user = useUserStore((s) => s.user);
+  const signOut = useUserStore((s) => s.signOut);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -82,13 +83,20 @@ export default function AdminDashboardScreen() {
     }
   };
 
-  const handleBackToAccount = () => {
+  const handleSignOut = () => {
     Haptics.selectionAsync();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/account");
-    }
+    Alert.alert("Admin Sign Out", "Are you sure you want to sign out of the Admin Console?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          await signOut();
+          router.replace("/(auth)/login");
+        }
+      }
+    ]);
   };
 
   const totalRevenueFormatted = revenueStats
@@ -120,18 +128,26 @@ export default function AdminDashboardScreen() {
         {/* 1. HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.title}>Admin</Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.adminPill}>
+                <Ionicons name="shield-checkmark" size={11} color="#FFFFFF" style={{ marginRight: 4 }} />
+                <Text style={styles.adminPillText}>ADMIN CONSOLE</Text>
+              </View>
+              <Text style={styles.storeName}>I-Store Worldwide</Text>
+            </View>
+            <Text style={styles.title}>Overview</Text>
             <Text style={styles.subtitle}>
               Signed in as {user?.email || "Admin User"}
             </Text>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Exit admin to account"
-            onPress={handleBackToAccount}
-            style={({ pressed }) => [styles.exitBtn, pressed && { opacity: 0.6 }]}
+            accessibilityLabel="Sign out of admin console"
+            onPress={handleSignOut}
+            style={({ pressed }) => [styles.signOutBtn, pressed && { opacity: 0.7 }]}
           >
-            <Ionicons name="close" size={22} color={colors.text} />
+            <Ionicons name="log-out-outline" size={16} color={colors.text} style={{ marginRight: 4 }} />
+            <Text style={styles.signOutBtnText}>Sign Out</Text>
           </Pressable>
         </View>
 
@@ -374,8 +390,33 @@ const styles = StyleSheet.create({
   headerLeft: {
     flex: 1
   },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6
+  },
+  adminPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.accent,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full
+  },
+  adminPillText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.5
+  },
+  storeName: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textSecondary
+  },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: "700",
     letterSpacing: -0.6,
     color: colors.text
@@ -385,14 +426,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2
   },
-  exitBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
+  signOutBtn: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
     marginLeft: 12
+  },
+  signOutBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.text
   },
   loadingContainer: {
     marginTop: 8

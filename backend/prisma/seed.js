@@ -53,6 +53,11 @@ const REVIEW_TEMPLATES = [
   }
 ];
 
+const PHOTO_BASE = "https://nxycejiuwpbocaiqwsdt.supabase.co/storage/v1/object/public/product-images/products";
+
+/** Every listing ships with one real studio render, uploaded via scripts/attach-product-photos.js */
+const photo = (slug) => [`${PHOTO_BASE}/${slug}.jpg`];
+
 const PRODUCTS_DATA = [
   // ─── 1. IPHONES ──────────────────────────────────────────────────────────
   {
@@ -86,43 +91,25 @@ const PRODUCTS_DATA = [
       {
         name: "Natural Titanium",
         hex: "#9E978E",
-        images: [
-          "https://placehold.co/800x800/9E978E/FFFFFF?text=iPhone+15+Pro+Max+Natural+Front",
-          "https://placehold.co/800x800/7E7870/FFFFFF?text=iPhone+15+Pro+Max+Natural+Back"
-        ]
+        images: photo("iphone-15-pro-max-256gb")
       },
       {
         name: "Blue Titanium",
         hex: "#39434F",
-        images: [
-          "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Max+Blue+Front",
-          "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Max+Blue+Back"
-        ]
+        images: photo("iphone-15-pro-max-256gb")
       },
       {
         name: "White Titanium",
         hex: "#F2F2ED",
-        images: [
-          "https://placehold.co/800x800/F2F2ED/1D1D1F?text=iPhone+15+Pro+Max+White+Front",
-          "https://placehold.co/800x800/DCDCD6/1D1D1F?text=iPhone+15+Pro+Max+White+Back"
-        ]
+        images: photo("iphone-15-pro-max-256gb")
       },
       {
         name: "Black Titanium",
         hex: "#28292A",
-        images: [
-          "https://placehold.co/800x800/28292A/FFFFFF?text=iPhone+15+Pro+Max+Black+Front",
-          "https://placehold.co/800x800/1C1D1E/FFFFFF?text=iPhone+15+Pro+Max+Black+Back"
-        ]
+        images: photo("iphone-15-pro-max-256gb")
       }
     ],
-    images: [
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=iPhone+15+Pro+Max+Hero",
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Max+Angle",
-      "https://placehold.co/800x800/9E978E/FFFFFF?text=iPhone+15+Pro+Max+Camera",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+15+Pro+Max+Profile",
-      "https://placehold.co/800x800/28292A/FFFFFF?text=iPhone+15+Pro+Max+Packaging"
-    ]
+    images: photo("iphone-15-pro-max-256gb")
   },
   {
     name: "iPhone 15 Pro 128GB",
@@ -152,15 +139,10 @@ const PRODUCTS_DATA = [
     tags: "new,bestseller",
     displayOrder: 2,
     colors: [
-      { name: "Natural Titanium", hex: "#9E978E", images: ["https://placehold.co/800x800/9E978E/FFFFFF?text=15+Pro+Natural+1", "https://placehold.co/800x800/9E978E/FFFFFF?text=15+Pro+Natural+2"] },
-      { name: "Black Titanium", hex: "#28292A", images: ["https://placehold.co/800x800/28292A/FFFFFF?text=15+Pro+Black+1", "https://placehold.co/800x800/28292A/FFFFFF?text=15+Pro+Black+2"] }
+      { name: "Natural Titanium", hex: "#9E978E", images: photo("iphone-15-pro-128gb") },
+      { name: "Black Titanium", hex: "#28292A", images: photo("iphone-15-pro-128gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/28292A/FFFFFF?text=iPhone+15+Pro+Front",
-      "https://placehold.co/800x800/9E978E/FFFFFF?text=iPhone+15+Pro+Back",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+15+Pro+Action+Button",
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+15+Pro+Lifestyle"
-    ]
+    images: photo("iphone-15-pro-128gb")
   },
   {
     name: "iPhone 15 128GB",
@@ -190,16 +172,11 @@ const PRODUCTS_DATA = [
     tags: "new,bestseller,popular",
     displayOrder: 3,
     colors: [
-      { name: "Black", hex: "#353839", images: ["https://placehold.co/800x800/353839/FFFFFF?text=iPhone+15+Black+1", "https://placehold.co/800x800/353839/FFFFFF?text=iPhone+15+Black+2"] },
-      { name: "Blue", hex: "#D4E1E8", images: ["https://placehold.co/800x800/D4E1E8/1D1D1F?text=iPhone+15+Blue+1", "https://placehold.co/800x800/D4E1E8/1D1D1F?text=iPhone+15+Blue+2"] },
-      { name: "Pink", hex: "#FCE1E4", images: ["https://placehold.co/800x800/FCE1E4/1D1D1F?text=iPhone+15+Pink+1", "https://placehold.co/800x800/FCE1E4/1D1D1F?text=iPhone+15+Pink+2"] }
+      { name: "Black", hex: "#353839", images: photo("iphone-15-128gb") },
+      { name: "Blue", hex: "#D4E1E8", images: photo("iphone-15-128gb") },
+      { name: "Pink", hex: "#FCE1E4", images: photo("iphone-15-128gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/D4E1E8/1D1D1F?text=iPhone+15+Hero",
-      "https://placehold.co/800x800/FCE1E4/1D1D1F?text=iPhone+15+Colors",
-      "https://placehold.co/800x800/353839/FFFFFF?text=iPhone+15+Dynamic+Island",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+15+Box"
-    ]
+    images: photo("iphone-15-128gb")
   },
   {
     name: "iPhone 14 128GB",
@@ -229,15 +206,10 @@ const PRODUCTS_DATA = [
     tags: "bestseller",
     displayOrder: 4,
     colors: [
-      { name: "Midnight", hex: "#1C232B", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Midnight+2"] },
-      { name: "Starlight", hex: "#F9F6EF", images: ["https://placehold.co/800x800/F9F6EF/1D1D1F?text=iPhone+14+Starlight+1", "https://placehold.co/800x800/F9F6EF/1D1D1F?text=iPhone+14+Starlight+2"] }
+      { name: "Midnight", hex: "#1C232B", images: photo("iphone-14-128gb") },
+      { name: "Starlight", hex: "#F9F6EF", images: photo("iphone-14-128gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Midnight",
-      "https://placehold.co/800x800/F9F6EF/1D1D1F?text=iPhone+14+Starlight",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+14+Camera",
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+14+Lifestyle"
-    ]
+    images: photo("iphone-14-128gb")
   },
   {
     name: "iPhone 13 128GB",
@@ -267,15 +239,10 @@ const PRODUCTS_DATA = [
     tags: "deal,bestseller",
     displayOrder: 5,
     colors: [
-      { name: "Midnight", hex: "#1D232A", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Midnight+2"] },
-      { name: "Blue", hex: "#2C5D88", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Blue+2"] }
+      { name: "Midnight", hex: "#1D232A", images: photo("iphone-13-128gb") },
+      { name: "Blue", hex: "#2C5D88", images: photo("iphone-13-128gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Front",
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+Back",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPhone+13+Angle",
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPhone+13+InHand"
-    ]
+    images: photo("iphone-13-128gb")
   },
 
   // ─── 2. IPADS ─────────────────────────────────────────────────────────────
@@ -306,15 +273,10 @@ const PRODUCTS_DATA = [
     tags: "pro,featured",
     displayOrder: 1,
     colors: [
-      { name: "Space Gray", hex: "#4E4F52", images: ["https://placehold.co/800x800/4E4F52/FFFFFF?text=iPad+Pro+SpaceGray+1", "https://placehold.co/800x800/4E4F52/FFFFFF?text=iPad+Pro+SpaceGray+2"] },
-      { name: "Silver", hex: "#E3E4E5", images: ["https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+Pro+Silver+1", "https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+Pro+Silver+2"] }
+      { name: "Space Gray", hex: "#4E4F52", images: photo("ipad-pro-12-9-m2-256gb") },
+      { name: "Silver", hex: "#E3E4E5", images: photo("ipad-pro-12-9-m2-256gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/4E4F52/FFFFFF?text=iPad+Pro+12.9+Front",
-      "https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+Pro+12.9+Back",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=iPad+Pro+with+Magic+Keyboard",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPad+Pro+Display"
-    ]
+    images: photo("ipad-pro-12-9-m2-256gb")
   },
   {
     name: 'iPad Air 11" M2 128GB',
@@ -343,16 +305,11 @@ const PRODUCTS_DATA = [
     tags: "new,bestseller",
     displayOrder: 2,
     colors: [
-      { name: "Space Gray", hex: "#535457", images: ["https://placehold.co/800x800/535457/FFFFFF?text=iPad+Air+SpaceGray+1", "https://placehold.co/800x800/535457/FFFFFF?text=iPad+Air+SpaceGray+2"] },
-      { name: "Starlight", hex: "#E5E1D8", images: ["https://placehold.co/800x800/E5E1D8/1D1D1F?text=iPad+Air+Starlight+1", "https://placehold.co/800x800/E5E1D8/1D1D1F?text=iPad+Air+Starlight+2"] },
-      { name: "Blue", hex: "#C7D8E2", images: ["https://placehold.co/800x800/C7D8E2/1D1D1F?text=iPad+Air+Blue+1", "https://placehold.co/800x800/C7D8E2/1D1D1F?text=iPad+Air+Blue+2"] }
+      { name: "Space Gray", hex: "#535457", images: photo("ipad-air-11-m2-128gb") },
+      { name: "Starlight", hex: "#E5E1D8", images: photo("ipad-air-11-m2-128gb") },
+      { name: "Blue", hex: "#C7D8E2", images: photo("ipad-air-11-m2-128gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/C7D8E2/1D1D1F?text=iPad+Air+Front",
-      "https://placehold.co/800x800/535457/FFFFFF?text=iPad+Air+Back",
-      "https://placehold.co/800x800/E5E1D8/1D1D1F?text=iPad+Air+Colors",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPad+Air+Side"
-    ]
+    images: photo("ipad-air-11-m2-128gb")
   },
   {
     name: "iPad 10th Gen 64GB",
@@ -381,16 +338,11 @@ const PRODUCTS_DATA = [
     tags: "featured,bestseller,popular",
     displayOrder: 3,
     colors: [
-      { name: "Silver", hex: "#E3E4E5", images: ["https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+10+Silver+1", "https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+10+Silver+2"] },
-      { name: "Blue", hex: "#5B8FB9", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iPad+10+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=iPad+10+Blue+2"] },
-      { name: "Yellow", hex: "#F3DC74", images: ["https://placehold.co/800x800/F3DC74/1D1D1F?text=iPad+10+Yellow+1", "https://placehold.co/800x800/F3DC74/1D1D1F?text=iPad+10+Yellow+2"] }
+      { name: "Silver", hex: "#E3E4E5", images: photo("ipad-10th-gen-64gb") },
+      { name: "Blue", hex: "#5B8FB9", images: photo("ipad-10th-gen-64gb") },
+      { name: "Yellow", hex: "#F3DC74", images: photo("ipad-10th-gen-64gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=iPad+10th+Gen+Hero",
-      "https://placehold.co/800x800/F3DC74/1D1D1F?text=iPad+10th+Gen+Colors",
-      "https://placehold.co/800x800/E3E4E5/1D1D1F?text=iPad+10th+Gen+Back",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPad+10th+Gen+Lifestyle"
-    ]
+    images: photo("ipad-10th-gen-64gb")
   },
   {
     name: "iPad mini 6 64GB",
@@ -419,15 +371,10 @@ const PRODUCTS_DATA = [
     tags: "compact",
     displayOrder: 4,
     colors: [
-      { name: "Space Gray", hex: "#4C4D50", images: ["https://placehold.co/800x800/4C4D50/FFFFFF?text=iPad+mini+SpaceGray+1", "https://placehold.co/800x800/4C4D50/FFFFFF?text=iPad+mini+SpaceGray+2"] },
-      { name: "Purple", hex: "#DDD2E3", images: ["https://placehold.co/800x800/DDD2E3/1D1D1F?text=iPad+mini+Purple+1", "https://placehold.co/800x800/DDD2E3/1D1D1F?text=iPad+mini+Purple+2"] }
+      { name: "Space Gray", hex: "#4C4D50", images: photo("ipad-mini-6-64gb") },
+      { name: "Purple", hex: "#DDD2E3", images: photo("ipad-mini-6-64gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/4C4D50/FFFFFF?text=iPad+mini+Front",
-      "https://placehold.co/800x800/DDD2E3/1D1D1F?text=iPad+mini+Purple",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iPad+mini+Handheld",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=iPad+mini+Back"
-    ]
+    images: photo("ipad-mini-6-64gb")
   },
 
   // ─── 3. MACS ──────────────────────────────────────────────────────────────
@@ -457,15 +404,10 @@ const PRODUCTS_DATA = [
     tags: "pro,flagship",
     displayOrder: 1,
     colors: [
-      { name: "Space Black", hex: "#2E2F33", images: ["https://placehold.co/800x800/2E2F33/FFFFFF?text=MBP+SpaceBlack+1", "https://placehold.co/800x800/2E2F33/FFFFFF?text=MBP+SpaceBlack+2"] },
-      { name: "Silver", hex: "#E2E3E4", images: ["https://placehold.co/800x800/E2E3E4/1D1D1F?text=MBP+Silver+1", "https://placehold.co/800x800/E2E3E4/1D1D1F?text=MBP+Silver+2"] }
+      { name: "Space Black", hex: "#2E2F33", images: photo("macbook-pro-14-m3-pro") },
+      { name: "Silver", hex: "#E2E3E4", images: photo("macbook-pro-14-m3-pro") }
     ],
-    images: [
-      "https://placehold.co/800x800/2E2F33/FFFFFF?text=MacBook+Pro+14+Open",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=MacBook+Pro+14+Keyboard",
-      "https://placehold.co/800x800/E2E3E4/1D1D1F?text=MacBook+Pro+14+Ports",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MacBook+Pro+14+Closed"
-    ]
+    images: photo("macbook-pro-14-m3-pro")
   },
   {
     name: 'MacBook Air 15" M3 256GB',
@@ -493,15 +435,10 @@ const PRODUCTS_DATA = [
     tags: "new,bestseller",
     displayOrder: 2,
     colors: [
-      { name: "Midnight", hex: "#1C242F", images: ["https://placehold.co/800x800/171717/FFFFFF?text=MBA15+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=MBA15+Midnight+2"] },
-      { name: "Starlight", hex: "#E8E2D6", images: ["https://placehold.co/800x800/E8E2D6/1D1D1F?text=MBA15+Starlight+1", "https://placehold.co/800x800/E8E2D6/1D1D1F?text=MBA15+Starlight+2"] }
+      { name: "Midnight", hex: "#1C242F", images: photo("macbook-air-15-m3-256gb") },
+      { name: "Starlight", hex: "#E8E2D6", images: photo("macbook-air-15-m3-256gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=MacBook+Air+15+Hero",
-      "https://placehold.co/800x800/E8E2D6/1D1D1F?text=MacBook+Air+15+Side",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MacBook+Air+15+Keyboard",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=MacBook+Air+15+SlimProfile"
-    ]
+    images: photo("macbook-air-15-m3-256gb")
   },
   {
     name: 'MacBook Air 13" M3 256GB',
@@ -529,16 +466,11 @@ const PRODUCTS_DATA = [
     tags: "featured,bestseller,popular",
     displayOrder: 3,
     colors: [
-      { name: "Space Gray", hex: "#525357", images: ["https://placehold.co/800x800/525357/FFFFFF?text=MBA13+SpaceGray+1", "https://placehold.co/800x800/525357/FFFFFF?text=MBA13+SpaceGray+2"] },
-      { name: "Silver", hex: "#E2E3E5", images: ["https://placehold.co/800x800/E2E3E5/1D1D1F?text=MBA13+Silver+1", "https://placehold.co/800x800/E2E3E5/1D1D1F?text=MBA13+Silver+2"] },
-      { name: "Midnight", hex: "#1C242F", images: ["https://placehold.co/800x800/171717/FFFFFF?text=MBA13+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=MBA13+Midnight+2"] }
+      { name: "Space Gray", hex: "#525357", images: photo("macbook-air-13-m3-256gb") },
+      { name: "Silver", hex: "#E2E3E5", images: photo("macbook-air-13-m3-256gb") },
+      { name: "Midnight", hex: "#1C242F", images: photo("macbook-air-13-m3-256gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=MacBook+Air+13+Front",
-      "https://placehold.co/800x800/525357/FFFFFF?text=MacBook+Air+13+Profile",
-      "https://placehold.co/800x800/E2E3E5/1D1D1F?text=MacBook+Air+13+Open",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MacBook+Air+13+Lifestyle"
-    ]
+    images: photo("macbook-air-13-m3-256gb")
   },
   {
     name: 'iMac 24" M3',
@@ -565,16 +497,11 @@ const PRODUCTS_DATA = [
     tags: "desktop",
     displayOrder: 4,
     colors: [
-      { name: "Blue", hex: "#4D748E", images: ["https://placehold.co/800x800/171717/FFFFFF?text=iMac+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=iMac+Blue+2"] },
-      { name: "Green", hex: "#638A73", images: ["https://placehold.co/800x800/638A73/FFFFFF?text=iMac+Green+1", "https://placehold.co/800x800/638A73/FFFFFF?text=iMac+Green+2"] },
-      { name: "Silver", hex: "#DCDDDF", images: ["https://placehold.co/800x800/DCDDDF/1D1D1F?text=iMac+Silver+1", "https://placehold.co/800x800/DCDDDF/1D1D1F?text=iMac+Silver+2"] }
+      { name: "Blue", hex: "#4D748E", images: photo("imac-24-m3") },
+      { name: "Green", hex: "#638A73", images: photo("imac-24-m3") },
+      { name: "Silver", hex: "#DCDDDF", images: photo("imac-24-m3") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=iMac+24+Hero",
-      "https://placehold.co/800x800/638A73/FFFFFF?text=iMac+24+Side",
-      "https://placehold.co/800x800/DCDDDF/1D1D1F?text=iMac+24+Back",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=iMac+24+Accessories"
-    ]
+    images: photo("imac-24-m3")
   },
   {
     name: "Mac mini M2",
@@ -601,14 +528,9 @@ const PRODUCTS_DATA = [
     tags: "desktop,value",
     displayOrder: 5,
     colors: [
-      { name: "Silver", hex: "#E0E1E3", images: ["https://placehold.co/800x800/E0E1E3/1D1D1F?text=Mac+mini+1", "https://placehold.co/800x800/E0E1E3/1D1D1F?text=Mac+mini+2"] }
+      { name: "Silver", hex: "#E0E1E3", images: photo("mac-mini-m2") }
     ],
-    images: [
-      "https://placehold.co/800x800/E0E1E3/1D1D1F?text=Mac+mini+Front",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=Mac+mini+Ports",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Mac+mini+Top",
-      "https://placehold.co/800x800/171717/FFFFFF?text=Mac+mini+Setup"
-    ]
+    images: photo("mac-mini-m2")
   },
 
   // ─── 4. WATCHES ───────────────────────────────────────────────────────────
@@ -638,15 +560,10 @@ const PRODUCTS_DATA = [
     tags: "rugged,pro",
     displayOrder: 1,
     colors: [
-      { name: "Titanium with Orange Ocean Band", hex: "#C5C5C7", images: ["https://placehold.co/800x800/C5C5C7/1D1D1F?text=Ultra2+Ocean+1", "https://placehold.co/800x800/C5C5C7/1D1D1F?text=Ultra2+Ocean+2"] },
-      { name: "Titanium with Trail Loop", hex: "#A8A8AA", images: ["https://placehold.co/800x800/A8A8AA/FFFFFF?text=Ultra2+Trail+1", "https://placehold.co/800x800/A8A8AA/FFFFFF?text=Ultra2+Trail+2"] }
+      { name: "Titanium with Orange Ocean Band", hex: "#C5C5C7", images: photo("apple-watch-ultra-2") },
+      { name: "Titanium with Trail Loop", hex: "#A8A8AA", images: photo("apple-watch-ultra-2") }
     ],
-    images: [
-      "https://placehold.co/800x800/C5C5C7/1D1D1F?text=Apple+Watch+Ultra+2+Front",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=Apple+Watch+Ultra+2+Action+Button",
-      "https://placehold.co/800x800/FF6600/FFFFFF?text=Apple+Watch+Ultra+2+Side",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+Watch+Ultra+2+Wrist"
-    ]
+    images: photo("apple-watch-ultra-2")
   },
   {
     name: "Apple Watch Series 9 45mm",
@@ -674,16 +591,11 @@ const PRODUCTS_DATA = [
     tags: "featured,bestseller",
     displayOrder: 2,
     colors: [
-      { name: "Midnight", hex: "#1D232A", images: ["https://placehold.co/800x800/171717/FFFFFF?text=Watch9+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=Watch9+Midnight+2"] },
-      { name: "Starlight", hex: "#F3EDE2", images: ["https://placehold.co/800x800/F3EDE2/1D1D1F?text=Watch9+Starlight+1", "https://placehold.co/800x800/F3EDE2/1D1D1F?text=Watch9+Starlight+2"] },
-      { name: "Silver", hex: "#E1E2E4", images: ["https://placehold.co/800x800/E1E2E4/1D1D1F?text=Watch9+Silver+1", "https://placehold.co/800x800/E1E2E4/1D1D1F?text=Watch9+Silver+2"] }
+      { name: "Midnight", hex: "#1D232A", images: photo("apple-watch-series-9-45mm") },
+      { name: "Starlight", hex: "#F3EDE2", images: photo("apple-watch-series-9-45mm") },
+      { name: "Silver", hex: "#E1E2E4", images: photo("apple-watch-series-9-45mm") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+Series+9+Hero",
-      "https://placehold.co/800x800/F3EDE2/1D1D1F?text=Apple+Watch+Series+9+Display",
-      "https://placehold.co/800x800/E1E2E4/1D1D1F?text=Apple+Watch+Series+9+Side",
-      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+Series+9+Fitness"
-    ]
+    images: photo("apple-watch-series-9-45mm")
   },
   {
     name: "Apple Watch SE 2 40mm",
@@ -711,15 +623,10 @@ const PRODUCTS_DATA = [
     tags: "value,bestseller",
     displayOrder: 3,
     colors: [
-      { name: "Midnight", hex: "#1C2329", images: ["https://placehold.co/800x800/171717/FFFFFF?text=WatchSE+Midnight+1", "https://placehold.co/800x800/171717/FFFFFF?text=WatchSE+Midnight+2"] },
-      { name: "Starlight", hex: "#F3EDE0", images: ["https://placehold.co/800x800/F3EDE0/1D1D1F?text=WatchSE+Starlight+1", "https://placehold.co/800x800/F3EDE0/1D1D1F?text=WatchSE+Starlight+2"] }
+      { name: "Midnight", hex: "#1C2329", images: photo("apple-watch-se-2-40mm") },
+      { name: "Starlight", hex: "#F3EDE0", images: photo("apple-watch-se-2-40mm") }
     ],
-    images: [
-      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+SE+Front",
-      "https://placehold.co/800x800/F3EDE0/1D1D1F?text=Apple+Watch+SE+Back",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+Watch+SE+Band",
-      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Watch+SE+Workout"
-    ]
+    images: photo("apple-watch-se-2-40mm")
   },
 
   // ─── 5. AIRPODS & AUDIO ───────────────────────────────────────────────────
@@ -748,14 +655,9 @@ const PRODUCTS_DATA = [
     tags: "featured,bestseller,deal",
     displayOrder: 1,
     colors: [
-      { name: "White", hex: "#F7F7F7", images: ["https://placehold.co/800x800/F7F7F7/1D1D1F?text=AirPods+Pro+2+Case", "https://placehold.co/800x800/F7F7F7/1D1D1F?text=AirPods+Pro+2+Earbuds"] }
+      { name: "White", hex: "#F7F7F7", images: photo("airpods-pro-2-usb-c") }
     ],
-    images: [
-      "https://placehold.co/800x800/FFFFFF/1D1D1F?text=AirPods+Pro+2+Hero",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=AirPods+Pro+2+Case+Open",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=AirPods+Pro+2+Earbuds",
-      "https://placehold.co/800x800/171717/FFFFFF?text=AirPods+Pro+2+InEar"
-    ]
+    images: photo("airpods-pro-2-usb-c")
   },
   {
     name: "AirPods 3rd Gen",
@@ -782,14 +684,9 @@ const PRODUCTS_DATA = [
     tags: "popular",
     displayOrder: 2,
     colors: [
-      { name: "White", hex: "#FAFAFA", images: ["https://placehold.co/800x800/FAFAFA/1D1D1F?text=AirPods+3+Case", "https://placehold.co/800x800/FAFAFA/1D1D1F?text=AirPods+3+Buds"] }
+      { name: "White", hex: "#FAFAFA", images: photo("airpods-3rd-gen") }
     ],
-    images: [
-      "https://placehold.co/800x800/FAFAFA/1D1D1F?text=AirPods+3+Front",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=AirPods+3+Open",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=AirPods+3+Earbuds",
-      "https://placehold.co/800x800/171717/FFFFFF?text=AirPods+3+Case"
-    ]
+    images: photo("airpods-3rd-gen")
   },
   {
     name: "AirPods Max",
@@ -816,16 +713,11 @@ const PRODUCTS_DATA = [
     tags: "luxury,flagship",
     displayOrder: 3,
     colors: [
-      { name: "Space Gray", hex: "#39393A", images: ["https://placehold.co/800x800/39393A/FFFFFF?text=AirPods+Max+SpaceGray+1", "https://placehold.co/800x800/39393A/FFFFFF?text=AirPods+Max+SpaceGray+2"] },
-      { name: "Silver", hex: "#E3E4E5", images: ["https://placehold.co/800x800/E3E4E5/1D1D1F?text=AirPods+Max+Silver+1", "https://placehold.co/800x800/E3E4E5/1D1D1F?text=AirPods+Max+Silver+2"] },
-      { name: "Sky Blue", hex: "#A8BDCC", images: ["https://placehold.co/800x800/A8BDCC/1D1D1F?text=AirPods+Max+Blue+1", "https://placehold.co/800x800/A8BDCC/1D1D1F?text=AirPods+Max+Blue+2"] }
+      { name: "Space Gray", hex: "#39393A", images: photo("airpods-max") },
+      { name: "Silver", hex: "#E3E4E5", images: photo("airpods-max") },
+      { name: "Sky Blue", hex: "#A8BDCC", images: photo("airpods-max") }
     ],
-    images: [
-      "https://placehold.co/800x800/39393A/FFFFFF?text=AirPods+Max+Hero",
-      "https://placehold.co/800x800/E3E4E5/1D1D1F?text=AirPods+Max+Silver",
-      "https://placehold.co/800x800/A8BDCC/1D1D1F?text=AirPods+Max+SkyBlue",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=AirPods+Max+Case"
-    ]
+    images: photo("airpods-max")
   },
 
   // ─── 6. TV & HOME ─────────────────────────────────────────────────────────
@@ -854,14 +746,9 @@ const PRODUCTS_DATA = [
     tags: "entertainment",
     displayOrder: 1,
     colors: [
-      { name: "Black", hex: "#1C1D1F", images: ["https://placehold.co/800x800/1C1D1F/FFFFFF?text=AppleTV+1", "https://placehold.co/800x800/1C1D1F/FFFFFF?text=AppleTV+2"] }
+      { name: "Black", hex: "#1C1D1F", images: photo("apple-tv-4k-128gb") }
     ],
-    images: [
-      "https://placehold.co/800x800/1C1D1F/FFFFFF?text=Apple+TV+4K+Box",
-      "https://placehold.co/800x800/333333/FFFFFF?text=Apple+TV+Siri+Remote",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+TV+Ports",
-      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+TV+Setup"
-    ]
+    images: photo("apple-tv-4k-128gb")
   },
   {
     name: "HomePod 2nd Gen",
@@ -888,15 +775,10 @@ const PRODUCTS_DATA = [
     tags: "smart-home",
     displayOrder: 2,
     colors: [
-      { name: "Midnight", hex: "#22252A", images: ["https://placehold.co/800x800/22252A/FFFFFF?text=HomePod+Midnight+1", "https://placehold.co/800x800/22252A/FFFFFF?text=HomePod+Midnight+2"] },
-      { name: "White", hex: "#F5F5F7", images: ["https://placehold.co/800x800/F5F5F7/1D1D1F?text=HomePod+White+1", "https://placehold.co/800x800/F5F5F7/1D1D1F?text=HomePod+White+2"] }
+      { name: "Midnight", hex: "#22252A", images: photo("homepod-2nd-gen") },
+      { name: "White", hex: "#F5F5F7", images: photo("homepod-2nd-gen") }
     ],
-    images: [
-      "https://placehold.co/800x800/22252A/FFFFFF?text=HomePod+2+Midnight",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=HomePod+2+White",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=HomePod+2+TopSurface",
-      "https://placehold.co/800x800/171717/FFFFFF?text=HomePod+2+LivingRoom"
-    ]
+    images: photo("homepod-2nd-gen")
   },
   {
     name: "HomePod mini",
@@ -922,16 +804,11 @@ const PRODUCTS_DATA = [
     tags: "value,smart-home",
     displayOrder: 3,
     colors: [
-      { name: "Space Gray", hex: "#3B3C3E", images: ["https://placehold.co/800x800/3B3C3E/FFFFFF?text=Mini+Gray+1", "https://placehold.co/800x800/3B3C3E/FFFFFF?text=Mini+Gray+2"] },
-      { name: "Blue", hex: "#2B5270", images: ["https://placehold.co/800x800/171717/FFFFFF?text=Mini+Blue+1", "https://placehold.co/800x800/171717/FFFFFF?text=Mini+Blue+2"] },
-      { name: "White", hex: "#F3F4F5", images: ["https://placehold.co/800x800/F3F4F5/1D1D1F?text=Mini+White+1", "https://placehold.co/800x800/F3F4F5/1D1D1F?text=Mini+White+2"] }
+      { name: "Space Gray", hex: "#3B3C3E", images: photo("homepod-mini") },
+      { name: "Blue", hex: "#2B5270", images: photo("homepod-mini") },
+      { name: "White", hex: "#F3F4F5", images: photo("homepod-mini") }
     ],
-    images: [
-      "https://placehold.co/800x800/3B3C3E/FFFFFF?text=HomePod+mini+Hero",
-      "https://placehold.co/800x800/171717/FFFFFF?text=HomePod+mini+Blue",
-      "https://placehold.co/800x800/F3F4F5/1D1D1F?text=HomePod+mini+White",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=HomePod+mini+Top"
-    ]
+    images: photo("homepod-mini")
   },
 
   // ─── 7. ACCESSORIES ───────────────────────────────────────────────────────
@@ -959,14 +836,9 @@ const PRODUCTS_DATA = [
     tags: "creative,accessory",
     displayOrder: 1,
     colors: [
-      { name: "White", hex: "#FFFFFF", images: ["https://placehold.co/800x800/FFFFFF/1D1D1F?text=Pencil+Pro+1", "https://placehold.co/800x800/FFFFFF/1D1D1F?text=Pencil+Pro+2"] }
+      { name: "White", hex: "#FFFFFF", images: photo("apple-pencil-pro") }
     ],
-    images: [
-      "https://placehold.co/800x800/FFFFFF/1D1D1F?text=Apple+Pencil+Pro+Hero",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=Apple+Pencil+Pro+Tip",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=Apple+Pencil+Pro+on+iPad",
-      "https://placehold.co/800x800/171717/FFFFFF?text=Apple+Pencil+Pro+Packaging"
-    ]
+    images: photo("apple-pencil-pro")
   },
   {
     name: "MagSafe Charger",
@@ -991,14 +863,9 @@ const PRODUCTS_DATA = [
     tags: "bestseller,charging",
     displayOrder: 2,
     colors: [
-      { name: "Silver & White", hex: "#EEEEEE", images: ["https://placehold.co/800x800/EEEEEE/1D1D1F?text=MagSafe+Puck", "https://placehold.co/800x800/EEEEEE/1D1D1F?text=MagSafe+Cable"] }
+      { name: "Silver & White", hex: "#EEEEEE", images: photo("magsafe-charger") }
     ],
-    images: [
-      "https://placehold.co/800x800/EEEEEE/1D1D1F?text=MagSafe+Charger+Hero",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=MagSafe+On+iPhone",
-      "https://placehold.co/800x800/1D1D1F/FFFFFF?text=MagSafe+Coil",
-      "https://placehold.co/800x800/171717/FFFFFF?text=MagSafe+Box"
-    ]
+    images: photo("magsafe-charger")
   },
   {
     name: "AirTag 4-pack",
@@ -1024,14 +891,9 @@ const PRODUCTS_DATA = [
     tags: "bestseller,tracking",
     displayOrder: 3,
     colors: [
-      { name: "White & Polished Stainless Steel", hex: "#FFFFFF", images: ["https://placehold.co/800x800/FFFFFF/1D1D1F?text=AirTag+Pack", "https://placehold.co/800x800/E3E3E3/1D1D1F?text=AirTag+Steel"] }
+      { name: "White & Polished Stainless Steel", hex: "#FFFFFF", images: photo("airtag-4-pack") }
     ],
-    images: [
-      "https://placehold.co/800x800/FFFFFF/1D1D1F?text=AirTag+4Pack+Box",
-      "https://placehold.co/800x800/E3E3E3/1D1D1F?text=AirTag+Individual",
-      "https://placehold.co/800x800/F5F5F7/1D1D1F?text=AirTag+With+Keys",
-      "https://placehold.co/800x800/171717/FFFFFF?text=AirTag+InBag"
-    ]
+    images: photo("airtag-4-pack")
   }
 ];
 
@@ -1229,7 +1091,7 @@ async function main() {
               name: prod.name,
               priceGHS: prod.priceGHS,
               qty: 1,
-              image: prod.images[0]?.url || "https://placehold.co/800x800"
+              image: prod.images[0]?.url
             }
           ]
         }

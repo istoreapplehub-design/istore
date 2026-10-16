@@ -19,20 +19,20 @@ export function StatCard({
   sublabel
 }: StatCardProps) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+    <div className="bg-white/85 backdrop-blur-md rounded-2xl border border-neutral-200/80 p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)] hover:border-neutral-300/90 transition-all duration-300 group">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-500">{label}</span>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
+        <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">{label}</span>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 duration-300 ${iconBg}`}>
           {icon}
         </div>
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between">
-        <div className="text-2xl font-bold tracking-tight text-gray-900">{value}</div>
+      <div className="mt-3 flex items-baseline justify-between">
+        <div className="text-3xl font-extrabold tracking-tight text-neutral-900">{value}</div>
         {trend && (
           <div
-            className={`flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
-              trend.positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+            className={`flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full ${
+              trend.positive ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
             }`}
           >
             {trend.positive ? (
@@ -45,7 +45,7 @@ export function StatCard({
         )}
       </div>
 
-      {sublabel && <p className="mt-1 text-xs text-gray-500">{sublabel}</p>}
+      {sublabel && <p className="mt-1.5 text-xs text-neutral-400 font-medium">{sublabel}</p>}
     </div>
   );
 }

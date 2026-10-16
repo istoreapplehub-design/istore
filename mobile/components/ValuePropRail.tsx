@@ -28,9 +28,9 @@ const VALUE_PROPS: ValueProp[] = [
     body: "Products arrive in original retail packaging with a serial number you can verify on Apple's site."
   },
   {
-    icon: "phone-portrait-outline",
+    icon: "card-outline",
     eyebrow: "Payments",
-    title: "Pay the Ghanaian way.",
+    title: "Fast, secure payments.",
     body: "MTN MoMo, Telecel Cash, AT Money and Visa or Mastercard through Paystack.",
     href: "/help"
   },

@@ -49,3 +49,6 @@ builds/
 # Editor
 .idea/
 .vscode/
+
+# Generated product renders (masters + JPEG derivatives); served from Supabase Storage
+vibe_images/

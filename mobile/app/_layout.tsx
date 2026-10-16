@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Platform, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -45,37 +45,43 @@ export default function RootLayout() {
   if (!fontsLoaded || !hydrated) {
     return (
       <View style={styles.splashContainer}>
-        <Text style={styles.brandTitle}>I-Store</Text>
-        <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 16 }} />
+        <Image
+          source={require("../assets/images/splash-icon.png")}
+          style={styles.splashIcon}
+          resizeMode="contain"
+        />
+        <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 24 }} />
       </View>
     );
   }
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
         <SafeAreaProvider>
-          <StatusBar style="dark" />
-          <Stack
-            initialRouteName="(tabs)"
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.background },
-              animation: "slide_from_right",
-              headerStyle: { backgroundColor: colors.background },
-              headerTintColor: colors.text,
-              headerShadowVisible: false,
-              headerTitleStyle: {
-                fontFamily: typography.fontFamily.semibold,
-                fontSize: 16
-              },
-              headerBackTitleStyle: {
-                fontFamily: typography.fontFamily.regular
-              }
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <View style={styles.webContainer}>
+            <StatusBar style="dark" />
+            <Stack
+              initialRouteName="(tabs)"
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.background },
+                animation: "slide_from_right",
+                headerStyle: { backgroundColor: colors.background },
+                headerTintColor: colors.text,
+                headerShadowVisible: false,
+                headerTitleStyle: {
+                  fontFamily: typography.fontFamily.semibold,
+                  fontSize: 16
+                },
+                headerBackTitleStyle: {
+                  fontFamily: typography.fontFamily.regular
+                }
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="admin" options={{ headerShown: false }} />
             <Stack.Screen
               name="account"
               options={{
@@ -179,7 +185,8 @@ export default function RootLayout() {
                 headerBackTitle: "Account"
               }}
             />
-          </Stack>
+            </Stack>
+          </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
@@ -187,11 +194,23 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
+  webContainer: {
+    flex: 1,
+    width: "100%",
+    maxWidth: Platform.OS === "web" ? 820 : "100%",
+    alignSelf: "center",
+    backgroundColor: colors.background
+  },
   splashContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
+    padding: 24
+  },
+  splashIcon: {
+    width: 140,
+    height: 140
   },
   brandTitle: {
     ...typography.h2,

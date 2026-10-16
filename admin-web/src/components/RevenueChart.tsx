@@ -71,10 +71,13 @@ export function RevenueChart({ data }: RevenueChartProps) {
                 const val = payload[0].value as number;
                 const ord = payload[0].payload.orders as number;
                 return (
-                  <div className="bg-white border border-gray-200 shadow-md rounded-xl p-3 text-xs">
-                    <p className="font-semibold text-gray-900">{label}</p>
-                    <p className="text-gray-900 font-bold mt-1">{formatGHS(val)}</p>
-                    <p className="text-gray-500 mt-0.5">{ord} order(s)</p>
+                  <div className="bg-neutral-900/95 backdrop-blur-md border border-neutral-800 shadow-2xl rounded-2xl p-3.5 text-xs text-white min-w-36 animate-in fade-in zoom-in-95 duration-150">
+                    <p className="font-medium text-neutral-400 text-[11px]">{label}</p>
+                    <p className="text-white font-extrabold text-base mt-1">{formatGHS(val)}</p>
+                    <div className="flex items-center gap-1.5 mt-1 text-[11px] text-neutral-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>{ord} settled order{ord === 1 ? "" : "s"}</span>
+                    </div>
                   </div>
                 );
               }
@@ -86,6 +89,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
             dataKey="revenue"
             stroke="#171717"
             strokeWidth={2.5}
+            activeDot={{ r: 5, fill: "#171717", stroke: "#FFFFFF", strokeWidth: 2 }}
             fillOpacity={1}
             fill="url(#revenueGradient)"
           />

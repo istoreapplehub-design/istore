@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Dimensions, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Carousel } from "react-native-reanimated-carousel";
@@ -14,15 +14,17 @@ interface HeroCarouselProps {
   products: Product[];
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SLIDE_HEIGHT = 470;
 
 /**
  * Apple-style editorial hero: light stage, centred headline, product image below,
  * and the signature "Buy" pill paired with a "Learn more" text link.
+ * Fully responsive across phone, mobile web toggle, and tablet emulator.
  */
 export function HeroCarousel({ products }: HeroCarouselProps) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const carouselWidth = Math.min(width, 768);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const slides = useMemo(
@@ -40,11 +42,11 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width: "100%", alignItems: "center" }]}>
       <Carousel<Product>
         loop
-        style={{ width: SCREEN_WIDTH, height: SLIDE_HEIGHT }}
-        itemSize={SCREEN_WIDTH}
+        style={{ width: carouselWidth, height: SLIDE_HEIGHT }}
+        itemSize={carouselWidth}
         autoplay
         autoplayInterval={5200}
         data={slides}
@@ -56,7 +58,7 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
             subtitle || (item.condition === "Refurbished" ? "Certified refurbished" : "New, sealed in box");
 
           return (
-            <View style={styles.slide}>
+            <View style={[styles.slide, { width: carouselWidth }]}>
               <View style={styles.copy}>
                 <Animated.View entering={FadeInDown.delay(index * 60).duration(420)}>
                   <Text style={styles.eyebrow}>{item.category.toUpperCase()}</Text>
@@ -130,12 +132,11 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: SCREEN_WIDTH,
+    width: "100%",
     height: SLIDE_HEIGHT,
     position: "relative"
   },
   slide: {
-    width: SCREEN_WIDTH,
     height: SLIDE_HEIGHT,
     backgroundColor: colors.surface,
     paddingHorizontal: 20

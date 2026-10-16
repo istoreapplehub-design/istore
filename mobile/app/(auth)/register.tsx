@@ -66,7 +66,7 @@ export default function RegisterScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.brandSubtitle}>I-Store Ghana</Text>
+            <Text style={styles.brandSubtitle}>I-Store Apple Hub</Text>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
               Sign up to track purchases, save your delivery addresses, and receive official Apple warranty support.

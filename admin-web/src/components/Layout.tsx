@@ -205,7 +205,7 @@ export function Layout() {
 
       {/* ─── SIDEBAR ───────────────────────────────────────────────────────── */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-[#ebebe9] flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white/95 backdrop-blur-xl border-r border-neutral-200/80 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-[2px_0_16px_rgba(0,0,0,0.02)] ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -315,7 +315,7 @@ export function Layout() {
 
       {/* ─── MAIN ──────────────────────────────────────────────────────────── */}
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 bg-[#f5f5f7]/90 backdrop-blur-md px-6 py-4 flex items-center justify-between gap-4 border-b border-[#ecece9]">
+        <header className="sticky top-0 z-30 bg-[#f5f5f7]/85 backdrop-blur-xl px-6 py-3.5 flex items-center justify-between gap-4 border-b border-neutral-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -339,7 +339,7 @@ export function Layout() {
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search products and orders..."
+                placeholder="Search devices and orders..."
                 value={searchQuery}
                 onFocus={() => setSearchOpen(true)}
                 onChange={(event) => {
@@ -349,8 +349,11 @@ export function Layout() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") submitSearch();
                 }}
-                className="w-full bg-white border border-gray-200/90 rounded-full pl-10 pr-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black shadow-xs transition"
+                className="w-full bg-white/90 border border-neutral-200 rounded-full pl-10 pr-12 py-2 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black shadow-xs transition"
               />
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-neutral-400 bg-neutral-100 border border-neutral-200 rounded-md absolute right-3 top-1/2 -translate-y-1/2">
+                ⌘K
+              </kbd>
 
               {searchOpen && searchEnabled ? (
                 <div className="absolute right-0 left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200/90 overflow-hidden z-50 max-h-96 overflow-y-auto">
@@ -396,6 +399,11 @@ export function Layout() {
 
           {/* Right cluster */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-neutral-200/80 text-xs font-semibold text-neutral-700 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Store · Worldwide</span>
+            </div>
+
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"

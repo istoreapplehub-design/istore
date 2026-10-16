@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Alert,
   DimensionValue,
-  Dimensions,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -23,7 +22,8 @@ import {
   StyleSheet,
   TextInput,
   Text,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -52,7 +52,6 @@ import { SkeletonLoader } from "../../components/SkeletonLoader";
 import { StarRating } from "../../components/StarRating";
 import { StoragePicker } from "../../components/StoragePicker";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_CAROUSEL_HEIGHT = 420;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -61,6 +60,8 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { width } = useWindowDimensions();
+  const carouselWidth = Math.min(width, 768);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,7 +307,7 @@ export default function ProductDetailScreen() {
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </Pressable>
         </View>
-        <SkeletonLoader width={SCREEN_WIDTH} height={420} radius={0} />
+        <SkeletonLoader width={carouselWidth} height={420} radius={0} />
         <View style={{ padding: spacing.md, marginTop: spacing.md }}>
           <SkeletonLoader width="40%" height={20} />
           <View style={{ marginTop: spacing.sm }}>
@@ -417,9 +418,9 @@ export default function ProductDetailScreen() {
         scrollEventThrottle={16}
       >
         {/* ─── 2. IMAGE CAROUSEL ────────────────────────────────────────── */}
-        <View style={styles.carouselContainer}>
+        <View style={[styles.carouselContainer, { width: carouselWidth, alignSelf: "center" }]}>
           {activeImages.length === 0 ? (
-            <View style={styles.imageSlide}>
+            <View style={[styles.imageSlide, { width: carouselWidth }]}>
               <ProductVisual category={product.category} glyphSize={110} />
             </View>
           ) : (
@@ -428,16 +429,18 @@ export default function ProductDetailScreen() {
                 ref={imageFlatListRef}
                 horizontal
                 pagingEnabled
+                snapToInterval={carouselWidth}
+                decelerationRate="fast"
                 showsHorizontalScrollIndicator={false}
                 data={activeImages}
                 keyExtractor={(_, index) => `img-${index}`}
                 onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
                   const offsetX = e.nativeEvent.contentOffset.x;
-                  const idx = Math.round(offsetX / SCREEN_WIDTH);
+                  const idx = Math.round(offsetX / carouselWidth);
                   setActiveImageIndex(idx);
                 }}
                 renderItem={({ item, index }) => (
-                  <View style={styles.imageSlide}>
+                  <View style={[styles.imageSlide, { width: carouselWidth }]}>
                     <Animated.Image
                       sharedTransitionTag={
                         index === 0 && product?.id ? `product-image-${product.id}` : undefined
@@ -860,13 +863,11 @@ const styles = StyleSheet.create({
     paddingBottom: 140
   },
   carouselContainer: {
-    width: SCREEN_WIDTH,
     height: IMAGE_CAROUSEL_HEIGHT,
     backgroundColor: colors.imageBg,
     position: "relative"
   },
   imageSlide: {
-    width: SCREEN_WIDTH,
     height: IMAGE_CAROUSEL_HEIGHT,
     alignItems: "center",
     justifyContent: "center",

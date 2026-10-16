@@ -117,7 +117,7 @@ export default function FlashSalesScreen() {
             empty
             emptyIcon="flash-outline"
             emptyTitle="No flash deals right now"
-            emptySubtitle="New prices drop every midnight Ghana time. Pull to refresh, or keep browsing the full store."
+            emptySubtitle="New prices drop every midnight. Pull to refresh, or keep browsing the full store."
           />
         ) : (
           <View style={styles.grid}>

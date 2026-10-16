@@ -1,16 +1,23 @@
 import React from "react";
 import { Platform, StyleSheet } from "react-native";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../constants/theme";
 import { useCartStore } from "../../store/useCartStore";
+import { useUserStore } from "../../store/useUserStore";
 
 /**
  * Four guest-first destinations. Search and Account live in the root stack and are
  * reached from the header, so browsing never requires an account.
+ * Admins are strictly redirected to the admin portal.
  */
 export default function TabLayout() {
   const cartItemCount = useCartStore((state) => state.getItemCount());
+  const isAdmin = useUserStore((state) => state.user?.role === "admin");
+
+  if (isAdmin) {
+    return <Redirect href="/admin" />;
+  }
 
   return (
     <Tabs

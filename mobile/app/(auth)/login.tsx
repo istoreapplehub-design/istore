@@ -34,6 +34,11 @@ export default function LoginScreen() {
     try {
       setLoading(true);
       await signIn(email.trim().toLowerCase(), password);
+      const isUserAdmin = useUserStore.getState().isAdmin();
+      if (isUserAdmin) {
+        router.replace("/admin" as Href);
+        return;
+      }
       const destination = returnTo ? `/${returnTo}` : "/(tabs)";
       router.replace(destination as Href);
     } catch (err: any) {
@@ -55,7 +60,7 @@ export default function LoginScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.brandSubtitle}>I-Store Ghana</Text>
+            <Text style={styles.brandSubtitle}>I-Store Apple Hub</Text>
             <Text style={styles.title}>Sign In</Text>
             <Text style={styles.subtitle}>
               Sign in with your I-Store account to manage orders, wishlist, and check out securely.
