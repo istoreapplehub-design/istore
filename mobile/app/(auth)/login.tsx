@@ -11,6 +11,7 @@ import {
   TextInput,
   View
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Href, useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
@@ -39,6 +40,14 @@ export default function LoginScreen() {
         router.replace("/admin" as Href);
         return;
       }
+      if (returnTo === "checkout") {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/checkout" as Href);
+        }
+        return;
+      }
       const destination = returnTo ? `/${returnTo}` : "/(tabs)";
       router.replace(destination as Href);
     } catch (err: any) {
@@ -54,6 +63,32 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
+        {/* Top dismissal bar */}
+        <View style={styles.topBar}>
+          <Pressable
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace(
+                  returnTo === "checkout" ? ("/checkout" as Href) : ("/(tabs)" as Href)
+                );
+              }
+            }}
+            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
+            accessibilityLabel={returnTo === "checkout" ? "Back to Checkout" : "Close"}
+          >
+            <Ionicons name="close" size={22} color={colors.text} />
+          </Pressable>
+          {returnTo === "checkout" && (
+            <View style={styles.checkoutBadge}>
+              <Ionicons name="cart-outline" size={13} color={colors.accent} />
+              <Text style={styles.checkoutBadgeText}>Checkout in progress</Text>
+            </View>
+          )}
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -119,16 +154,36 @@ export default function LoginScreen() {
                 styles.guestButton,
                 pressed && { opacity: 0.7 }
               ]}
-              onPress={() => router.replace("/(tabs)")}
+              onPress={() => {
+                if (returnTo === "checkout") {
+                  if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace("/checkout" as Href);
+                  }
+                  return;
+                }
+                router.replace("/(tabs)");
+              }}
             >
-              <Text style={styles.guestButtonText}>Continue as Guest</Text>
+              <Text style={styles.guestButtonText}>
+                {returnTo === "checkout" ? "Return to Checkout as Guest" : "Continue as Guest"}
+              </Text>
             </Pressable>
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>{"Don't have an account?"}</Text>
-            <Pressable onPress={() => router.push("/(auth)/register")}>
+            <Pressable
+              onPress={() =>
+                router.push(
+                  returnTo
+                    ? (`/(auth)/register?returnTo=${encodeURIComponent(returnTo)}` as Href)
+                    : ("/(auth)/register" as Href)
+                )
+              }
+            >
               <Text style={styles.footerLink}> Sign Up</Text>
             </Pressable>
           </View>
@@ -145,6 +200,40 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  checkoutBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  checkoutBadgeText: {
+    ...typography.caption1,
+    color: colors.textSecondary,
+    fontWeight: "600"
   },
   scrollContent: {
     flexGrow: 1,

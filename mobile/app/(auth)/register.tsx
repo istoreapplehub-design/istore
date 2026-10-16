@@ -11,14 +11,18 @@ import {
   TextInput,
   View
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { email: prefillEmail } = useLocalSearchParams<{ email?: string }>();
+  const { email: prefillEmail, returnTo } = useLocalSearchParams<{
+    email?: string;
+    returnTo?: string;
+  }>();
   const signUp = useUserStore((state) => state.signUp);
 
   const [name, setName] = useState("");
@@ -44,7 +48,18 @@ export default function RegisterScreen() {
       Alert.alert("Welcome!", "Your account has been created successfully.", [
         {
           text: "Continue",
-          onPress: () => router.replace("/(tabs)")
+          onPress: () => {
+            if (returnTo === "checkout") {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace("/checkout" as Href);
+              }
+              return;
+            }
+            const destination = returnTo ? `/${returnTo}` : "/(tabs)";
+            router.replace(destination as Href);
+          }
         }
       ]);
     } catch (err: any) {
@@ -60,6 +75,32 @@ export default function RegisterScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
+        {/* Top dismissal bar */}
+        <View style={styles.topBar}>
+          <Pressable
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace(
+                  returnTo === "checkout" ? ("/checkout" as Href) : ("/(tabs)" as Href)
+                );
+              }
+            }}
+            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
+            accessibilityLabel={returnTo === "checkout" ? "Back to Checkout" : "Close"}
+          >
+            <Ionicons name="close" size={22} color={colors.text} />
+          </Pressable>
+          {returnTo === "checkout" && (
+            <View style={styles.checkoutBadge}>
+              <Ionicons name="cart-outline" size={13} color={colors.accent} />
+              <Text style={styles.checkoutBadgeText}>Checkout in progress</Text>
+            </View>
+          )}
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
@@ -142,12 +183,39 @@ export default function RegisterScreen() {
                 <Text style={styles.primaryButtonText}>Create Account</Text>
               )}
             </Pressable>
+
+            {/* Guest button when checking out */}
+            {returnTo === "checkout" && (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.guestButton,
+                  pressed && { opacity: 0.7 }
+                ]}
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace("/checkout" as Href);
+                  }
+                }}
+              >
+                <Text style={styles.guestButtonText}>Cancel & Continue as Guest</Text>
+              </Pressable>
+            )}
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account?</Text>
-            <Pressable onPress={() => router.push("/(auth)/login")}>
+            <Pressable
+              onPress={() =>
+                router.push(
+                  returnTo
+                    ? (`/(auth)/login?returnTo=${encodeURIComponent(returnTo)}` as Href)
+                    : ("/(auth)/login" as Href)
+                )
+              }
+            >
               <Text style={styles.footerLink}> Sign In</Text>
             </Pressable>
           </View>
@@ -164,6 +232,50 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  checkoutBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  checkoutBadgeText: {
+    ...typography.caption1,
+    color: colors.textSecondary,
+    fontWeight: "600"
+  },
+  guestButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  guestButtonText: {
+    ...typography.callout,
+    color: colors.textSecondary,
+    fontWeight: "500"
   },
   scrollContent: {
     flexGrow: 1,

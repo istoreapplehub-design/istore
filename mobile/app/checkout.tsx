@@ -69,10 +69,13 @@ export default function CheckoutScreen() {
   const { userId, session, addresses, name: defaultName, phone: defaultPhone, email: defaultEmail } =
     useUserStore();
 
-  /** Guests pick an checkout lane before the form; members go straight in. */
-  const [checkoutMode, setCheckoutMode] = useState<"choose" | "guest" | "member">(
-    session ? "member" : "choose"
-  );
+  /** Guests pick a checkout lane before the form; members go straight in. */
+  const [userSelectedMode, setUserSelectedMode] = useState<"guest" | null>(null);
+  const checkoutMode: "choose" | "guest" | "member" = session
+    ? "member"
+    : userSelectedMode === "guest"
+    ? "guest"
+    : "choose";
 
   const subtotalGHS = getSubtotalGHS();
   const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0];
@@ -95,6 +98,14 @@ export default function CheckoutScreen() {
       if (p.defaultRegion) setRegion((prev) => prev || p.defaultRegion);
     });
   }, [defaultAddress?.region]);
+
+  useEffect(() => {
+    if (!session) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEmail((prev) => prev || defaultEmail || "");
+    setFullName((prev) => prev || (defaultName === "Guest User" ? "" : defaultName || ""));
+    setPhone((prev) => prev || defaultPhone || "");
+  }, [session, defaultEmail, defaultName, defaultPhone]);
 
   // UI state
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -347,14 +358,14 @@ export default function CheckoutScreen() {
               onPress={() => {
                 AppHaptics.selection();
                 if (lane.key === "guest") {
-                  setCheckoutMode("guest");
+                  setUserSelectedMode("guest");
                   return;
                 }
                 if (lane.key === "signin") {
                   router.push("/(auth)/login?returnTo=checkout");
                   return;
                 }
-                router.push("/(auth)/register");
+                router.push("/(auth)/register?returnTo=checkout");
               }}
             >
               <Ionicons name={lane.icon} size={26} color={colors.text} />
