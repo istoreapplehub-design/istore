@@ -22,7 +22,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
@@ -64,16 +64,18 @@ const REGION_FEE_MAP: Record<string, number> = {
 export default function CheckoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
 
-  const { items, getSubtotalGHS, clearCart } = useCartStore();
+  const { items, getSubtotalGHS, clearCart, guestCheckout, setGuestCheckout } = useCartStore();
   const { userId, session, addresses, name: defaultName, phone: defaultPhone, email: defaultEmail } =
     useUserStore();
 
   /** Guests pick a checkout lane before the form; members go straight in. */
   const [userSelectedMode, setUserSelectedMode] = useState<"guest" | null>(null);
+  const isGuestMode = guestCheckout || mode === "guest" || userSelectedMode === "guest";
   const checkoutMode: "choose" | "guest" | "member" = session
     ? "member"
-    : userSelectedMode === "guest"
+    : isGuestMode
     ? "guest"
     : "choose";
 
@@ -358,6 +360,7 @@ export default function CheckoutScreen() {
               onPress={() => {
                 AppHaptics.selection();
                 if (lane.key === "guest") {
+                  setGuestCheckout(true);
                   setUserSelectedMode("guest");
                   return;
                 }
@@ -399,7 +402,11 @@ export default function CheckoutScreen() {
         <View style={styles.header}>
           <Pressable
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            onPress={() => router.back()}
+            onPress={() => {
+              setGuestCheckout(false);
+              setUserSelectedMode(null);
+              router.back();
+            }}
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
           >
             <Ionicons name="close" size={24} color={colors.text} />

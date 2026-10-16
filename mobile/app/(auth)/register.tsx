@@ -16,6 +16,7 @@ import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
+import { useCartStore } from "../../store/useCartStore";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -50,6 +51,7 @@ export default function RegisterScreen() {
           text: "Continue",
           onPress: () => {
             if (returnTo === "checkout") {
+              useCartStore.getState().setGuestCheckout(false);
               if (router.canGoBack()) {
                 router.back();
               } else {
@@ -80,11 +82,16 @@ export default function RegisterScreen() {
           <Pressable
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             onPress={() => {
+              if (returnTo === "checkout") {
+                useCartStore.getState().setGuestCheckout(true);
+              }
               if (router.canGoBack()) {
                 router.back();
               } else {
                 router.replace(
-                  returnTo === "checkout" ? ("/checkout" as Href) : ("/(tabs)" as Href)
+                  returnTo === "checkout"
+                    ? (({ pathname: "/checkout", params: { mode: "guest" } } as any))
+                    : ("/(tabs)" as Href)
                 );
               }
             }}
@@ -192,14 +199,15 @@ export default function RegisterScreen() {
                   pressed && { opacity: 0.7 }
                 ]}
                 onPress={() => {
+                  useCartStore.getState().setGuestCheckout(true);
                   if (router.canGoBack()) {
                     router.back();
                   } else {
-                    router.replace("/checkout" as Href);
+                    router.replace({ pathname: "/checkout", params: { mode: "guest" } } as any);
                   }
                 }}
               >
-                <Text style={styles.guestButtonText}>Cancel & Continue as Guest</Text>
+                <Text style={styles.guestButtonText}>Cancel & Continue to Guest Checkout</Text>
               </Pressable>
             )}
           </View>

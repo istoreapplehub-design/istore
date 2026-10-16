@@ -16,6 +16,7 @@ import { Href, useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
+import { useCartStore } from "../../store/useCartStore";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function LoginScreen() {
         return;
       }
       if (returnTo === "checkout") {
+        useCartStore.getState().setGuestCheckout(false);
         if (router.canGoBack()) {
           router.back();
         } else {
@@ -68,11 +70,16 @@ export default function LoginScreen() {
           <Pressable
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             onPress={() => {
+              if (returnTo === "checkout") {
+                useCartStore.getState().setGuestCheckout(true);
+              }
               if (router.canGoBack()) {
                 router.back();
               } else {
                 router.replace(
-                  returnTo === "checkout" ? ("/checkout" as Href) : ("/(tabs)" as Href)
+                  returnTo === "checkout"
+                    ? (({ pathname: "/checkout", params: { mode: "guest" } } as any))
+                    : ("/(tabs)" as Href)
                 );
               }
             }}
@@ -156,10 +163,11 @@ export default function LoginScreen() {
               ]}
               onPress={() => {
                 if (returnTo === "checkout") {
+                  useCartStore.getState().setGuestCheckout(true);
                   if (router.canGoBack()) {
                     router.back();
                   } else {
-                    router.replace("/checkout" as Href);
+                    router.replace({ pathname: "/checkout", params: { mode: "guest" } } as any);
                   }
                   return;
                 }
@@ -167,7 +175,7 @@ export default function LoginScreen() {
               }}
             >
               <Text style={styles.guestButtonText}>
-                {returnTo === "checkout" ? "Return to Checkout as Guest" : "Continue as Guest"}
+                {returnTo === "checkout" ? "Continue to Guest Checkout" : "Continue as Guest"}
               </Text>
             </Pressable>
           </View>

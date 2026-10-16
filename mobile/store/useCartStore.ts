@@ -14,6 +14,8 @@ export interface CartItem {
 
 interface CartState {
   items: CartItem[];
+  guestCheckout: boolean;
+  setGuestCheckout: (guest: boolean) => void;
   addItem: (item: Omit<CartItem, "qty"> & { qty?: number }) => void;
   removeItem: (productId: string, color?: string, storage?: string) => void;
   updateQty: (productId: string, qty: number, color?: string, storage?: string) => void;
@@ -26,6 +28,8 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      guestCheckout: false,
+      setGuestCheckout: (guest: boolean) => set({ guestCheckout: guest }),
 
       addItem: (item) => {
         const currentItems = get().items;
@@ -112,7 +116,8 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: "ghanaapps-cart",
-      storage: createJSONStorage(() => AsyncStorage)
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ items: state.items })
     }
   )
 );
