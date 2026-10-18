@@ -56,7 +56,7 @@ function makeReviews(productId: string, baseIdx: number): Review[] {
  * - AirPods Pro 3 (H3), AirPods 4 (ANC), AirPods Max (USB-C)
  * - iPad Pro 13" M5 Tandem OLED & MacBook Pro 16" M5 Max
  */
-const RAW_CATALOG_2026: Omit<Product, "reviews">[] = [
+const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = [
   // ─── IPHONE 18 SERIES & IPHONE DUO (OCT 2026) ────────────────────────────
   {
     id: "prod-iphone-18-pro-max-512gb",
@@ -1057,5 +1057,7 @@ const RAW_CATALOG_2026: Omit<Product, "reviews">[] = [
 
 export const CATALOG_2026: Product[] = RAW_CATALOG_2026.map((item, idx) => ({
   ...item,
+  isActive: true,
+  updatedAt: item.createdAt,
   reviews: makeReviews(item.id, idx)
 }));
