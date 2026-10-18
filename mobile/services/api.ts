@@ -1,4 +1,5 @@
 import { API_URL, CATEGORIES } from "../constants/config";
+import { CATALOG_2026 } from "../constants/catalog2026";
 import {
   Category,
   Order,
@@ -95,6 +96,80 @@ function formatSupabaseProduct(row: any): Product {
   };
 }
 
+function filterAndSortCatalog(
+  pool: Product[],
+  params: Record<string, string | number | boolean | undefined>
+): Product[] {
+  let list = [...pool];
+
+  if (params.inStock === "true" || params.inStock === true) {
+    list = list.filter((p) => p.stock > 0);
+  }
+  if (params.category) {
+    const cat = String(params.category).trim().toLowerCase();
+    list = list.filter((p) => p.category.trim().toLowerCase() === cat);
+  }
+  if (params.featured !== undefined) {
+    const wantFeatured = params.featured === "true" || params.featured === true;
+    list = list.filter((p) => Boolean(p.featured) === wantFeatured);
+  }
+  if (params.condition) {
+    const cond = String(params.condition).trim().toLowerCase();
+    list = list.filter((p) => p.condition.trim().toLowerCase() === cond);
+  }
+  if (params.minPrice) {
+    list = list.filter((p) => p.priceGHS >= Number(params.minPrice));
+  }
+  if (params.maxPrice) {
+    list = list.filter((p) => p.priceGHS <= Number(params.maxPrice));
+  }
+  if (params.search && String(params.search).trim()) {
+    const q = String(params.search).trim().toLowerCase();
+    list = list.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.model && p.model.toLowerCase().includes(q)) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (Array.isArray(p.tags) && p.tags.some((t) => t.toLowerCase().includes(q)))
+    );
+  }
+
+  const sort = String(params.sort || "");
+  if (sort === "price_asc") {
+    list.sort((a, b) => a.priceGHS - b.priceGHS);
+  } else if (sort === "price_desc") {
+    list.sort((a, b) => b.priceGHS - a.priceGHS);
+  } else if (sort === "newest") {
+    list.sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tb - ta;
+    });
+  } else if (sort === "rating") {
+    list.sort((a, b) => b.rating - a.rating);
+  } else if (sort === "popular") {
+    list.sort((a, b) => b.reviewCount - a.reviewCount);
+  } else {
+    list.sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
+  }
+
+  return list;
+}
+
+function mergeWith2026Catalog(remoteProducts: Product[]): Product[] {
+  const bySlug = new Map<string, Product>();
+  for (const item of CATALOG_2026) {
+    bySlug.set(item.slug, item);
+  }
+  for (const remote of remoteProducts) {
+    if (!bySlug.has(remote.slug)) {
+      bySlug.set(remote.slug, remote);
+    }
+  }
+  return Array.from(bySlug.values());
+}
+
 function formatSupabaseOrder(row: any): Order {
   return {
     ...row,
@@ -162,95 +237,65 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export async function getProducts(
   params: Record<string, string | number | boolean | undefined> = {}
 ): Promise<PaginatedResponse<Product>> {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      query.set(key, String(value));
-    }
-  });
-  const queryString = query.toString();
+  const page = Math.max(1, Number(params.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(params.limit) || 24));
+  const from = (page - 1) * limit;
+
+  let remoteList: Product[] = [];
 
   try {
-    return await request<PaginatedResponse<Product>>(
-      `/api/products${queryString ? `?${queryString}` : ""}`
-    );
+    const res = await request<PaginatedResponse<Product>>(`/api/products?limit=100`);
+    remoteList = res.data || [];
   } catch (err) {
-    if (!(err instanceof ApiError && err.kind === "network")) throw err;
-
-    const page = Math.max(1, Number(params.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-
-    let sbQuery = supabase
-      .from("Product")
-      .select("*, images:ProductImage(url, displayOrder)", { count: "exact" })
-      .eq("isActive", true);
-
-    if (params.inStock === "true" || params.inStock === true) {
-      sbQuery = sbQuery.gt("stock", 0);
+    if (!(err instanceof ApiError && err.kind === "network")) {
+      // Fallback to Supabase query or local 2026 catalog
     }
-    if (params.category) {
-      sbQuery = sbQuery.eq("category", String(params.category));
+    try {
+      const { data: rows } = await supabase
+        .from("Product")
+        .select("*, images:ProductImage(url, displayOrder)")
+        .eq("isActive", true)
+        .limit(100);
+      remoteList = (rows || []).map(formatSupabaseProduct);
+    } catch {
+      remoteList = [];
     }
-    if (params.featured !== undefined) {
-      sbQuery = sbQuery.eq("featured", params.featured === "true" || params.featured === true);
-    }
-    if (params.condition) {
-      sbQuery = sbQuery.eq("condition", String(params.condition));
-    }
-    if (params.minPrice) {
-      sbQuery = sbQuery.gte("priceGHS", Number(params.minPrice));
-    }
-    if (params.maxPrice) {
-      sbQuery = sbQuery.lte("priceGHS", Number(params.maxPrice));
-    }
-    if (params.search && String(params.search).trim()) {
-      const q = String(params.search).trim();
-      sbQuery = sbQuery.or(`name.ilike.%${q}%,model.ilike.%${q}%,description.ilike.%${q}%`);
-    }
-
-    const sort = String(params.sort || "");
-    if (sort === "price_asc") {
-      sbQuery = sbQuery.order("priceGHS", { ascending: true });
-    } else if (sort === "price_desc") {
-      sbQuery = sbQuery.order("priceGHS", { ascending: false });
-    } else if (sort === "newest") {
-      sbQuery = sbQuery.order("createdAt", { ascending: false });
-    } else if (sort === "rating") {
-      sbQuery = sbQuery.order("rating", { ascending: false });
-    } else if (sort === "popular") {
-      sbQuery = sbQuery.order("reviewCount", { ascending: false });
-    } else {
-      sbQuery = sbQuery
-        .order("displayOrder", { ascending: true })
-        .order("createdAt", { ascending: false });
-    }
-
-    const { data: rows, count, error } = await sbQuery.range(from, to);
-    if (error) {
-      throw new ApiError(error.message, "network");
-    }
-
-    const total = count ?? (rows?.length || 0);
-    const totalPages = Math.ceil(total / limit) || 1;
-    return {
-      data: (rows || []).map(formatSupabaseProduct),
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages
-      }
-    };
   }
+
+  const combined = mergeWith2026Catalog(remoteList);
+  const filtered = filterAndSortCatalog(combined, params);
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / limit) || 1;
+  const paged = filtered.slice(from, from + limit);
+
+  return {
+    data: paged,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNext: page < totalPages
+    }
+  };
 }
 
 export async function getProduct(slug: string): Promise<Product> {
+  const localMatch = CATALOG_2026.find((p) => p.slug === slug || p.id === slug);
+
   try {
     return await request<Product>(`/api/products/${slug}`);
   } catch (err) {
+    if (localMatch) {
+      let relatedPool = CATALOG_2026.filter(
+        (p) => p.category === localMatch.category && p.id !== localMatch.id
+      );
+      return {
+        ...localMatch,
+        relatedProducts: relatedPool.slice(0, 4)
+      };
+    }
+
     if (!(err instanceof ApiError && err.kind === "network")) throw err;
 
     const { data: rows, error } = await supabase
@@ -274,7 +319,12 @@ export async function getProduct(slug: string): Promise<Product> {
       .order("displayOrder", { ascending: true })
       .limit(4);
 
-    product.relatedProducts = (relRows || []).map(formatSupabaseProduct);
+    const relMerged = [
+      ...CATALOG_2026.filter((p) => p.category === product.category && p.slug !== product.slug),
+      ...(relRows || []).map(formatSupabaseProduct)
+    ].slice(0, 4);
+
+    product.relatedProducts = relMerged;
     return product;
   }
 }
@@ -291,15 +341,9 @@ export async function getRelated(slug: string, limit = 4): Promise<Product[]> {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    return await request<Category[]>("/api/categories");
-  } catch {
-    const { data: rows } = await supabase
-      .from("Product")
-      .select("category")
-      .eq("isActive", true);
-
+    const res = await getProducts({ limit: 100 });
     const counts: Record<string, number> = {};
-    (rows || []).forEach((r: any) => {
+    (res.data || []).forEach((r) => {
       if (r.category) counts[r.category] = (counts[r.category] || 0) + 1;
     });
 
@@ -309,6 +353,14 @@ export async function getCategories(): Promise<Category[]> {
       icon: c.icon,
       displayOrder: c.displayOrder,
       count: counts[c.name] || 0
+    }));
+  } catch {
+    return CATEGORIES.map((c) => ({
+      name: c.name,
+      slug: c.slug,
+      icon: c.icon,
+      displayOrder: c.displayOrder,
+      count: CATALOG_2026.filter((p) => p.category === c.name).length
     }));
   }
 }
@@ -331,6 +383,11 @@ export async function getReviews(
   } catch {
     const p = await getProduct(slug);
     const reviews = p.reviews || [];
+    const breakdown: Record<string, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach((r) => {
+      const k = String(Math.round(r.rating));
+      breakdown[k] = (breakdown[k] || 0) + 1;
+    });
     return {
       data: reviews,
       meta: {
@@ -339,8 +396,9 @@ export async function getReviews(
         total: reviews.length,
         totalPages: 1,
         hasNext: false,
-        avgRating: p.rating
-      }
+        avgRating: p.rating,
+        ratingBreakdown: breakdown
+      } as any
     };
   }
 }

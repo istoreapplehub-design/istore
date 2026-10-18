@@ -41,10 +41,11 @@ const VALUE_PROPS: ValueProp[] = [
     body: "Riders in Accra and Kumasi, tracked courier nationwide. Your fee shows before you pay."
   },
   {
-    icon: "refresh-outline",
-    eyebrow: "Changes of mind",
-    title: "Cancel while pending.",
-    body: "Cancel an unpaid order from My Orders in two taps — no phone calls, no arguments."
+    icon: "gift-outline",
+    eyebrow: "Referral Bonus",
+    title: "Refer & earn bonus.",
+    body: "Invite friends with your I-Store referral code — they save GHS 250 and you earn GHS 300 bonus credit on every referral order.",
+    href: "/account"
   }
 ];
 
@@ -77,7 +78,9 @@ export function ValuePropRail() {
           <Text style={styles.body}>{item.body}</Text>
           {item.href ? (
             <View style={styles.linkRow}>
-              <Text style={styles.linkText}>Find out more</Text>
+              <Text style={styles.linkText}>
+                {item.eyebrow === "Referral Bonus" ? "Claim referral bonus" : "Find out more"}
+              </Text>
               <Ionicons name="chevron-forward" size={12} color={colors.brandRed} />
             </View>
           ) : null}
@@ -98,18 +101,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: "#FFFFFF",
-    padding: 18
+    padding: 16
   },
   iconCircle: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: radius.full,
     backgroundColor: colors.brandRedSoft,
     borderWidth: 1,
     borderColor: colors.brandRedBorder,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14
+    marginBottom: 10
   },
   eyebrow: {
     fontSize: 10,
@@ -118,22 +121,22 @@ const styles = StyleSheet.create({
     color: colors.brandRed
   },
   title: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: "700",
     letterSpacing: -0.4,
     color: colors.text,
-    marginTop: 3
+    marginTop: 2
   },
   body: {
     fontSize: 13,
-    lineHeight: 19,
+    lineHeight: 18,
     color: colors.textSecondary,
-    marginTop: 7
+    marginTop: 5
   },
   linkRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 10,
     gap: 2
   },
   linkText: {

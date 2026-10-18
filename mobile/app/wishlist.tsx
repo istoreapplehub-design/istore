@@ -31,7 +31,7 @@ export default function WishlistScreen() {
   const containerWidth = Math.min(width, 820);
   const numColumns = containerWidth >= 680 ? 3 : 2;
   const cardWidth = Math.floor((containerWidth - 32 - 12 * (numColumns - 1)) / numColumns);
-  const { items: wishlistIds, toggle } = useWishlistStore();
+  const { items: wishlistIds } = useWishlistStore();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,11 +75,7 @@ export default function WishlistScreen() {
     fetchWishlistProducts();
   };
 
-  const handleRemove = (productId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    toggle(productId);
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
+  const displayedProducts = products.filter((p) => wishlistIds.includes(p.id));
 
   if (loading) {
     return (
@@ -99,7 +95,7 @@ export default function WishlistScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      {products.length === 0 ? (
+      {displayedProducts.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons
             name="heart-outline"
@@ -127,7 +123,7 @@ export default function WishlistScreen() {
       ) : (
         <FlatList
           key={`wishlist-cols-${numColumns}`}
-          data={products}
+          data={displayedProducts}
           keyExtractor={(item) => item.id}
           numColumns={numColumns}
           columnWrapperStyle={styles.columnWrapper}
@@ -136,6 +132,20 @@ export default function WishlistScreen() {
           initialNumToRender={6}
           windowSize={5}
           removeClippedSubviews={true}
+          ListHeaderComponent={
+            <View style={styles.countHeader}>
+              <View style={styles.countRow}>
+                <Ionicons name="heart" size={16} color={colors.brandRed} />
+                <Text style={styles.countTitle}>Saved Devices</Text>
+              </View>
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>
+                  {displayedProducts.length}{" "}
+                  {displayedProducts.length === 1 ? "item" : "items"}
+                </Text>
+              </View>
+            </View>
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -157,20 +167,6 @@ export default function WishlistScreen() {
                 variant="grid"
                 style={styles.gridCard}
               />
-
-              {/* Heart badge button to remove from wishlist */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${item.name} from wishlist`}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                style={({ pressed }) => [
-                  styles.heartBtn,
-                  pressed && { opacity: 0.7, transform: [{ scale: 0.9 }] }
-                ]}
-                onPress={() => handleRemove(item.id)}
-              >
-                <Ionicons name="heart" size={18} color={colors.danger} />
-              </Pressable>
             </Animated.View>
           )}
         />
@@ -201,8 +197,38 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: 12,
-    paddingTop: 16,
-    paddingBottom: 100
+    paddingTop: 12,
+    paddingBottom: 32
+  },
+  countHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 4
+  },
+  countRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6
+  },
+  countTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text
+  },
+  countBadge: {
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 980
+  },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.brandRed
   },
   cardWrapper: {
     flex: 1,
@@ -210,23 +236,6 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: "100%"
-  },
-  heartBtn: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2
   },
   emptyContainer: {
     flex: 1,

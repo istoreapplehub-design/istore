@@ -115,7 +115,7 @@ export function ProductCard({
                 sharedTransitionTag={`product-image-${product.id}`}
                 source={{ uri: imageUrl }}
                 style={styles.rowImage}
-                resizeMode="contain"
+                resizeMode="cover"
                 accessibilityLabel={product.name}
               />
             ) : (
@@ -182,14 +182,14 @@ export function ProductCard({
       onPressOut={handlePressOut}
       onPress={handlePress}
     >
-      {/* Framed Studio Pedestal */}
+      {/* Full-Bleed Studio Image */}
       <View style={styles.gridImageWrapper}>
         {imageUrl ? (
           <Animated.Image
             sharedTransitionTag={`product-image-${product.id}`}
             source={{ uri: imageUrl }}
             style={styles.gridImage}
-            resizeMode="contain"
+            resizeMode="cover"
             accessibilityLabel={product.name}
           />
         ) : (
@@ -307,7 +307,8 @@ const styles = StyleSheet.create({
     width: 174,
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    padding: 8,
+    padding: 0,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.06)",
     shadowColor: "#000000",
@@ -318,12 +319,11 @@ const styles = StyleSheet.create({
   },
   gridImageWrapper: {
     width: "100%",
-    aspectRatio: 1.04,
-    borderRadius: 18,
-    backgroundColor: "#F6F6F8",
+    aspectRatio: 1,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    padding: 4,
+    padding: 0,
     overflow: "hidden",
     position: "relative"
   },
@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
   },
   saleBadge: {
     position: "absolute",
-    top: 8,
-    left: 8,
+    top: 10,
+    left: 10,
     backgroundColor: colors.brandRed,
     paddingHorizontal: 8,
     paddingVertical: 3.5,
@@ -348,8 +348,8 @@ const styles = StyleSheet.create({
   },
   featuredBadge: {
     position: "absolute",
-    top: 8,
-    left: 8,
+    top: 10,
+    left: 10,
     backgroundColor: "#0D0D12",
     paddingHorizontal: 8,
     paddingVertical: 3.5,
@@ -363,8 +363,8 @@ const styles = StyleSheet.create({
   },
   heartBtn: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 10,
+    right: 10,
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   swatchBar: {
     position: "absolute",
     bottom: 8,
-    left: 8,
+    left: 10,
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
@@ -407,9 +407,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary
   },
   gridContent: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 12,
     paddingTop: 10,
-    paddingBottom: 4
+    paddingBottom: 12
   },
   metaRow: {
     flexDirection: "row",
@@ -499,10 +499,11 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: radius.md,
-    backgroundColor: "#F4F5F9",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    padding: 6
+    padding: 0,
+    overflow: "hidden"
   },
   rowImage: {
     width: "100%",

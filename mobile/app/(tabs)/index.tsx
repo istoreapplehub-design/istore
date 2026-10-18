@@ -152,7 +152,7 @@ export default function HomeScreen() {
           >
             <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.searchPlaceholder} numberOfLines={1}>
-              Search iPhone 15 Pro, M3 MacBook, Watch...
+              Search iPhone 18 Pro Max, iPhone Duo, Watch Ultra 3...
             </Text>
             <View style={styles.searchKbd}>
               <Ionicons name="sparkles" size={11} color={colors.brandRed} />
@@ -361,7 +361,7 @@ export default function HomeScreen() {
                       <Image
                         source={{ uri: image }}
                         style={styles.editorialImage}
-                        resizeMode="contain"
+                        resizeMode="cover"
                       />
                     ) : (
                       <View style={styles.editorialImageFallback}>
@@ -391,10 +391,11 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* Why I-Store — The I-Store Standard as the final section */}
-        <Animated.View entering={FadeInDown.delay(140).duration(420)} style={{ marginBottom: 24 }}>
+        <Animated.View entering={FadeInDown.delay(140).duration(420)} style={styles.standardSection}>
           <SectionHeader
             title="The I-Store Standard"
             subtitle="Engineered for peace of mind on every order"
+            style={styles.standardHeader}
           />
           <ValuePropRail />
         </Animated.View>
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F6F7FB"
   },
   scrollContent: {
-    paddingBottom: 110
+    paddingBottom: 8
   },
   searchRow: {
     flexDirection: "row",
@@ -596,7 +597,8 @@ const styles = StyleSheet.create({
   editorialCard: {
     borderRadius: 24,
     backgroundColor: "#FFFFFF",
-    padding: 10,
+    padding: 0,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.06)",
     shadowColor: "#000",
@@ -606,13 +608,20 @@ const styles = StyleSheet.create({
     elevation: 3
   },
   editorialStage: {
-    height: 190,
-    borderRadius: 18,
-    backgroundColor: "#F4F5F9",
-    padding: 12,
-    justifyContent: "space-between"
+    height: 210,
+    backgroundColor: "#FFFFFF",
+    padding: 0,
+    overflow: "hidden",
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center"
   },
   editorialTopRow: {
+    position: "absolute",
+    top: 10,
+    left: 12,
+    right: 12,
+    zIndex: 2,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between"
@@ -637,15 +646,21 @@ const styles = StyleSheet.create({
   editorialStorageTag: {
     fontSize: 11,
     fontWeight: "700",
-    color: colors.textSecondary
+    color: colors.textSecondary,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+    overflow: "hidden"
   },
   editorialImage: {
     width: "100%",
-    height: 135,
-    alignSelf: "center"
+    height: "100%"
   },
   editorialImageFallback: {
     flex: 1,
+    width: "100%",
+    height: "100%",
     alignItems: "center",
     justifyContent: "center"
   },
@@ -653,9 +668,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 6,
+    paddingHorizontal: 14,
     paddingTop: 12,
-    paddingBottom: 4
+    paddingBottom: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.05)"
   },
   editorialTitle: {
     fontSize: 16,
@@ -682,6 +699,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12.5,
     fontWeight: "800"
+  },
+  standardSection: {
+    marginTop: 6,
+    marginBottom: 0
+  },
+  standardHeader: {
+    paddingTop: 6,
+    paddingBottom: 6
   },
   skeletonRow: {
     flexDirection: "row",

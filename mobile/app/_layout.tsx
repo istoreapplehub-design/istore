@@ -32,6 +32,7 @@ export default function RootLayout() {
 
   const [hydrated, setHydrated] = useState(false);
   const [splashFinished, setSplashFinished] = useState(false);
+  const wishlistCount = useWishlistStore((state) => state.items.length);
 
   useEffect(() => {
     useUserStore
@@ -134,7 +135,7 @@ export default function RootLayout() {
               name="wishlist"
               options={{
                 headerShown: true,
-                title: "Wishlist",
+                title: wishlistCount > 0 ? `Wishlist (${wishlistCount})` : "Wishlist",
                 headerBackTitle: "Back"
               }}
             />

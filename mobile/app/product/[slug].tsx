@@ -204,7 +204,7 @@ export default function ProductDetailScreen() {
     if (!product) return [];
     if (product.storage) {
       if (product.category === "iPhone" || product.category === "iPad") {
-        const tiers = ["128GB", "256GB", "512GB", "1TB"];
+        const tiers = ["128GB", "256GB", "512GB", "1TB", "2TB"];
         const idx = tiers.indexOf(product.storage);
         return idx >= 0 ? tiers.slice(idx) : [product.storage];
       }
@@ -470,7 +470,7 @@ export default function ProductDetailScreen() {
                       }
                       source={{ uri: item }}
                       style={styles.carouselImage}
-                      resizeMode="contain"
+                      resizeMode="cover"
                       accessibilityLabel={product?.name}
                     />
                   </View>
@@ -956,14 +956,17 @@ const styles = StyleSheet.create({
   },
   carouselContainer: {
     height: IMAGE_CAROUSEL_HEIGHT,
-    backgroundColor: colors.imageBg,
-    position: "relative"
+    backgroundColor: "#FFFFFF",
+    position: "relative",
+    overflow: "hidden"
   },
   imageSlide: {
     height: IMAGE_CAROUSEL_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
-    padding: spacing.xl
+    padding: 0,
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden"
   },
   carouselImage: {
     width: "100%",

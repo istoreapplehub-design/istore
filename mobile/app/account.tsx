@@ -4,7 +4,7 @@
  * - Haptics.notificationAsync("warning") on sign out confirmation
  */
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, RefreshControl, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -125,7 +125,8 @@ export default function AccountScreen() {
 
             <View style={styles.gatePerks}>
               {[
-                { icon: "cube-outline" as const, text: "Track and cancel orders" },
+                { icon: "gift-outline" as const, text: "Refer friends & earn GHS 300 bonus credit" },
+                { icon: "cube-outline" as const, text: "Track orders in real time" },
                 { icon: "heart-outline" as const, text: "Wishlist synced across devices" },
                 { icon: "location-outline" as const, text: "Saved delivery addresses" },
                 { icon: "notifications-outline" as const, text: "Delivery and price alerts" }
@@ -190,6 +191,21 @@ export default function AccountScreen() {
   const email = user?.email || "";
   const phone = user?.phone || "";
   const initial = name.trim().charAt(0).toUpperCase();
+  const referralCode = `ISTORE-${name
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 5)
+    .toUpperCase() || "VIP"}26`;
+
+  const handleShareReferral = async () => {
+    Haptics.selectionAsync();
+    try {
+      await Share.share({
+        message: `Shop official Apple devices on APPLE HUB (I-Store) with my referral code ${referralCode} to get GHS 250 off your first order!`
+      });
+    } catch {
+      // User dismissed share sheet
+    }
+  };
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -274,6 +290,27 @@ export default function AccountScreen() {
             <Text style={styles.statLabel}>Region</Text>
           </Pressable>
         </View>
+
+        {/* Referral Bonus Card */}
+        <Pressable
+          style={({ pressed }) => [styles.referralCard, pressed && { opacity: 0.92 }]}
+          onPress={handleShareReferral}
+        >
+          <View style={styles.referralIconWrap}>
+            <Ionicons name="gift-outline" size={20} color={colors.brandRed} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.referralEyebrow}>REFERRAL BONUS</Text>
+            <Text style={styles.referralTitle}>Invite friends & earn GHS 300</Text>
+            <Text style={styles.referralSub}>
+              Code: <Text style={styles.referralCodeText}>{referralCode}</Text> · Friends get GHS 250 off
+            </Text>
+          </View>
+          <View style={styles.referralSharePill}>
+            <Ionicons name="share-social-outline" size={14} color="#FFFFFF" />
+            <Text style={styles.referralShareText}>Share</Text>
+          </View>
+        </Pressable>
 
         {isAdmin && (
           <Group title="ADMIN">
@@ -484,6 +521,62 @@ const styles = StyleSheet.create({
     width: StyleSheet.hairlineWidth,
     height: 26,
     backgroundColor: colors.border
+  },
+  referralCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
+    marginTop: spacing.md,
+    padding: spacing.md
+  },
+  referralIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.brandRedSoft,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  referralEyebrow: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+    color: colors.brandRed
+  },
+  referralTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text,
+    marginTop: 2
+  },
+  referralSub: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  referralCodeText: {
+    fontWeight: "800",
+    color: colors.text
+  },
+  referralSharePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.brandRed,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.full
+  },
+  referralShareText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF"
   },
   group: {
     marginTop: spacing.lg

@@ -135,7 +135,7 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
                     </View>
 
                     {image ? (
-                      <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+                      <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
                     ) : (
                       <ProductVisual
                         category={item.category}
@@ -333,8 +333,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.96)",
-    padding: 10,
+    backgroundColor: "#FFFFFF",
+    padding: 0,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     position: "relative"
@@ -358,12 +359,12 @@ const styles = StyleSheet.create({
     color: "#FFFFFF"
   },
   image: {
-    width: "88%",
-    height: "78%"
+    width: "100%",
+    height: "100%"
   },
   visualFill: {
     width: "100%",
-    height: "78%"
+    height: "100%"
   },
   swatchRow: {
     position: "absolute",

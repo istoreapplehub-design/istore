@@ -23,7 +23,7 @@ export const colors = {
   star: "#E11D48",            // Crimson rating stars
   gradientBottom: "rgba(0, 0, 0, 0.78)",
   gradientTop: "rgba(0, 0, 0, 0)",
-  imageBg: "#F5F5F7"
+  imageBg: "#FFFFFF"
 } as const;
 
 export const spacing = {

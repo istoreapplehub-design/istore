@@ -81,7 +81,7 @@ export function AppHeader({
             <View style={styles.logoLiveDot} />
           </View>
           <View style={styles.brandTextCol}>
-            <Text style={styles.eyebrow}>APPLE HUB · GHANA</Text>
+            <Text style={styles.eyebrow}>APPLE HUB</Text>
             <Text style={styles.wordmark}>I-Store</Text>
           </View>
         </Pressable>
@@ -92,14 +92,18 @@ export function AppHeader({
               hitSlop={6}
               onPress={() => press(() => router.push("/wishlist"))}
               style={({ pressed }) => [styles.iconCircle, pressed && styles.iconCirclePressed]}
-              accessibilityLabel="Saved wishlist"
+              accessibilityLabel={`Saved wishlist, ${wishlistCount} items`}
             >
               <Ionicons
                 name={wishlistCount > 0 ? "heart" : "heart-outline"}
                 size={19}
                 color={wishlistCount > 0 ? colors.brandRed : colors.text}
               />
-              {wishlistCount > 0 && <View style={styles.wishDot} />}
+              {wishlistCount > 0 && (
+                <View style={styles.badgeWrapper}>
+                  <Badge count={wishlistCount} />
+                </View>
+              )}
             </Pressable>
 
             <Pressable

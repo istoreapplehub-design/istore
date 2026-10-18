@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,11 +13,12 @@ interface SectionHeaderProps {
   title: string;
   subtitle?: string;
   onSeeAll?: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, onSeeAll, style }: SectionHeaderProps) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -40,7 +41,7 @@ export function SectionHeader({ title, subtitle, onSeeAll }: SectionHeaderProps)
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View style={styles.textContainer}>
         <View style={styles.titleRow}>
           <View style={styles.accentBar} />

@@ -2,6 +2,7 @@ require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
 const { safeJsonStringify } = require("../src/utils/json");
 const { supabaseAdmin } = require("../src/utils/supabase");
+const { CATALOG_2026_PRODUCTS } = require("../src/utils/catalog2026");
 
 const prisma = new PrismaClient();
 
@@ -59,6 +60,7 @@ const PHOTO_BASE = "https://nxycejiuwpbocaiqwsdt.supabase.co/storage/v1/object/p
 const photo = (slug) => [`${PHOTO_BASE}/${slug}.jpg?v=apple2`];
 
 const PRODUCTS_DATA = [
+  ...CATALOG_2026_PRODUCTS,
   // ─── 1. IPHONES ──────────────────────────────────────────────────────────
   {
     name: "iPhone 15 Pro Max 256GB",
@@ -925,7 +927,9 @@ async function main() {
 
     const resolvedColors = item.colors.map((c) => ({
       ...c,
-      images: [`${PHOTO_BASE}/${item.slug}-${slugifyColor(c.name)}.jpg?v=apple2`]
+      images: item.id
+        ? c.images
+        : [`${PHOTO_BASE}/${item.slug}-${slugifyColor(c.name)}.jpg?v=apple2`]
     }));
 
     const resolvedImages = Array.from(

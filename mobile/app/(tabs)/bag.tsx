@@ -137,7 +137,7 @@ export default function BagScreen() {
                     <Image
                       source={{ uri: thumb }}
                       style={styles.itemImage}
-                      resizeMode="contain"
+                      resizeMode="cover"
                     />
                   ) : (
                     <View style={styles.itemImageFallback}>
