@@ -55,8 +55,8 @@ const REVIEW_TEMPLATES = [
 
 const PHOTO_BASE = "https://nxycejiuwpbocaiqwsdt.supabase.co/storage/v1/object/public/product-images/products";
 
-/** Every listing ships with one real studio render, uploaded via scripts/attach-product-photos.js */
-const photo = (slug) => [`${PHOTO_BASE}/${slug}.jpg`];
+/** Every listing ships with official Apple.com studio photographs uploaded via scripts/sync-apple-official-photos.js */
+const photo = (slug) => [`${PHOTO_BASE}/${slug}.jpg?v=apple2`];
 
 const PRODUCTS_DATA = [
   // ─── 1. IPHONES ──────────────────────────────────────────────────────────
@@ -917,6 +917,21 @@ async function main() {
       where: { slug: item.slug }
     });
 
+    const slugifyColor = (name) =>
+      String(name)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    const resolvedColors = item.colors.map((c) => ({
+      ...c,
+      images: [`${PHOTO_BASE}/${item.slug}-${slugifyColor(c.name)}.jpg?v=apple2`]
+    }));
+
+    const resolvedImages = Array.from(
+      new Set([...item.images, ...resolvedColors.flatMap((c) => c.images)])
+    );
+
     let productRecord;
     const productPayload = {
       name: item.name,
@@ -925,7 +940,7 @@ async function main() {
       category: item.category,
       model: item.model,
       storage: item.storage,
-      colors: safeJsonStringify(item.colors),
+      colors: safeJsonStringify(resolvedColors),
       priceGHS: item.priceGHS,
       compareAtPriceGHS: item.compareAtPriceGHS,
       stock: item.stock,
@@ -958,11 +973,11 @@ async function main() {
       where: { productId: productRecord.id }
     });
 
-    for (let i = 0; i < item.images.length; i++) {
+    for (let i = 0; i < resolvedImages.length; i++) {
       await prisma.productImage.create({
         data: {
           productId: productRecord.id,
-          url: item.images[i],
+          url: resolvedImages[i],
           alt: `${item.name} image ${i + 1}`,
           isPrimary: i === 0,
           displayOrder: i + 1

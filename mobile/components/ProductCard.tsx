@@ -58,7 +58,13 @@ export function ProductCard({
     }
   };
 
-  const imageUrl = getProductImage(product);
+  const [selectedColorIdx, setSelectedColorIdx] = useState(0);
+  const activeColor = product.colors?.[selectedColorIdx] || product.colors?.[0];
+  const colorImg =
+    Array.isArray(activeColor?.images) && activeColor.images.length > 0
+      ? activeColor.images[0]
+      : (activeColor as any)?.image;
+  const imageUrl = colorImg || getProductImage(product);
 
   const handleQuickAdd = () => {
     if (product.stock <= 0) {
@@ -71,7 +77,7 @@ export function ProductCard({
       name: product.name,
       priceGHS: product.priceGHS,
       image: imageUrl || "",
-      color: product.colors?.[0]?.name,
+      color: activeColor?.name || product.colors?.[0]?.name,
       storage: product.storage || undefined,
       qty: 1
     });
@@ -221,12 +227,25 @@ export function ProductCard({
         {/* Bottom-left Hardware Finish Swatches */}
         {Array.isArray(product.colors) && product.colors.length > 0 && (
           <View style={styles.swatchBar}>
-            {product.colors.slice(0, 4).map((c, idx) => (
-              <View
-                key={c.name || idx}
-                style={[styles.swatchDot, { backgroundColor: c.hex || "#CCCCCC" }]}
-              />
-            ))}
+            {product.colors.slice(0, 4).map((c, idx) => {
+              const isSelected = idx === selectedColorIdx;
+              return (
+                <Pressable
+                  key={c.name || idx}
+                  hitSlop={6}
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    Haptics.selectionAsync();
+                    setSelectedColorIdx(idx);
+                  }}
+                  style={[
+                    styles.swatchDot,
+                    { backgroundColor: c.hex || "#CCCCCC" },
+                    isSelected && styles.swatchDotActive
+                  ]}
+                />
+              );
+            })}
             {product.colors.length > 4 && (
               <Text style={styles.swatchMore}>+{product.colors.length - 4}</Text>
             )}
@@ -301,15 +320,16 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 1.04,
     borderRadius: 18,
-    backgroundColor: "#F4F5F9",
+    backgroundColor: "#F6F6F8",
     alignItems: "center",
     justifyContent: "center",
-    padding: 14,
+    padding: 4,
+    overflow: "hidden",
     position: "relative"
   },
   gridImage: {
-    width: "92%",
-    height: "92%"
+    width: "100%",
+    height: "100%"
   },
   saleBadge: {
     position: "absolute",
@@ -363,18 +383,23 @@ const styles = StyleSheet.create({
     left: 8,
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(255,255,255,0.85)",
+    gap: 5,
+    backgroundColor: "rgba(255,255,255,0.92)",
     paddingHorizontal: 7,
-    paddingVertical: 3.5,
+    paddingVertical: 4,
     borderRadius: radius.pill
   },
   swatchDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    borderWidth: 0.8,
-    borderColor: "rgba(0,0,0,0.18)"
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.22)"
+  },
+  swatchDotActive: {
+    transform: [{ scale: 1.22 }],
+    borderColor: colors.brandRed,
+    borderWidth: 1.5
   },
   swatchMore: {
     fontSize: 8.5,
