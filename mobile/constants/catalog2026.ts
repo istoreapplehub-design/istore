@@ -1055,9 +1055,15 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
   }
 ];
 
-export const CATALOG_2026: Product[] = RAW_CATALOG_2026.map((item, idx) => ({
-  ...item,
-  isActive: true,
-  updatedAt: item.createdAt,
-  reviews: makeReviews(item.id, idx)
-}));
+export const CATALOG_2026: Product[] = RAW_CATALOG_2026.map((item, idx) => {
+  const baseTime = new Date("2026-10-18T18:00:00.000Z").getTime();
+  const createdAt = new Date(baseTime - idx * 60 * 1000).toISOString();
+  return {
+    ...item,
+    displayOrder: idx + 1,
+    createdAt,
+    isActive: true,
+    updatedAt: createdAt,
+    reviews: makeReviews(item.id, idx)
+  };
+});

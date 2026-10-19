@@ -112,7 +112,7 @@ export default function ShopScreen() {
 
         const queryParams: Record<string, string | number | boolean | undefined> = {
           page: targetPage,
-          limit: 10,
+          limit: 50,
           sort: sortBy
         };
 

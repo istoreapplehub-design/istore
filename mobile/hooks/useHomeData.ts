@@ -26,9 +26,9 @@ export function useHomeData(): HomeDataState {
     try {
       const [featuredRes, newArrivalsRes, bestSellersRes, categoriesRes] =
         await Promise.all([
-          getProducts({ featured: true, limit: 5 }),
-          getProducts({ sort: "newest", limit: 10 }),
-          getProducts({ sort: "popular", limit: 10 }),
+          getProducts({ featured: true, limit: 8 }),
+          getProducts({ sort: "newest", limit: 24 }),
+          getProducts({ sort: "popular", limit: 24 }),
           getCategories()
         ]);
 

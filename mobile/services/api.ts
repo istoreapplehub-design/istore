@@ -135,6 +135,7 @@ function filterAndSortCatalog(
     );
   }
 
+  const catalog2026Slugs = new Set(CATALOG_2026.map((p) => p.slug));
   const sort = String(params.sort || "");
   if (sort === "price_asc") {
     list.sort((a, b) => a.priceGHS - b.priceGHS);
@@ -142,6 +143,9 @@ function filterAndSortCatalog(
     list.sort((a, b) => b.priceGHS - a.priceGHS);
   } else if (sort === "newest") {
     list.sort((a, b) => {
+      const aIs2026 = catalog2026Slugs.has(a.slug) ? 1 : 0;
+      const bIs2026 = catalog2026Slugs.has(b.slug) ? 1 : 0;
+      if (aIs2026 !== bIs2026) return bIs2026 - aIs2026;
       const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return tb - ta;
@@ -149,9 +153,19 @@ function filterAndSortCatalog(
   } else if (sort === "rating") {
     list.sort((a, b) => b.rating - a.rating);
   } else if (sort === "popular") {
-    list.sort((a, b) => b.reviewCount - a.reviewCount);
+    list.sort((a, b) => {
+      const aIs2026 = catalog2026Slugs.has(a.slug) ? 1 : 0;
+      const bIs2026 = catalog2026Slugs.has(b.slug) ? 1 : 0;
+      if (aIs2026 !== bIs2026) return bIs2026 - aIs2026;
+      return b.reviewCount - a.reviewCount;
+    });
   } else {
-    list.sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
+    list.sort((a, b) => {
+      const aIs2026 = catalog2026Slugs.has(a.slug) ? 1 : 0;
+      const bIs2026 = catalog2026Slugs.has(b.slug) ? 1 : 0;
+      if (aIs2026 !== bIs2026) return bIs2026 - aIs2026;
+      return (a.displayOrder ?? 99) - (b.displayOrder ?? 99);
+    });
   }
 
   return list;
@@ -164,7 +178,17 @@ function mergeWith2026Catalog(remoteProducts: Product[]): Product[] {
   }
   for (const remote of remoteProducts) {
     if (!bySlug.has(remote.slug)) {
-      bySlug.set(remote.slug, remote);
+      bySlug.set(remote.slug, {
+        ...remote,
+        displayOrder: (remote.displayOrder ?? 20) + 50
+      });
+    } else {
+      // Keep remote database ID so orders/reviews reference the real Supabase row ID
+      const local2026 = bySlug.get(remote.slug)!;
+      bySlug.set(remote.slug, {
+        ...local2026,
+        id: remote.id || local2026.id
+      });
     }
   }
   return Array.from(bySlug.values());

@@ -88,11 +88,11 @@ export default function HomeScreen() {
         : allCatalog.filter(
             (p) => p.category.toLowerCase() === selectedCategory.toLowerCase()
           );
-    return pool.slice(0, numCols * 3);
+    return pool.slice(0, numCols * 6);
   }, [selectedCategory, bestSellers, allCatalog, numCols]);
 
-  const heroProducts = featured.length > 0 ? featured : newArrivals.slice(0, 5);
-  const editorial = newArrivals.slice(0, 6);
+  const heroProducts = featured.length > 0 ? featured : newArrivals.slice(0, 6);
+  const editorial = newArrivals.slice(0, 12);
 
   const nothingLoaded =
     !loading && heroProducts.length === 0 && editorial.length === 0 && bestSellers.length === 0;

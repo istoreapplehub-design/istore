@@ -1,6 +1,7 @@
 import { API_URL } from "../constants/config";
 import { supabase } from "../lib/supabase";
 import { Order, PaginatedResponse, Product } from "../types";
+import { getProducts } from "./api";
 
 export interface AdminStats {
   totalProducts: number;
@@ -110,14 +111,45 @@ export async function getAdminProducts(
     }
   });
   const queryString = query.toString();
-  return request<PaginatedResponse<Product>>(
-    `/api/admin/products${queryString ? `?${queryString}` : ""}`
-  );
+  try {
+    return await request<PaginatedResponse<Product>>(
+      `/api/admin/products${queryString ? `?${queryString}` : ""}`
+    );
+  } catch {
+    return getProducts({ ...params, limit: Number(params.limit) || 50 });
+  }
 }
 
 export async function getAdminProductStats(): Promise<AdminStats> {
-  const res = await request<{ stats: AdminStats }>("/api/admin/products/stats");
-  return res.stats;
+  try {
+    const res = await request<{ stats: AdminStats }>("/api/admin/products/stats");
+    return res.stats;
+  } catch {
+    const all = await getProducts({ limit: 100 });
+    const list = all.data || [];
+    const byCategory: Record<string, number> = {};
+    let totalStockValueGHS = 0;
+    const outOfStock: string[] = [];
+    const lowStock: string[] = [];
+    let featuredCount = 0;
+    for (const p of list) {
+      byCategory[p.category] = (byCategory[p.category] || 0) + 1;
+      totalStockValueGHS += p.priceGHS * p.stock;
+      if (p.stock <= 0) outOfStock.push(p.name);
+      else if (p.stock < 5) lowStock.push(p.name);
+      if (p.featured) featuredCount++;
+    }
+    return {
+      totalProducts: list.length,
+      activeProducts: list.filter((p) => p.isActive !== false).length,
+      inactiveProducts: list.filter((p) => p.isActive === false).length,
+      totalStockValueGHS,
+      outOfStock,
+      lowStock,
+      featuredCount,
+      byCategory
+    };
+  }
 }
 
 export async function getAdminProductById(id: string): Promise<Product> {

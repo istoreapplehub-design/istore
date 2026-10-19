@@ -906,11 +906,22 @@ async function main() {
   let reviewsCount = 0;
   const categoryCounts = {};
   const featuredSlugs = [];
+  const catalog2026Slugs = new Set(CATALOG_2026_PRODUCTS.map((p) => p.slug));
+  const base2026Time = new Date("2026-10-18T18:00:00.000Z").getTime();
+  const baseLegacyTime = new Date("2026-08-01T12:00:00.000Z").getTime();
 
-  for (const item of PRODUCTS_DATA) {
+  for (let idx = 0; idx < PRODUCTS_DATA.length; idx++) {
+    const item = PRODUCTS_DATA[idx];
+    const is2026 = catalog2026Slugs.has(item.slug);
+    const isFeatured = is2026 ? Boolean(item.featured) : false;
+    const itemCreatedAt = is2026
+      ? new Date(base2026Time - idx * 60 * 1000)
+      : new Date(baseLegacyTime - idx * 60 * 1000);
+    const itemDisplayOrder = is2026 ? idx + 1 : idx + 50;
+
     // Track stats
     categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
-    if (item.featured) {
+    if (isFeatured) {
       featuredSlugs.push(item.slug);
     }
 
@@ -954,10 +965,11 @@ async function main() {
       condition: item.condition,
       rating: item.rating,
       reviewCount: item.reviewCount,
-      featured: item.featured,
+      featured: isFeatured,
       tags: item.tags,
       isActive: true,
-      displayOrder: item.displayOrder
+      displayOrder: itemDisplayOrder,
+      createdAt: itemCreatedAt
     };
 
     if (existing) {
