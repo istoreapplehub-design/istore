@@ -925,11 +925,7 @@ async function main() {
       featuredSlugs.push(item.slug);
     }
 
-    // 1. Check or Upsert Product
-    const existing = await prisma.product.findUnique({
-      where: { slug: item.slug }
-    });
-
+    // 1. Upsert Product
     const slugifyColor = (name) =>
       String(name)
         .toLowerCase()
@@ -947,7 +943,6 @@ async function main() {
       new Set([...item.images, ...resolvedColors.flatMap((c) => c.images)])
     );
 
-    let productRecord;
     const productPayload = {
       name: item.name,
       slug: item.slug,
@@ -972,57 +967,55 @@ async function main() {
       createdAt: itemCreatedAt
     };
 
-    if (existing) {
-      productRecord = await prisma.product.update({
-        where: { slug: item.slug },
-        data: productPayload
-      });
-    } else {
-      productRecord = await prisma.product.create({
-        data: productPayload
-      });
-    }
+    const productRecord = await prisma.product.upsert({
+      where: { slug: item.slug },
+      update: productPayload,
+      create: productPayload
+    });
     productsCount++;
+    if (productsCount % 10 === 0 || productsCount === PRODUCTS_DATA.length) {
+      console.log(`   Seeded ${productsCount}/${PRODUCTS_DATA.length} products...`);
+    }
 
-    // 2. Clean up existing product images & recreate
+    // 2. Clean up existing product images & recreate in batch
     await prisma.productImage.deleteMany({
       where: { productId: productRecord.id }
     });
 
-    for (let i = 0; i < resolvedImages.length; i++) {
-      await prisma.productImage.create({
-        data: {
+    if (resolvedImages.length > 0) {
+      await prisma.productImage.createMany({
+        data: resolvedImages.map((url, i) => ({
           productId: productRecord.id,
-          url: resolvedImages[i],
+          url,
           alt: `${item.name} image ${i + 1}`,
           isPrimary: i === 0,
           displayOrder: i + 1
-        }
+        }))
       });
     }
 
-    // 3. Clean up existing reviews & recreate exactly 3 reviews with Ghanaian names
+    // 3. Clean up existing reviews & recreate 3 reviews in batch
     await prisma.review.deleteMany({
       where: { productId: productRecord.id }
     });
 
+    const reviewsBatch = [];
     for (let r = 0; r < 3; r++) {
       const reviewerName =
         GHANAIAN_REVIEWERS[(productsCount * 3 + r) % GHANAIAN_REVIEWERS.length];
       const template =
         REVIEW_TEMPLATES[(productsCount * 2 + r) % REVIEW_TEMPLATES.length];
 
-      await prisma.review.create({
-        data: {
-          productId: productRecord.id,
-          authorName: reviewerName,
-          rating: template.rating,
-          title: template.title,
-          body: template.body
-        }
+      reviewsBatch.push({
+        productId: productRecord.id,
+        authorName: reviewerName,
+        rating: template.rating,
+        title: template.title,
+        body: template.body
       });
       reviewsCount++;
     }
+    await prisma.review.createMany({ data: reviewsBatch });
   }
 
   // Check if admin already exists in Supabase
