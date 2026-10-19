@@ -540,8 +540,8 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: 12,
-    paddingTop: 16,
-    paddingBottom: 100
+    paddingTop: 14,
+    paddingBottom: 36
   },
   gridCard: {
     flex: 1,
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     marginTop: 6
   },
   footerContainer: {
-    paddingVertical: 20,
+    paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center"
   },

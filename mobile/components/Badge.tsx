@@ -32,7 +32,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.badge,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF"
   },
   text: {
     color: "#FFFFFF",

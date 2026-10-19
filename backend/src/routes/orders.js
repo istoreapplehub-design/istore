@@ -8,6 +8,7 @@ const {
   getOrder,
   cancelOrder,
   updateStatus,
+  getDeliveryQuoteHandler,
   createOrderSchema,
   guestCreateOrderSchema,
   trackGuestOrderSchema,
@@ -15,6 +16,9 @@ const {
 } = require("../controllers/orderController");
 const { validate } = require("../middleware/validate");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
+
+// GET /api/orders/delivery-quote - Dynamic delivery fee or TBD status by region (Public)
+router.get("/delivery-quote", getDeliveryQuoteHandler);
 
 // POST /api/orders - Create pending order with snapshot items (Authenticated)
 router.post(

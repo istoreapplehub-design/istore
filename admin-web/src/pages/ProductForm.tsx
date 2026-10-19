@@ -200,7 +200,6 @@ export function ProductForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      toast.loading("Uploading color image...", { id: `color-img-${index}` });
       const res = await uploadAdminImage(file);
       if (res?.url) {
         setColors((prev) => {
@@ -208,10 +207,10 @@ export function ProductForm() {
           next[index] = { ...next[index], images: [res.url] };
           return next;
         });
-        toast.success("Color image attached!", { id: `color-img-${index}` });
+        toast.success("Color image attached!");
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload color image", { id: `color-img-${index}` });
+      toast.error(err.message || "Failed to upload color image");
     } finally {
       e.target.value = "";
     }

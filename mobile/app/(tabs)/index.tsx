@@ -701,12 +701,12 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   standardSection: {
-    marginTop: 6,
+    marginTop: 0,
     marginBottom: 0
   },
   standardHeader: {
-    paddingTop: 6,
-    paddingBottom: 6
+    paddingTop: 2,
+    paddingBottom: 2
   },
   skeletonRow: {
     flexDirection: "row",

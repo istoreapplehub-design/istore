@@ -35,6 +35,10 @@ export default function RootLayout() {
   const wishlistCount = useWishlistStore((state) => state.items.length);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setHydrated(true);
+    }, 1500);
+
     useUserStore
       .getState()
       .hydrate()
@@ -43,10 +47,13 @@ export default function RootLayout() {
           void useWishlistStore.getState().syncOnSignIn();
         }
         setHydrated(true);
+        clearTimeout(timer);
       });
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const appReady = Boolean(fontsLoaded && hydrated);
+  const appReady = Boolean(hydrated);
 
   return (
     <ErrorBoundary>

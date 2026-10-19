@@ -36,6 +36,59 @@ export const GHANA_REGIONS = [
 
 export type GhanaRegion = (typeof GHANA_REGIONS)[number];
 
+export const UBER_SUPPORTED_REGIONS = ["Greater Accra", "Ashanti"] as const;
+export type UberSupportedRegion = (typeof UBER_SUPPORTED_REGIONS)[number];
+
+export const UBER_REGION_FEE_MAP: Record<string, number> = {
+  "Greater Accra": 25.0,
+  Ashanti: 40.0
+};
+
+export interface DeliveryQuote {
+  feeGHS: number;
+  isUber: boolean;
+  isTbd: boolean;
+  provider: "uber" | "pay_on_delivery";
+  label: string;
+  description: string;
+}
+
+export function getDeliveryQuote(region?: string | null): DeliveryQuote {
+  if (!region) {
+    return {
+      feeGHS: 0,
+      isUber: false,
+      isTbd: true,
+      provider: "pay_on_delivery",
+      label: "Select region",
+      description: "Select delivery destination region"
+    };
+  }
+
+  const isUber = (UBER_SUPPORTED_REGIONS as readonly string[]).includes(region.trim());
+
+  if (isUber) {
+    const fee = UBER_REGION_FEE_MAP[region.trim()] || 25.0;
+    return {
+      feeGHS: fee,
+      isUber: true,
+      isTbd: false,
+      provider: "uber",
+      label: `₵${fee.toFixed(2)} (Uber Express)`,
+      description: "Direct doorstep courier delivery via Uber"
+    };
+  }
+
+  return {
+    feeGHS: 0,
+    isUber: false,
+    isTbd: true,
+    provider: "pay_on_delivery",
+    label: "TBD — Pay on Delivery",
+    description: "Delivery fee paid directly to courier or bus terminal upon collection"
+  };
+}
+
 export interface CategoryDefinition {
   name: string;
   slug: string;

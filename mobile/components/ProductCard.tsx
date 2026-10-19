@@ -115,7 +115,7 @@ export function ProductCard({
                 sharedTransitionTag={`product-image-${product.id}`}
                 source={{ uri: imageUrl }}
                 style={styles.rowImage}
-                resizeMode="cover"
+                resizeMode="contain"
                 accessibilityLabel={product.name}
               />
             ) : (
@@ -189,7 +189,7 @@ export function ProductCard({
             sharedTransitionTag={`product-image-${product.id}`}
             source={{ uri: imageUrl }}
             style={styles.gridImage}
-            resizeMode="cover"
+            resizeMode="contain"
             accessibilityLabel={product.name}
           />
         ) : (
@@ -309,13 +309,12 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 0,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
+    borderWidth: 0,
     shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.055,
-    shadowRadius: 14,
-    elevation: 3
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2
   },
   gridImageWrapper: {
     width: "100%",
@@ -323,13 +322,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    padding: 0,
+    padding: 8,
     overflow: "hidden",
     position: "relative"
   },
   gridImage: {
-    width: "100%",
-    height: "100%"
+    width: "92%",
+    height: "92%"
   },
   saleBadge: {
     position: "absolute",
@@ -502,12 +501,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    padding: 0,
+    padding: 4,
     overflow: "hidden"
   },
   rowImage: {
-    width: "100%",
-    height: "100%"
+    width: "92%",
+    height: "92%"
   },
   rowContent: {
     flex: 1

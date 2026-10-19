@@ -470,7 +470,7 @@ export default function ProductDetailScreen() {
                       }
                       source={{ uri: item }}
                       style={styles.carouselImage}
-                      resizeMode="cover"
+                      resizeMode="contain"
                       accessibilityLabel={product?.name}
                     />
                   </View>

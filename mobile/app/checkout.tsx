@@ -27,7 +27,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
 import { getPreferences } from "../lib/preferences";
-import { GHANA_REGIONS } from "../constants/config";
+import { GHANA_REGIONS, getDeliveryQuote } from "../constants/config";
 import { colors, formatGHS } from "../constants/theme";
 import {
   createGuestOrder,
@@ -42,24 +42,35 @@ import { ProductVisual, getStoredImage } from "../components/ProductVisual";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-const REGION_FEE_MAP: Record<string, number> = {
-  "Greater Accra": 25.0,
-  Ashanti: 40.0,
-  Western: 45.0,
-  Central: 45.0,
-  Eastern: 45.0,
-  Volta: 45.0,
-  Northern: 55.0,
-  "Upper East": 55.0,
-  "Upper West": 55.0,
-  Bono: 55.0,
-  Ahafo: 55.0,
-  "Bono East": 55.0,
-  Oti: 55.0,
-  Savannah: 55.0,
-  "North East": 55.0,
-  "Western North": 55.0
-};
+const STORE_PICKUP_LOCATIONS = [
+  {
+    id: "flagship-east-legon",
+    name: "I-Store Flagship — East Legon",
+    address: "Boundary Road, Opp. A&C Mall, East Legon, Accra",
+    region: "Greater Accra",
+    city: "Accra",
+    hours: "Mon–Sat: 9:00 AM – 8:00 PM | Sun: 12:00 PM – 6:00 PM",
+    readyTime: "Ready for pickup in 1 hour"
+  },
+  {
+    id: "studio-accra-mall",
+    name: "I-Store Studio — Accra Mall",
+    address: "Tetteh Quarshie Interchange, Shop G12, Accra",
+    region: "Greater Accra",
+    city: "Accra",
+    hours: "Mon–Sat: 9:00 AM – 9:00 PM | Sun: 10:00 AM – 8:00 PM",
+    readyTime: "Ready for pickup in 1 hour"
+  },
+  {
+    id: "hub-kumasi",
+    name: "I-Store Experience — Kumasi City Mall",
+    address: "Asokwa, Kumasi City Mall, Shop 24, Kumasi",
+    region: "Ashanti",
+    city: "Kumasi",
+    hours: "Mon–Sat: 9:00 AM – 8:00 PM | Sun: 12:00 PM – 6:00 PM",
+    readyTime: "Ready for pickup in 2 hours"
+  }
+];
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -110,6 +121,8 @@ export default function CheckoutScreen() {
   }, [session, defaultEmail, defaultName, defaultPhone]);
 
   // UI state
+  const [fulfillmentType, setFulfillmentType] = useState<"delivery" | "pickup">("delivery");
+  const [selectedPickupLocation, setSelectedPickupLocation] = useState(STORE_PICKUP_LOCATIONS[0]);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showRegionModal, setShowRegionModal] = useState(false);
@@ -130,8 +143,9 @@ export default function CheckoutScreen() {
   } | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
-  // Delivery fee & Total calculations
-  const deliveryFee = region ? REGION_FEE_MAP[region] || 55.0 : null;
+  // Delivery quote & Total calculations
+  const deliveryQuote = getDeliveryQuote(region);
+  const deliveryFee = fulfillmentType === "pickup" ? 0 : region ? deliveryQuote.feeGHS : null;
   const discountAmount = appliedDiscount
     ? Math.round((subtotalGHS * appliedDiscount.percent) / 100)
     : 0;
@@ -149,9 +163,8 @@ export default function CheckoutScreen() {
   const isFormValid =
     isFullNameValid &&
     isPhoneValid &&
-    isRegionValid &&
-    isCityValid &&
-    (!needsGuestEmail || isEmailValid);
+    (!needsGuestEmail || isEmailValid) &&
+    (fulfillmentType === "pickup" || (isRegionValid && isCityValid));
 
   const handleBlur = (field: string) => {
     setFocusedField(null);
@@ -232,14 +245,24 @@ export default function CheckoutScreen() {
           color: i.color || undefined,
           storage: i.storage || undefined
         })),
-        shippingAddress: {
-          fullName: fullName.trim(),
-          phone: cleanPhone,
-          region,
-          city: city.trim(),
-          gpsAddress: gpsAddress.trim() || undefined,
-          landmark: landmark.trim() || undefined
-        },
+        shippingAddress:
+          fulfillmentType === "pickup"
+            ? {
+                fullName: fullName.trim(),
+                phone: cleanPhone,
+                region: selectedPickupLocation.region,
+                city: selectedPickupLocation.city,
+                gpsAddress: selectedPickupLocation.address,
+                landmark: `Store Pickup: ${selectedPickupLocation.name}`
+              }
+            : {
+                fullName: fullName.trim(),
+                phone: cleanPhone,
+                region,
+                city: city.trim(),
+                gpsAddress: gpsAddress.trim() || undefined,
+                landmark: landmark.trim() || undefined
+              },
         notes: notes.trim() || undefined,
         promoCode: appliedDiscount?.code || undefined
       };
@@ -440,10 +463,108 @@ export default function CheckoutScreen() {
             </View>
           )}
 
-          {/* 1. SHIPPING ADDRESS */}
-          <Text style={styles.sectionTitle}>Shipping Address</Text>
+          {/* FULFILLMENT MODE: DELIVERY vs STORE PICKUP */}
+          <View style={styles.fulfillmentSegment}>
+            <Pressable
+              style={[
+                styles.fulfillmentTab,
+                fulfillmentType === "delivery" && styles.fulfillmentTabActive
+              ]}
+              onPress={() => {
+                AppHaptics.selection();
+                setFulfillmentType("delivery");
+              }}
+            >
+              <Ionicons
+                name="bicycle"
+                size={17}
+                color={fulfillmentType === "delivery" ? "#FFFFFF" : colors.text}
+              />
+              <Text
+                style={[
+                  styles.fulfillmentTabText,
+                  fulfillmentType === "delivery" && styles.fulfillmentTabTextActive
+                ]}
+              >
+                Doorstep Delivery
+              </Text>
+            </Pressable>
 
-          {addresses.length > 0 && !needsGuestEmail && (
+            <Pressable
+              style={[
+                styles.fulfillmentTab,
+                fulfillmentType === "pickup" && styles.fulfillmentTabActive
+              ]}
+              onPress={() => {
+                AppHaptics.selection();
+                setFulfillmentType("pickup");
+              }}
+            >
+              <Ionicons
+                name="business"
+                size={17}
+                color={fulfillmentType === "pickup" ? "#FFFFFF" : colors.text}
+              />
+              <Text
+                style={[
+                  styles.fulfillmentTabText,
+                  fulfillmentType === "pickup" && styles.fulfillmentTabTextActive
+                ]}
+              >
+                Store Pickup (Free)
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* STORE PICKUP STATIONS */}
+          {fulfillmentType === "pickup" && (
+            <View style={{ marginBottom: 16 }}>
+              <Text style={styles.sectionTitle}>Select Pickup Station</Text>
+              <View style={styles.pickupLocationsList}>
+                {STORE_PICKUP_LOCATIONS.map((loc) => {
+                  const isSelected = loc.id === selectedPickupLocation.id;
+                  return (
+                    <Pressable
+                      key={loc.id}
+                      style={[
+                        styles.pickupCard,
+                        isSelected && styles.pickupCardSelected
+                      ]}
+                      onPress={() => {
+                        AppHaptics.selection();
+                        setSelectedPickupLocation(loc);
+                      }}
+                    >
+                      <View style={styles.pickupHeaderRow}>
+                        <Ionicons
+                          name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                          size={20}
+                          color={isSelected ? colors.brandRed : colors.textSecondary}
+                        />
+                        <Text style={[styles.pickupName, isSelected && styles.pickupNameSelected]}>
+                          {loc.name}
+                        </Text>
+                      </View>
+                      <Text style={styles.pickupAddress}>{loc.address}</Text>
+                      <View style={styles.pickupMetaRow}>
+                        <View style={styles.pickupReadyBadge}>
+                          <Text style={styles.pickupReadyText}>{loc.readyTime}</Text>
+                        </View>
+                        <Text style={styles.pickupHours}>{loc.hours}</Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* SHIPPING ADDRESS OR PICKUP PERSON */}
+          <Text style={styles.sectionTitle}>
+            {fulfillmentType === "pickup" ? "Pickup Contact Details" : "Shipping Address"}
+          </Text>
+
+          {fulfillmentType === "delivery" && addresses.length > 0 && !needsGuestEmail && (
             <View style={styles.savedAddressCard}>
               <View style={styles.savedAddressInfo}>
                 <View style={styles.savedAddressBadge}>
@@ -507,7 +628,9 @@ export default function CheckoutScreen() {
 
           {/* Full Name */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Full Name *</Text>
+            <Text style={styles.fieldLabel}>
+              {fulfillmentType === "pickup" ? "Full Name (Person Collecting) *" : "Full Name *"}
+            </Text>
             <TextInput
               style={[
                 styles.textInput,
@@ -530,7 +653,9 @@ export default function CheckoutScreen() {
 
           {/* Phone */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Phone Number *</Text>
+            <Text style={styles.fieldLabel}>
+              {fulfillmentType === "pickup" ? "Phone Number (Pickup SMS Alert) *" : "Phone Number *"}
+            </Text>
             <TextInput
               style={[
                 styles.textInput,
@@ -553,88 +678,95 @@ export default function CheckoutScreen() {
             )}
           </View>
 
-          {/* Region Picker Button */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Region *</Text>
-            <Pressable
-              style={[
-                styles.regionPickerBtn,
-                touched.region && !isRegionValid && styles.textInputError
-              ]}
-              onPress={() => {
-                AppHaptics.impactLight();
-                setShowRegionModal(true);
-              }}
-            >
-              <Text style={region ? styles.regionValueText : styles.regionPlaceholderText}>
-                {region || "Select a Ghana Region"}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
-            </Pressable>
-            {touched.region && !isRegionValid && (
-              <Text style={styles.errorText}>Please select your delivery region.</Text>
-            )}
-          </View>
+          {/* Delivery Specific Fields */}
+          {fulfillmentType === "delivery" && (
+            <>
+              {/* Region Picker Button */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Region *</Text>
+                <Pressable
+                  style={[
+                    styles.regionPickerBtn,
+                    touched.region && !isRegionValid && styles.textInputError
+                  ]}
+                  onPress={() => {
+                    AppHaptics.impactLight();
+                    setShowRegionModal(true);
+                  }}
+                >
+                  <Text style={region ? styles.regionValueText : styles.regionPlaceholderText}>
+                    {region || "Select a Ghana Region"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color={colors.textSecondary} />
+                </Pressable>
+                {touched.region && !isRegionValid && (
+                  <Text style={styles.errorText}>Please select your delivery region.</Text>
+                )}
+              </View>
 
-          {/* City */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>City / Town *</Text>
-            <TextInput
-              style={[
-                styles.textInput,
-                focusedField === "city" && styles.textInputFocused,
-                touched.city && !isCityValid && styles.textInputError
-              ]}
-              value={city}
-              onChangeText={setCity}
-              placeholder="e.g. East Legon, Accra or Kumasi"
-              placeholderTextColor={colors.textTertiary}
-              onFocus={() => handleFocus("city")}
-              onBlur={() => handleBlur("city")}
-            />
-            {touched.city && !isCityValid && (
-              <Text style={styles.errorText}>Please enter your city or town.</Text>
-            )}
-          </View>
+              {/* City */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>City / Town *</Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    focusedField === "city" && styles.textInputFocused,
+                    touched.city && !isCityValid && styles.textInputError
+                  ]}
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="e.g. East Legon, Accra or Kumasi"
+                  placeholderTextColor={colors.textTertiary}
+                  onFocus={() => handleFocus("city")}
+                  onBlur={() => handleBlur("city")}
+                />
+                {touched.city && !isCityValid && (
+                  <Text style={styles.errorText}>Please enter your city or town.</Text>
+                )}
+              </View>
 
-          {/* GPS Address */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>GhanaPost GPS (Optional)</Text>
-            <TextInput
-              style={[
-                styles.textInput,
-                focusedField === "gpsAddress" && styles.textInputFocused
-              ]}
-              value={gpsAddress}
-              onChangeText={setGpsAddress}
-              placeholder="e.g. GA-183-9021"
-              placeholderTextColor={colors.textTertiary}
-              autoCapitalize="characters"
-              onFocus={() => handleFocus("gpsAddress")}
-              onBlur={() => handleBlur("gpsAddress")}
-            />
-          </View>
+              {/* GPS Address */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>GhanaPost GPS (Optional)</Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    focusedField === "gpsAddress" && styles.textInputFocused
+                  ]}
+                  value={gpsAddress}
+                  onChangeText={setGpsAddress}
+                  placeholder="e.g. GA-183-9021"
+                  placeholderTextColor={colors.textTertiary}
+                  autoCapitalize="characters"
+                  onFocus={() => handleFocus("gpsAddress")}
+                  onBlur={() => handleBlur("gpsAddress")}
+                />
+              </View>
 
-          {/* Landmark */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Nearby Landmark (Optional)</Text>
-            <TextInput
-              style={[
-                styles.textInput,
-                focusedField === "landmark" && styles.textInputFocused
-              ]}
-              value={landmark}
-              onChangeText={setLandmark}
-              placeholder="e.g. Near Melcom, Spintex"
-              placeholderTextColor={colors.textTertiary}
-              onFocus={() => handleFocus("landmark")}
-              onBlur={() => handleBlur("landmark")}
-            />
-          </View>
+              {/* Landmark */}
+              <View style={styles.fieldGroup}>
+                <Text style={styles.fieldLabel}>Nearby Landmark (Optional)</Text>
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    focusedField === "landmark" && styles.textInputFocused
+                  ]}
+                  value={landmark}
+                  onChangeText={setLandmark}
+                  placeholder="e.g. Near Melcom, Spintex"
+                  placeholderTextColor={colors.textTertiary}
+                  onFocus={() => handleFocus("landmark")}
+                  onBlur={() => handleBlur("landmark")}
+                />
+              </View>
+            </>
+          )}
 
           {/* Notes */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Delivery Notes (Optional)</Text>
+            <Text style={styles.fieldLabel}>
+              {fulfillmentType === "pickup" ? "Order Notes (Optional)" : "Delivery Notes (Optional)"}
+            </Text>
             <TextInput
               style={[
                 styles.textInput,
@@ -643,7 +775,11 @@ export default function CheckoutScreen() {
               ]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Any specific delivery instructions or gate directions..."
+              placeholder={
+                fulfillmentType === "pickup"
+                  ? "e.g. Someone else picking up on my behalf with Ghana Card..."
+                  : "Any specific delivery instructions or gate directions..."
+              }
               placeholderTextColor={colors.textTertiary}
               multiline
               numberOfLines={3}
@@ -746,16 +882,50 @@ export default function CheckoutScreen() {
             )}
 
             <View style={[styles.breakdownRow, { marginTop: 8 }]}>
-              <Text style={styles.breakdownLabel}>Delivery</Text>
+              <View>
+                <Text style={styles.breakdownLabel}>
+                  {fulfillmentType === "pickup" ? "Store Pickup" : "Delivery"}
+                </Text>
+                <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
+                  {fulfillmentType === "pickup"
+                    ? selectedPickupLocation.name
+                    : region
+                    ? deliveryQuote.isUber
+                      ? "Uber Express"
+                      : "Regional Courier / Bus"
+                    : "Select region"}
+                </Text>
+              </View>
               <Text
                 style={[
                   styles.breakdownValue,
-                  !deliveryFee && styles.deliveryPrompt
+                  fulfillmentType === "pickup"
+                    ? { color: colors.brandRed, fontWeight: "700" }
+                    : !region
+                    ? styles.deliveryPrompt
+                    : deliveryQuote.isTbd
+                    ? { color: colors.accent, fontWeight: "600", fontSize: 13 }
+                    : null
                 ]}
               >
-                {deliveryFee ? formatGHS(deliveryFee) : "Select region"}
+                {fulfillmentType === "pickup"
+                  ? "Free"
+                  : !region
+                  ? "Select region"
+                  : deliveryQuote.isTbd
+                  ? "TBD (Pay on Delivery)"
+                  : formatGHS(deliveryQuote.feeGHS)}
               </Text>
             </View>
+
+            {fulfillmentType === "delivery" && region && deliveryQuote.isTbd && (
+              <View style={styles.tbdNoticeContainer}>
+                <Ionicons name="information-circle-outline" size={15} color={colors.accent} />
+                <Text style={styles.tbdNoticeText}>
+                  For {region}, delivery is handled via intercity courier. You pay ₵0.00 online for delivery; the fee is paid directly to the courier or bus terminal upon collection.
+                </Text>
+              </View>
+            )}
 
             <View style={styles.breakdownDivider} />
 
@@ -820,7 +990,7 @@ export default function CheckoutScreen() {
             data={GHANA_REGIONS}
             keyExtractor={(item) => item}
             renderItem={({ item }) => {
-              const fee = REGION_FEE_MAP[item] || 55;
+              const quote = getDeliveryQuote(item);
               const isSelected = item === region;
 
               return (
@@ -836,7 +1006,14 @@ export default function CheckoutScreen() {
                     <Text style={[styles.regionItemName, isSelected && styles.regionItemNameSelected]}>
                       {item}
                     </Text>
-                    <Text style={styles.regionItemFee}>Delivery: {formatGHS(fee)}</Text>
+                    <Text
+                      style={[
+                        styles.regionItemFee,
+                        quote.isTbd && { color: colors.accent, fontWeight: "600" }
+                      ]}
+                    >
+                      {quote.isUber ? `Uber Express: ${formatGHS(quote.feeGHS)}` : "Pay on Delivery (TBD)"}
+                    </Text>
                   </View>
 
                   {isSelected && (
@@ -1387,6 +1564,96 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2
   },
+  fulfillmentSegment: {
+    flexDirection: "row",
+    backgroundColor: "#F2F3F7",
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 20
+  },
+  fulfillmentTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingVertical: 10,
+    borderRadius: 11
+  },
+  fulfillmentTabActive: {
+    backgroundColor: colors.brandRed,
+    shadowColor: colors.brandRed,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3
+  },
+  fulfillmentTabText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary
+  },
+  fulfillmentTabTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700"
+  },
+  pickupLocationsList: {
+    gap: 10,
+    marginBottom: 8
+  },
+  pickupCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: "rgba(0,0,0,0.06)"
+  },
+  pickupCardSelected: {
+    borderColor: colors.brandRed,
+    backgroundColor: "rgba(225, 29, 72, 0.02)"
+  },
+  pickupHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  pickupName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#0D0D12"
+  },
+  pickupNameSelected: {
+    fontWeight: "700",
+    color: colors.brandRed
+  },
+  pickupAddress: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 4,
+    marginLeft: 28
+  },
+  pickupMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 8,
+    marginLeft: 28
+  },
+  pickupReadyBadge: {
+    backgroundColor: "rgba(52, 199, 89, 0.12)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+  pickupReadyText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#248A3D"
+  },
+  pickupHours: {
+    fontSize: 11.5,
+    color: colors.textTertiary
+  },
   addressPickerDefaultBadge: {
     backgroundColor: "rgba(23, 23, 23, 0.08)",
     paddingHorizontal: 8,
@@ -1396,6 +1663,23 @@ const styles = StyleSheet.create({
   addressPickerDefaultText: {
     fontSize: 10,
     fontWeight: "700",
+    color: colors.accent
+  },
+  tbdNoticeContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    backgroundColor: "rgba(0, 113, 227, 0.06)",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "rgba(0, 113, 227, 0.15)"
+  },
+  tbdNoticeText: {
+    flex: 1,
+    fontSize: 11.5,
+    lineHeight: 16,
     color: colors.accent
   }
 });
