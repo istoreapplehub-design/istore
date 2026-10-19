@@ -10,6 +10,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View
@@ -490,8 +491,10 @@ export default function OrderDetailsScreen() {
           )}
           <View style={[styles.summaryRow, { marginTop: 8 }]}>
             <Text style={styles.summaryLabel}>Delivery</Text>
-            <Text style={styles.summaryValue}>
-              {formatGHS(order.deliveryFeeGHS)}
+            <Text style={[styles.summaryValue, order.deliveryFeeGHS === 0 ? { fontSize: 13, color: colors.accent, fontWeight: "600" } : null]}>
+              {order.deliveryFeeGHS > 0
+                ? formatGHS(order.deliveryFeeGHS)
+                : "TBD (Pay on Delivery)"}
             </Text>
           </View>
 
@@ -541,24 +544,38 @@ export default function OrderDetailsScreen() {
           </Pressable>
         )}
 
-        {["pending", "paid"].includes(order.status) && (
+        {/* VIP Referral Bonus Card replacing Cancel Order */}
+        <View style={styles.referralBonusCard}>
+          <View style={styles.referralBonusHeader}>
+            <View style={styles.referralIconCircle}>
+              <Ionicons name="gift" size={20} color={colors.brandRed} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.referralBonusTitle}>VIP Buyer Reward · Earn ₵300</Text>
+              <Text style={styles.referralBonusSub}>
+                Invite a friend with your order code. They save ₵250 on their Apple purchase and you earn ₵300 store credit.
+              </Text>
+            </View>
+          </View>
+
           <Pressable
             style={({ pressed }) => [
-              styles.cancelOrderBtn,
-              pressed && { opacity: 0.7 },
-              cancelling && { opacity: 0.5 }
+              styles.shareReferralBtn,
+              pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] }
             ]}
-            disabled={cancelling || paying}
             onPress={() => {
               Haptics.selectionAsync();
-              handleCancelOrder();
+              Share.share({
+                message: `Get ₵250 off your genuine Apple device on I-Store (Ghana) using my VIP referral code: ISTORE-${order.id.slice(0, 6).toUpperCase()}! Download: https://istore.gh`
+              }).catch(() => {});
             }}
           >
-            <Text style={styles.cancelOrderText}>
-              {cancelling ? "Cancelling…" : "Cancel Order"}
+            <Ionicons name="share-social-outline" size={17} color="#FFFFFF" />
+            <Text style={styles.shareReferralBtnText}>
+              Share Referral Code (ISTORE-{order.id.slice(0, 6).toUpperCase()})
             </Text>
           </Pressable>
-        )}
+        </View>
 
         <View style={styles.helpContainer}>
           <Text style={styles.helpText}>Need help with this order?</Text>
@@ -906,20 +923,61 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700"
   },
-  cancelOrderBtn: {
-    alignItems: "center",
+  referralBonusCard: {
     marginHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 980,
+    marginTop: 14,
     backgroundColor: "#FFFFFF",
-    marginTop: 12
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder,
+    shadowColor: colors.brandRed,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2
   },
-  cancelOrderText: {
-    ...typography.body,
-    color: colors.text,
-    fontWeight: "600"
+  referralBonusHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12
+  },
+  referralIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.brandRedSoft,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.brandRedBorder
+  },
+  referralBonusTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#0D0D12"
+  },
+  referralBonusSub: {
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: colors.textSecondary,
+    marginTop: 3
+  },
+  shareReferralBtn: {
+    marginTop: 12,
+    backgroundColor: colors.brandRed,
+    borderRadius: 980,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16
+  },
+  shareReferralBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13.5,
+    fontWeight: "700"
   },
   helpContainer: {
     alignItems: "center",

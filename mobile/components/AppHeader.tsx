@@ -255,8 +255,9 @@ const styles = StyleSheet.create({
   },
   badgeWrapper: {
     position: "absolute",
-    top: -4,
-    right: -4
+    top: -5,
+    right: -5,
+    zIndex: 10
   },
   avatar: {
     width: "100%",

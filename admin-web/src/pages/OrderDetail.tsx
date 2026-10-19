@@ -284,7 +284,11 @@ export function OrderDetail() {
               </div>
               <div className="flex justify-between text-xs text-gray-600">
                 <span>Delivery Fee</span>
-                <span>{formatGHS(order.deliveryFeeGHS)}</span>
+                <span>
+                  {order.deliveryFeeGHS > 0
+                    ? formatGHS(order.deliveryFeeGHS)
+                    : "TBD (Pay on Delivery)"}
+                </span>
               </div>
               <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
                 <span>Total Amount</span>

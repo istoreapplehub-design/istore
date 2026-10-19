@@ -1,6 +1,6 @@
 const { z } = require("zod");
 const { safeJsonParse, safeJsonStringify, formatOrder } = require("../utils/json");
-const { VALID_GHANA_REGIONS, getDeliveryFee } = require("../utils/delivery");
+const { VALID_GHANA_REGIONS, getDeliveryFee, getDeliveryQuote } = require("../utils/delivery");
 const { parsePagination } = require("../utils/pagination");
 
 const prisma = require("../utils/prisma");
@@ -137,8 +137,16 @@ async function persistOrder({ userId, items, shippingAddress, notes, promoCode }
     const discountPct = PROMO_DISCOUNTS[normalizedPromo] || 0;
     const discountAmountGHS = discountPct > 0 ? Math.round((subtotalGHS * discountPct) / 100) : 0;
 
-    const deliveryFeeGHS = getDeliveryFee(shippingAddress.region);
+    const deliveryQuote = getDeliveryQuote(shippingAddress.region);
+    const deliveryFeeGHS = deliveryQuote.feeGHS;
     const totalGHS = Math.max(0, subtotalGHS - discountAmountGHS + deliveryFeeGHS);
+
+    const enrichedShippingAddress = {
+      ...shippingAddress,
+      deliveryMethod: deliveryQuote.provider,
+      deliveryLabel: deliveryQuote.label,
+      deliveryDescription: deliveryQuote.description
+    };
 
     // 4. Create Order and nested OrderItems
     const newOrder = await tx.order.create({
@@ -148,7 +156,7 @@ async function persistOrder({ userId, items, shippingAddress, notes, promoCode }
         deliveryFeeGHS,
         totalGHS,
         deliveryRegion: shippingAddress.region,
-        shippingAddress: safeJsonStringify(shippingAddress),
+        shippingAddress: safeJsonStringify(enrichedShippingAddress),
         status: "pending",
         notes: notes || null,
         items: {
@@ -431,6 +439,19 @@ async function cancelOrder(req, res, next) {
   }
 }
 
+/**
+ * GET /api/orders/delivery-quote?region=Greater+Accra
+ */
+async function getDeliveryQuoteHandler(req, res, next) {
+  try {
+    const region = req.query.region;
+    const quote = getDeliveryQuote(region);
+    res.json({ success: true, quote });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createOrder,
   createGuestOrder,
@@ -439,6 +460,7 @@ module.exports = {
   getOrder,
   cancelOrder,
   updateStatus,
+  getDeliveryQuoteHandler,
   createOrderSchema,
   guestCreateOrderSchema,
   trackGuestOrderSchema,

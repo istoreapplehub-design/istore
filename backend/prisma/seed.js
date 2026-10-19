@@ -4,7 +4,7 @@ const { safeJsonStringify } = require("../src/utils/json");
 const { supabaseAdmin } = require("../src/utils/supabase");
 const { CATALOG_2026_PRODUCTS } = require("../src/utils/catalog2026");
 
-const prisma = new PrismaClient();
+const prisma = require("../src/utils/prisma");
 
 const GHANAIAN_REVIEWERS = [
   "Kwame Mensah",

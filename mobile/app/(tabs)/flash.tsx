@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: 48
+    paddingBottom: 24
   },
   band: {
     backgroundColor: colors.accentDark,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
     gap: 12
   },
   browseBtn: {
-    marginTop: spacing.xl,
+    marginTop: 14,
     height: 50,
     borderRadius: radius.full,
     backgroundColor: colors.accent,
