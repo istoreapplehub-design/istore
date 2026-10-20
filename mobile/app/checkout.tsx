@@ -219,12 +219,12 @@ export default function CheckoutScreen() {
   const handleApplyPromo = () => {
     const clean = promoCode.trim().toUpperCase();
     if (!clean) return;
-    if (clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
+    if (clean === "IDYNAMIC10" || clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
       AppHaptics.success();
       setAppliedDiscount({ code: clean, percent: 10 });
       setPromoSuccess("10% discount applied!");
       setPromoError(null);
-    } else if (clean === "SAVE5") {
+    } else if (clean === "IDYNAMIC5" || clean === "SAVE5") {
       AppHaptics.success();
       setAppliedDiscount({ code: clean, percent: 5 });
       setPromoSuccess("5% discount applied!");
