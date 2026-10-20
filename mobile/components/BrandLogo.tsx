@@ -5,6 +5,8 @@ import { colors } from "../constants/theme";
 interface BrandLogoProps {
   size?: number;
   variant?: "dark" | "light" | "minimal";
+  showWordmark?: boolean;
+  wordmarkSize?: number;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -16,6 +18,8 @@ interface BrandLogoProps {
 export function BrandLogo({
   size = 38,
   variant = "dark",
+  showWordmark = false,
+  wordmarkSize = 18,
   style
 }: BrandLogoProps) {
   const isDark = variant === "dark";
@@ -23,7 +27,7 @@ export function BrandLogo({
   const fontSize = Math.round(size * 0.42);
   const dotSize = Math.max(4, Math.round(size * 0.11));
 
-  return (
+  const badge = (
     <View
       style={[
         styles.container,
@@ -35,7 +39,7 @@ export function BrandLogo({
           borderWidth: isDark ? 1 : 1.5,
           borderColor: isDark ? "rgba(255,255,255,0.14)" : "#1D1D1F"
         },
-        style
+        !showWordmark && style
       ]}
     >
       <View style={styles.innerLockup}>
@@ -75,6 +79,19 @@ export function BrandLogo({
       </View>
     </View>
   );
+
+  if (!showWordmark) {
+    return badge;
+  }
+
+  return (
+    <View style={[styles.wordmarkRow, style]}>
+      {badge}
+      <Text style={[styles.wordmarkText, { fontSize: wordmarkSize }]}>
+        I-Dynamic
+      </Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -99,6 +116,16 @@ const styles = StyleSheet.create({
   monogramD: {
     fontWeight: "800",
     letterSpacing: -0.5
+  },
+  wordmarkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  wordmarkText: {
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: -0.4
   }
 });
 
