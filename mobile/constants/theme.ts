@@ -4,23 +4,24 @@ export const colors = {
   background: "#FFFFFF",
   surface: "#F5F5F7",
   surfaceElevated: "#FFFFFF",
-  text: "#111111",
-  textSecondary: "#52525B",
+  text: "#1D1D1F",
+  textSecondary: "#6E6E73",
   textTertiary: "#86868B",
-  accent: "#111111",          // Obsidian black primary ink
+  accent: "#1D1D1F",          // Deep charcoal primary actions
   accentDark: "#0A0A0A",      // Deep carbon stage
-  brandRed: "#E11D48",        // Signature Apple (PRODUCT)RED crimson
-  brandRedDark: "#BE123C",    // Deep crimson press state
-  brandRedSoft: "rgba(225, 29, 72, 0.10)", // Soft crimson tint for pills/badges
-  brandRedBorder: "rgba(225, 29, 72, 0.25)",
-  success: "#111111",
-  danger: "#E11D48",          // Crimson alert/destructive accent
-  badge: "#E11D48",           // Live crimson badges & notification dots
-  gold: "#E11D48",
+  brandAccent: "#0066CC",     // Restrained editorial blue accent
+  brandRed: "#0066CC",        // Restrained primary interactive accent (Apple-Store style)
+  brandRedDark: "#004C99",    // Deep blue press state
+  brandRedSoft: "rgba(0, 102, 204, 0.08)", // Soft blue tint for pills/badges
+  brandRedBorder: "rgba(0, 102, 204, 0.20)",
+  success: "#1D1D1F",
+  danger: "#D92D20",          // Destructive alert accent
+  badge: "#1D1D1F",           // Minimalist charcoal notification badges
+  gold: "#F59E0B",
   border: "#E5E5EA",
-  cardShadow: "rgba(0, 0, 0, 0.06)",
-  tabInactive: "#8E8E93",
-  star: "#E11D48",            // Crimson rating stars
+  cardShadow: "rgba(0, 0, 0, 0.04)",
+  tabInactive: "#86868B",
+  star: "#1D1D1F",            // Minimalist rating stars
   gradientBottom: "rgba(0, 0, 0, 0.78)",
   gradientTop: "rgba(0, 0, 0, 0)",
   imageBg: "#FFFFFF"

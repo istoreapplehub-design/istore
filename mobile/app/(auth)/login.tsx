@@ -17,6 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 import { useCartStore } from "../../store/useCartStore";
+import { BrandLogo } from "../../components/BrandLogo";
+import { supabase } from "../../lib/supabase";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -102,10 +104,12 @@ export default function LoginScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.brandSubtitle}>I-Store Apple Hub</Text>
+            <View style={{ marginBottom: 12 }}>
+              <BrandLogo size={38} showWordmark wordmarkSize={19} />
+            </View>
             <Text style={styles.title}>Sign In</Text>
             <Text style={styles.subtitle}>
-              Sign in with your I-Store account to manage orders, wishlist, and check out securely.
+              Sign in with your I-Dynamic account to manage orders, saved favorites, and check out securely.
             </Text>
           </View>
 
@@ -126,7 +130,37 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                <Text style={styles.label}>Password</Text>
+                <Pressable
+                  onPress={async () => {
+                    const cleanEmail = email.trim().toLowerCase();
+                    if (!cleanEmail) {
+                      Alert.alert(
+                        "Reset Password",
+                        "Enter your email address above first, then tap Forgot Password to receive a password recovery link."
+                      );
+                      return;
+                    }
+                    try {
+                      await supabase.auth.resetPasswordForEmail(cleanEmail);
+                      Alert.alert(
+                        "Recovery Email Sent",
+                        `If an I-Dynamic account exists for ${cleanEmail}, a password reset link has been sent to your inbox.`
+                      );
+                    } catch {
+                      Alert.alert(
+                        "Password Recovery",
+                        `Please contact support@idynamic.com.gh if you need help recovering ${cleanEmail}.`
+                      );
+                    }
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: colors.brandRed }}>
+                    Forgot Password?
+                  </Text>
+                </Pressable>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="••••••••"

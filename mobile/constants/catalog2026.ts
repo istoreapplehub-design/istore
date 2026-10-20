@@ -24,7 +24,7 @@ function makeReviews(productId: string, baseIdx: number): Review[] {
     },
     {
       title: "Unbelievable battery life and build quality",
-      body: "Upgraded through I-Store and paid effortlessly with MTN MoMo. Easily lasts two full days of heavy work and 4K video capture.",
+      body: "Upgraded through I-Dynamic and paid effortlessly with MTN MoMo. Easily lasts two full days of heavy work and 4K video capture.",
       rating: 5
     },
     {

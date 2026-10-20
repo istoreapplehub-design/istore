@@ -38,7 +38,7 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radius, shadow, spacing, typography } from "../../constants/theme";
-import { createReview, getProduct, getReviews } from "../../services/api";
+import { createReview, getProduct, getProducts, getReviews } from "../../services/api";
 import { Product, Review } from "../../types";
 import { useCartStore } from "../../store/useCartStore";
 import { useWishlistStore } from "../../store/useWishlistStore";
@@ -64,6 +64,7 @@ export default function ProductDetailScreen() {
   const carouselWidth = Math.min(width, 820);
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [compatibleAccessories, setCompatibleAccessories] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -137,6 +138,14 @@ export default function ProductDetailScreen() {
         .catch(() => {
           // Reviews are supplementary; product view still works without them
         });
+
+      getProducts({ category: "Accessories", limit: 8 })
+        .then((accRes) => {
+          setCompatibleAccessories(
+            (accRes.data || []).filter((item) => item.id !== data.id).slice(0, 6)
+          );
+        })
+        .catch(() => {});
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Product not found");
     } finally {
@@ -203,7 +212,7 @@ export default function ProductDetailScreen() {
   const storageOptions = useMemo(() => {
     if (!product) return [];
     if (product.storage) {
-      if (product.category === "iPhone" || product.category === "iPad") {
+      if (product.category === "iPhone" || product.category === "iPad" || product.category === "Mac") {
         const tiers = ["128GB", "256GB", "512GB", "1TB", "2TB"];
         const idx = tiers.indexOf(product.storage);
         return idx >= 0 ? tiers.slice(idx) : [product.storage];
@@ -212,6 +221,25 @@ export default function ProductDetailScreen() {
     }
     return [];
   }, [product]);
+
+  // Dynamically update displayed price when customer selects a higher storage variant
+  const effectivePriceGHS = useMemo(() => {
+    if (!product) return 0;
+    const tiers = ["128GB", "256GB", "512GB", "1TB", "2TB"];
+    const baseIdx = product.storage ? tiers.indexOf(product.storage) : -1;
+    const selIdx = selectedStorage ? tiers.indexOf(selectedStorage) : -1;
+    if (baseIdx >= 0 && selIdx > baseIdx) {
+      const steps = selIdx - baseIdx;
+      return product.priceGHS + steps * 2200;
+    }
+    return product.priceGHS;
+  }, [product, selectedStorage]);
+
+  const effectiveCompareAtPriceGHS = useMemo(() => {
+    if (!product?.compareAtPriceGHS) return null;
+    const diff = effectivePriceGHS - product.priceGHS;
+    return product.compareAtPriceGHS + diff;
+  }, [product, effectivePriceGHS]);
 
   const isOutOfStock = product ? product.stock <= 0 : false;
 
@@ -223,7 +251,7 @@ export default function ProductDetailScreen() {
     cartAddItem({
       productId: product.id,
       name: product.name,
-      priceGHS: product.priceGHS,
+      priceGHS: effectivePriceGHS,
       image: activeImages[0] || "",
       color: selectedColor || undefined,
       storage: selectedStorage || undefined,
@@ -309,7 +337,7 @@ export default function ProductDetailScreen() {
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Check out the ${product.name} at I-Store: ₵${product.priceGHS.toLocaleString("en-GH")}`
+        message: `Check out the ${product.name} at I-Dynamic: ₵${effectivePriceGHS.toLocaleString("en-GH")}`
       });
     } catch {
       // Ignored
@@ -520,11 +548,69 @@ export default function ProductDetailScreen() {
           {/* Price Tag */}
           <View style={styles.priceContainer}>
             <PriceTag
-              price={product.priceGHS}
-              compareAt={product.compareAtPriceGHS}
+              price={effectivePriceGHS}
+              compareAt={effectiveCompareAtPriceGHS}
               size="lg"
             />
-            <Text style={styles.paystackHint}>MTN MoMo, Telecel Cash, AT Money or card via Paystack</Text>
+            <Text style={styles.paystackHint}>
+              MTN MoMo, Telecel Cash, AT Money or card via Paystack
+            </Text>
+          </View>
+
+          {/* Stock Availability, Delivery Estimate & Warranty Summary */}
+          <View style={styles.assuranceSummaryCard}>
+            <View style={styles.assuranceItemRow}>
+              <Ionicons
+                name={isOutOfStock ? "close-circle-outline" : "checkmark-circle"}
+                size={18}
+                color={isOutOfStock ? colors.danger : colors.brandAccent}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.assuranceItemTitle}>
+                  {isOutOfStock
+                    ? "Out of Stock"
+                    : product.stock <= 5
+                    ? `Low Stock · Only ${product.stock} left`
+                    : `In Stock · ${product.stock} units ready to ship`}
+                </Text>
+                <Text style={styles.assuranceItemSub}>
+                  {product.condition || "New"} · Factory-sealed original box
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.assuranceDivider} />
+
+            <View style={styles.assuranceItemRow}>
+              <Ionicons name="bicycle-outline" size={18} color={colors.text} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.assuranceItemTitle}>Delivery Estimate</Text>
+                <Text style={styles.assuranceItemSub}>
+                  Same-day express in Accra · 1–3 working days nationwide · Free 1-hr Showroom Pickup
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.assuranceDivider} />
+
+            <Pressable
+              style={styles.assuranceItemRow}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/warranty" as never);
+              }}
+            >
+              <Ionicons name="shield-checkmark-outline" size={18} color={colors.text} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.assuranceItemTitle}>
+                  {product.warranty || "1 Year Official Apple Warranty"} & 7-Day Returns
+                </Text>
+                <Text style={styles.assuranceItemSub}>
+                  Tap for warranty verification & return policy details
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={15} color={colors.textTertiary} />
+            </Pressable>
           </View>
 
           {/* ─── 4. COLOR PICKER ────────────────────────────────────────── */}
@@ -600,7 +686,7 @@ export default function ProductDetailScreen() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              accessibilityLabel={isWishlisted ? "Remove from Favorites" : "Save to Favorites"}
               style={[styles.wishlistCtaBtn, isWishlisted && styles.wishlistCtaBtnActive]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -613,9 +699,43 @@ export default function ProductDetailScreen() {
                 color={isWishlisted ? colors.brandRed : colors.text}
               />
               <Text style={[styles.wishlistCtaText, isWishlisted && styles.wishlistCtaTextActive]}>
-                {isWishlisted ? "Saved to Wishlist" : "Add to Wishlist"}
+                {isWishlisted ? "Saved to Favorites" : "Save to Favorites"}
               </Text>
             </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Compare with other models"
+              style={styles.compareCtaBtn}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push(`/compare?base=${encodeURIComponent(product.slug)}` as never);
+              }}
+            >
+              <Ionicons name="git-compare-outline" size={18} color={colors.text} />
+              <Text style={styles.compareCtaText}>Compare with Other Models</Text>
+            </Pressable>
+          </View>
+
+          {/* ─── 6B. KEY PRODUCT FEATURES ───────────────────────────────── */}
+          <View style={styles.detailsBlock}>
+            <Text style={styles.blockTitle}>Key Features</Text>
+            <View style={styles.featuresList}>
+              {[
+                product.specs?.chip && `Powered by ${product.specs.chip}`,
+                product.specs?.display && `Display: ${product.specs.display}`,
+                product.specs?.camera && `Camera system: ${product.specs.camera}`,
+                product.specs?.battery && `Battery: ${product.specs.battery}`,
+                `${product.condition || "New"} condition with ${product.warranty || "1 Year Official Apple Warranty"}`
+              ]
+                .filter(Boolean)
+                .map((feat, idx) => (
+                  <View key={idx} style={styles.featureBulletRow}>
+                    <Ionicons name="checkmark-circle-outline" size={17} color={colors.brandAccent} />
+                    <Text style={styles.featureBulletText}>{feat}</Text>
+                  </View>
+                ))}
+            </View>
           </View>
 
           {/* ─── 7. SPECIFICATIONS TABLE ────────────────────────────────── */}
@@ -732,10 +852,31 @@ export default function ProductDetailScreen() {
           </View>
         </View>
 
-        {/* ─── 10. RELATED PRODUCTS ─────────────────────────────────────── */}
+        {/* ─── 10. COMPATIBLE ACCESSORIES ───────────────────────────────── */}
+        {compatibleAccessories.length > 0 && product.category !== "Accessories" && (
+          <View style={styles.relatedSection}>
+            <SectionHeader
+              title="Compatible Accessories"
+              subtitle="Cases, MagSafe chargers & essentials designed to pair"
+              onSeeAll={() => router.push("/(tabs)/shop?category=Accessories")}
+            />
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={compatibleAccessories}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.relatedListContent}
+              renderItem={({ item }) => (
+                <ProductCard product={item} variant="grid" />
+              )}
+            />
+          </View>
+        )}
+
+        {/* ─── 10B. RELATED PRODUCTS ────────────────────────────────────── */}
         {product.relatedProducts && product.relatedProducts.length > 0 && (
           <View style={styles.relatedSection}>
-            <SectionHeader title="You May Also Like" />
+            <SectionHeader title="Related Products" />
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -774,7 +915,7 @@ export default function ProductDetailScreen() {
             <Text style={styles.stickyTitle} numberOfLines={1}>
               {product.name}
             </Text>
-            <PriceTag price={product.priceGHS} size="sm" />
+            <PriceTag price={effectivePriceGHS} size="sm" />
           </View>
         </View>
 
@@ -1109,6 +1250,69 @@ const styles = StyleSheet.create({
   wishlistCtaTextActive: {
     color: colors.brandRed,
     fontWeight: "700"
+  },
+  compareCtaBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 48,
+    borderRadius: radius.pill,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  compareCtaText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text
+  },
+  assuranceSummaryCard: {
+    marginTop: 20,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 10
+  },
+  assuranceItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  assuranceItemTitle: {
+    fontSize: 13.5,
+    fontWeight: "600",
+    color: colors.text
+  },
+  assuranceItemSub: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 1
+  },
+  assuranceDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border
+  },
+  featuresList: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  featureBulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10
+  },
+  featureBulletText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.text
   },
   detailsBlock: {
     marginTop: 32

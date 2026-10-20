@@ -52,7 +52,7 @@ const FAQS: Faq[] = [
   },
   {
     q: "Are the products genuine?",
-    a: "Every device sold on I-Store is genuine, new and sealed, sourced through authorized distribution channels with full manufacturer warranty valid in Ghana."
+    a: "Every device sold on I-Dynamic is genuine, new and sealed, sourced through authorized distribution channels with full manufacturer warranty valid in Ghana."
   },
   {
     q: "Which regions do you deliver to?",
@@ -88,12 +88,12 @@ export default function HelpScreen() {
       >
         <View style={styles.pageHeader}>
           <Text style={typography.bodySmall}>
-            Answers, order tools and ways to reach the I-Store team.
+            Answers, order tools, warranty coverage, and ways to reach the I-Dynamic team.
           </Text>
         </View>
 
         {/* ORDER TOOLS */}
-        <Text style={styles.sectionLabel}>MY ORDERS</Text>
+        <Text style={styles.sectionLabel}>MY ORDERS & WARRANTY</Text>
         <View style={styles.groupContainer}>
           <Pressable
             style={({ pressed }) => [styles.menuRow, pressed && styles.rowPressed]}
@@ -111,11 +111,23 @@ export default function HelpScreen() {
             style={({ pressed }) => [styles.menuRow, pressed && styles.rowPressed]}
             onPress={() => {
               Haptics.selectionAsync();
-              router.push("/orders");
+              router.push("/warranty" as any);
             }}
           >
-            <Ionicons name="close-circle-outline" size={20} color={colors.accent} />
-            <Text style={styles.menuLabel}>Cancel a pending order</Text>
+            <Ionicons name="shield-checkmark-outline" size={20} color={colors.accent} />
+            <Text style={styles.menuLabel}>Warranty coverage & serial check</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
+          </Pressable>
+          <View style={styles.divider} />
+          <Pressable
+            style={({ pressed }) => [styles.menuRow, pressed && styles.rowPressed]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/returns" as any);
+            }}
+          >
+            <Ionicons name="refresh-circle-outline" size={20} color={colors.accent} />
+            <Text style={styles.menuLabel}>Returns & refunds request</Text>
             <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
           </Pressable>
           <View style={styles.divider} />

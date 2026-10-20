@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import {
   FlatList,
   Image,
+  Linking,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -31,7 +32,8 @@ import { SkeletonProductCard } from "../../components/SkeletonLoader";
 import { ProductVisual, getProductImage } from "../../components/ProductVisual";
 import { useHomeData } from "../../hooks/useHomeData";
 import { useFlashDeals } from "../../hooks/useFlashDeals";
-import { colors, formatGHS, radius, spacing } from "../../constants/theme";
+import { colors, formatGHS, radius } from "../../constants/theme";
+import { SUPPORT_WHATSAPP_URL } from "../../constants/support";
 
 const EDITORIAL_GAP = 14;
 
@@ -42,7 +44,7 @@ export default function HomeScreen() {
   const numCols = stageWidth >= 680 ? 3 : 2;
   const gridGap = 12;
   const cardWidth = Math.floor((stageWidth - 32 - gridGap * (numCols - 1)) / numCols);
-  const editorialWidth = Math.min(Math.max(stageWidth - 64, 270), 340);
+  const editorialWidth = Math.min(Math.max(stageWidth - 64, 270), 330);
 
   const { featured, newArrivals, bestSellers, loading, error, refetch } = useHomeData();
   const { deals, products, endsAt, error: flashError } = useFlashDeals();
@@ -79,7 +81,7 @@ export default function HomeScreen() {
     return Array.from(map.values());
   }, [products, featured, newArrivals, bestSellers]);
 
-  const filteredCurated = useMemo(() => {
+  const filteredFeatured = useMemo(() => {
     const pool =
       selectedCategory === "All"
         ? bestSellers.length > 0
@@ -88,14 +90,22 @@ export default function HomeScreen() {
         : allCatalog.filter(
             (p) => p.category.toLowerCase() === selectedCategory.toLowerCase()
           );
-    return pool.slice(0, numCols * 6);
+    return pool.slice(0, numCols * 5);
   }, [selectedCategory, bestSellers, allCatalog, numCols]);
 
+  const accessoriesCollection = useMemo(
+    () =>
+      allCatalog
+        .filter((p) => p.category.toLowerCase() === "accessories")
+        .slice(0, 8),
+    [allCatalog]
+  );
+
   const heroProducts = featured.length > 0 ? featured : newArrivals.slice(0, 6);
-  const editorial = newArrivals.slice(0, 12);
+  const latestArrivals = newArrivals.slice(0, 10);
 
   const nothingLoaded =
-    !loading && heroProducts.length === 0 && editorial.length === 0 && bestSellers.length === 0;
+    !loading && heroProducts.length === 0 && latestArrivals.length === 0 && bestSellers.length === 0;
 
   if (nothingLoaded && (error || flashError)) {
     return (
@@ -122,6 +132,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
+      {/* 1. Minimal Header with Brand Identity, Search, Favorites, and Bag */}
       <AppHeader scrolled={scrolled} />
 
       <Animated.ScrollView
@@ -133,12 +144,12 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.brandRed}
-            colors={[colors.brandRed]}
+            tintColor={colors.text}
+            colors={[colors.text]}
           />
         }
       >
-        {/* Dribbble Tactile Search & Quick-Filter Bar */}
+        {/* Quick Search Bar */}
         <View style={styles.searchRow}>
           <Pressable
             onPress={() => {
@@ -147,81 +158,20 @@ export default function HomeScreen() {
             }}
             style={({ pressed }) => [
               styles.searchPill,
-              pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }
+              pressed && { opacity: 0.85 }
             ]}
           >
             <Ionicons name="search-outline" size={18} color={colors.textSecondary} />
             <Text style={styles.searchPlaceholder} numberOfLines={1}>
-              Search iPhone 18 Pro Max, iPhone Duo, Watch Ultra 3...
+              Search iPhone, Mac, iPad, Watch, AirPods...
             </Text>
-            <View style={styles.searchKbd}>
-              <Ionicons name="sparkles" size={11} color={colors.brandRed} />
-            </View>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/(tabs)/shop");
-            }}
-            style={({ pressed }) => [
-              styles.filterBtn,
-              pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] }
-            ]}
-            accessibilityLabel="Browse full catalog and filters"
-          >
-            <Ionicons name="options-outline" size={19} color="#FFFFFF" />
-            <View style={styles.filterBtnDot} />
           </Pressable>
         </View>
 
-        {/* Split-Stage Obsidian Titanium Bento Hero */}
+        {/* 2. Large Hero Section Featuring a Flagship Product */}
         <HeroCarousel products={heroProducts} />
 
-        {/* Express Assurance Mini-Bento Strip */}
-        <View style={styles.assuranceRow}>
-          <Pressable
-            style={styles.assuranceCard}
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/(tabs)/shop");
-            }}
-          >
-            <View style={styles.assuranceIconWrap}>
-              <Ionicons name="flash" size={14} color={colors.brandRed} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.assuranceTitle} numberOfLines={1}>
-                Same-Day Delivery
-              </Text>
-              <Text style={styles.assuranceSub} numberOfLines={1}>
-                Accra & Kumasi Express
-              </Text>
-            </View>
-          </Pressable>
-
-          <Pressable
-            style={styles.assuranceCard}
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/help");
-            }}
-          >
-            <View style={styles.assuranceIconWrap}>
-              <Ionicons name="shield-checkmark" size={14} color="#0D0D12" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.assuranceTitle} numberOfLines={1}>
-                1-Yr Apple Care
-              </Text>
-              <Text style={styles.assuranceSub} numberOfLines={1}>
-                100% Sealed & Verified
-              </Text>
-            </View>
-          </Pressable>
-        </View>
-
-        {/* Interactive Category Capsule Rail */}
+        {/* 3. Horizontal Category Selector */}
         <View style={styles.ribbonWrap}>
           <AppleCategoryRibbon
             products={allCatalog}
@@ -230,94 +180,17 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Curated Studio Grid (Live Filtered by Category) */}
-        <Animated.View entering={FadeInDown.duration(380)}>
-          <SectionHeader
-            title={
-              selectedCategory === "All" ? "Popular Flagships" : `${selectedCategory} Lineup`
-            }
-            subtitle={
-              selectedCategory === "All"
-                ? "Tap + on any device to add directly to your bag"
-                : `Authorized ${selectedCategory} models ready to ship`
-            }
-            onSeeAll={() =>
-              router.push(
-                selectedCategory === "All"
-                  ? "/(tabs)/shop"
-                  : `/(tabs)/shop?category=${encodeURIComponent(selectedCategory)}`
-              )
-            }
-          />
-
-          {loading && filteredCurated.length === 0 ? (
-            <View style={styles.skeletonRow}>
-              <SkeletonProductCard />
-              <SkeletonProductCard />
-            </View>
-          ) : (
-            <View style={styles.bentoGrid}>
-              {filteredCurated.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  product={item}
-                  variant="grid"
-                  style={{ width: cardWidth }}
-                />
-              ))}
-            </View>
-          )}
-        </Animated.View>
-
-        {/* Flash Drops Dark Bento Band */}
-        {deals.length > 0 && (
-          <Animated.View entering={FadeInDown.delay(60).duration(420)} style={styles.flashBand}>
-            <View style={styles.flashBandHead}>
-              <View style={styles.flashTitleRow}>
-                <View style={styles.flashIconCircle}>
-                  <Ionicons name="flash" size={14} color="#FFFFFF" />
-                </View>
-                <View>
-                  <Text style={styles.flashEyebrow}>LIMITED TIME DROPS</Text>
-                  <Text style={styles.flashTitle}>Flash Sales</Text>
-                </View>
-              </View>
-              <CountdownTimer endsAt={endsAt} variant="inline" />
-            </View>
-
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={deals.slice(0, 8)}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.flashListContent}
-              renderItem={({ item }) => <FlashDealCard product={item} />}
-            />
-
-            <Pressable
-              style={({ pressed }) => [styles.flashSeeAll, pressed && { opacity: 0.85 }]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push("/(tabs)/flash");
-              }}
-            >
-              <Text style={styles.flashSeeAllText}>Explore all {deals.length} live drops</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-            </Pressable>
-          </Animated.View>
-        )}
-
-        {/* The Latest — Studio Pedestal Editorial Cards */}
-        <Animated.View entering={FadeInDown.delay(100).duration(420)}>
+        {/* 4. New Arrivals Section */}
+        <Animated.View entering={FadeInDown.duration(360)}>
           <SectionHeader
             title="New Arrivals"
-            subtitle="Freshly unboxed in our Accra showroom"
+            subtitle="The latest generation of Apple innovation"
             onSeeAll={() => router.push("/(tabs)/shop?sort=newest")}
           />
           <FlatList
             horizontal
             showsHorizontalScrollIndicator={false}
-            data={editorial}
+            data={latestArrivals}
             keyExtractor={(item) => item.id}
             snapToInterval={editorialWidth + EDITORIAL_GAP}
             decelerationRate="fast"
@@ -333,7 +206,7 @@ export default function HomeScreen() {
                   style={({ pressed }) => [
                     styles.editorialCard,
                     { width: editorialWidth },
-                    pressed && { transform: [{ scale: 0.98 }] }
+                    pressed && { transform: [{ scale: 0.985 }] }
                   ]}
                   onPress={() => {
                     Haptics.selectionAsync();
@@ -349,7 +222,7 @@ export default function HomeScreen() {
                         ]}
                       >
                         <Text style={styles.editorialBadgeText}>
-                          {isSale ? "SPECIAL OFFER" : "JUST LANDED"}
+                          {isSale ? "SPECIAL OFFER" : "NEW"}
                         </Text>
                       </View>
                       <Text style={styles.editorialStorageTag}>
@@ -380,7 +253,7 @@ export default function HomeScreen() {
                       </Text>
                     </View>
                     <View style={styles.editorialPill}>
-                      <Text style={styles.editorialPillText}>Buy</Text>
+                      <Text style={styles.editorialPillText}>Shop</Text>
                       <Ionicons name="arrow-forward" size={12} color="#FFFFFF" />
                     </View>
                   </View>
@@ -390,10 +263,159 @@ export default function HomeScreen() {
           />
         </Animated.View>
 
-        {/* Why I-Store — The I-Store Standard as the final section */}
-        <Animated.View entering={FadeInDown.delay(140).duration(420)} style={styles.standardSection}>
+        {/* 5. Featured Products in a Clean Product Grid */}
+        <Animated.View entering={FadeInDown.delay(60).duration(380)}>
           <SectionHeader
-            title="The I-Store Standard"
+            title={
+              selectedCategory === "All" ? "Featured Products" : `${selectedCategory} Collection`
+            }
+            subtitle={
+              selectedCategory === "All"
+                ? "Curated hardware ready for immediate dispatch"
+                : `Factory-sealed ${selectedCategory} models in stock`
+            }
+            onSeeAll={() =>
+              router.push(
+                selectedCategory === "All"
+                  ? "/(tabs)/shop"
+                  : `/(tabs)/shop?category=${encodeURIComponent(selectedCategory)}`
+              )
+            }
+          />
+
+          {loading && filteredFeatured.length === 0 ? (
+            <View style={styles.skeletonRow}>
+              <SkeletonProductCard />
+              <SkeletonProductCard />
+            </View>
+          ) : (
+            <View style={styles.bentoGrid}>
+              {filteredFeatured.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  product={item}
+                  variant="grid"
+                  style={{ width: cardWidth }}
+                />
+              ))}
+            </View>
+          )}
+        </Animated.View>
+
+        {/* 6. Accessories Collection */}
+        {accessoriesCollection.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(90).duration(400)}>
+            <SectionHeader
+              title="Accessories Collection"
+              subtitle="Cases, MagSafe chargers, wallets & precision essentials"
+              onSeeAll={() => router.push("/(tabs)/shop?category=Accessories")}
+            />
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={accessoriesCollection}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.accessoriesContent}
+              renderItem={({ item }) => (
+                <ProductCard
+                  product={item}
+                  variant="grid"
+                  style={{ width: 182 }}
+                />
+              )}
+            />
+          </Animated.View>
+        )}
+
+        {/* 7. Promotional or Seasonal Collection */}
+        {deals.length > 0 && (
+          <Animated.View entering={FadeInDown.delay(110).duration(420)} style={styles.promoSection}>
+            <View style={styles.promoHead}>
+              <View>
+                <Text style={styles.promoEyebrow}>SEASONAL COLLECTION</Text>
+                <Text style={styles.promoTitle}>Special Offers</Text>
+              </View>
+              <CountdownTimer endsAt={endsAt} variant="inline" />
+            </View>
+
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={deals.slice(0, 8)}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.promoListContent}
+              renderItem={({ item }) => <FlashDealCard product={item} />}
+            />
+
+            <Pressable
+              style={({ pressed }) => [styles.promoSeeAll, pressed && { opacity: 0.85 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/(tabs)/flash");
+              }}
+            >
+              <Text style={styles.promoSeeAllText}>View all {deals.length} special offers</Text>
+              <Ionicons name="arrow-forward" size={14} color={colors.text} />
+            </Pressable>
+          </Animated.View>
+        )}
+
+        {/* 8. Customer Support & Shopping Assistance Section */}
+        <Animated.View entering={FadeInDown.delay(140).duration(420)} style={styles.assistanceWrap}>
+          <SectionHeader
+            title="Shopping Assistance"
+            subtitle="Personal guidance, model comparison & official protection"
+          />
+
+          <View style={styles.assistanceGrid}>
+            <Pressable
+              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/compare" as never);
+              }}
+            >
+              <View style={styles.assistIcon}>
+                <Ionicons name="git-compare-outline" size={20} color={colors.text} />
+              </View>
+              <Text style={styles.assistCardTitle}>Compare Models</Text>
+              <Text style={styles.assistCardSub}>
+                Compare processors, cameras, displays & prices side by side.
+              </Text>
+              <View style={styles.assistLinkRow}>
+                <Text style={styles.assistLinkText}>Open Compare</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                Linking.openURL(SUPPORT_WHATSAPP_URL).catch(() => {
+                  router.push("/help");
+                });
+              }}
+            >
+              <View style={styles.assistIcon}>
+                <Ionicons name="chatbubbles-outline" size={20} color={colors.text} />
+              </View>
+              <Text style={styles.assistCardTitle}>Ask a Specialist</Text>
+              <Text style={styles.assistCardSub}>
+                Get one-on-one help choosing the right configuration.
+              </Text>
+              <View style={styles.assistLinkRow}>
+                <Text style={styles.assistLinkText}>Start Chat</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
+              </View>
+            </Pressable>
+          </View>
+        </Animated.View>
+
+        {/* The I-Dynamic Standard */}
+        <Animated.View entering={FadeInDown.delay(160).duration(420)} style={styles.standardSection}>
+          <SectionHeader
+            title="The I-Dynamic Standard"
             subtitle="Engineered for peace of mind on every order"
             style={styles.standardHeader}
           />
@@ -407,208 +429,51 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#F6F7FB"
+    backgroundColor: colors.background
   },
   scrollContent: {
-    paddingBottom: 8
+    paddingBottom: 16
   },
   searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
     paddingHorizontal: 16,
     paddingTop: 4,
     paddingBottom: 6
   },
   searchPill: {
-    flex: 1,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: "#FFFFFF",
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
+    borderColor: colors.border,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    gap: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.035,
-    shadowRadius: 10,
-    elevation: 2
+    gap: 10
   },
   searchPlaceholder: {
     flex: 1,
-    fontSize: 13.5,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "400",
     color: colors.textSecondary
   },
-  searchKbd: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: colors.brandRedSoft,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  filterBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
-    backgroundColor: "#0D0D12",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 8,
-    elevation: 3
-  },
-  filterBtnDot: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.brandRed
-  },
-  assuranceRow: {
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 16,
-    marginTop: 12
-  },
-  assuranceCard: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.05)"
-  },
-  assuranceIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: "#F4F5F9",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  assuranceTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: "#0D0D12",
-    letterSpacing: -0.2
-  },
-  assuranceSub: {
-    fontSize: 10.5,
-    fontWeight: "500",
-    color: colors.textSecondary,
-    marginTop: 1
-  },
   ribbonWrap: {
-    paddingTop: 14,
-    paddingBottom: 4
-  },
-  bentoGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 16,
-    gap: 12
-  },
-  flashBand: {
-    marginHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 8,
-    backgroundColor: "#0D0D12",
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: "rgba(225, 29, 72, 0.35)",
-    paddingTop: 18,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 6
-  },
-  flashBandHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 18,
-    marginBottom: 14
-  },
-  flashTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10
-  },
-  flashIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 11,
-    backgroundColor: colors.brandRed,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  flashEyebrow: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 1,
-    color: colors.brandRed
-  },
-  flashTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    letterSpacing: -0.5
-  },
-  flashListContent: {
-    paddingLeft: 18,
-    paddingRight: 8,
-    gap: 12,
-    paddingBottom: 16
-  },
-  flashSeeAll: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7,
-    paddingVertical: 14,
-    backgroundColor: colors.brandRed
-  },
-  flashSeeAllText: {
-    color: "#FFFFFF",
-    fontSize: 13.5,
-    fontWeight: "800",
-    letterSpacing: -0.1
+    paddingTop: 12,
+    paddingBottom: 2
   },
   editorialContent: {
     paddingHorizontal: 16,
     gap: EDITORIAL_GAP
   },
   editorialCard: {
-    borderRadius: 24,
+    borderRadius: 22,
     backgroundColor: "#FFFFFF",
     padding: 0,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 14,
-    elevation: 3
+    borderColor: colors.border
   },
   editorialStage: {
-    height: 210,
+    height: 204,
     backgroundColor: "#FFFFFF",
     padding: 0,
     overflow: "hidden",
@@ -632,22 +497,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.full
   },
   editorialBadgeSale: {
-    backgroundColor: colors.brandRed
+    backgroundColor: colors.brandAccent
   },
   editorialBadgeNew: {
-    backgroundColor: "#0D0D12"
+    backgroundColor: colors.text
   },
   editorialBadgeText: {
     fontSize: 9,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 0.7,
     color: "#FFFFFF"
   },
   editorialStorageTag: {
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: "600",
     color: colors.textSecondary,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.92)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.full,
@@ -672,41 +537,153 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(0,0,0,0.05)"
+    borderTopColor: colors.border
   },
   editorialTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: -0.4,
-    color: "#0D0D12"
+    fontSize: 15.5,
+    fontWeight: "700",
+    letterSpacing: -0.3,
+    color: colors.text
   },
   editorialPrice: {
     fontSize: 14,
-    fontWeight: "700",
-    color: colors.brandRed,
+    fontWeight: "600",
+    color: colors.textSecondary,
     marginTop: 2
   },
   editorialPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#0D0D12",
+    backgroundColor: colors.text,
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 8,
     borderRadius: radius.full
   },
   editorialPillText: {
     color: "#FFFFFF",
     fontSize: 12.5,
-    fontWeight: "800"
+    fontWeight: "600"
+  },
+  bentoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 16,
+    gap: 12
+  },
+  accessoriesContent: {
+    paddingHorizontal: 16,
+    gap: 12
+  },
+  promoSection: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingTop: 18,
+    overflow: "hidden"
+  },
+  promoHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    marginBottom: 14
+  },
+  promoEyebrow: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.1,
+    color: colors.brandAccent
+  },
+  promoTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: -0.4,
+    marginTop: 2
+  },
+  promoListContent: {
+    paddingLeft: 18,
+    paddingRight: 8,
+    gap: 12,
+    paddingBottom: 16
+  },
+  promoSeeAll: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border
+  },
+  promoSeeAllText: {
+    color: colors.text,
+    fontSize: 13.5,
+    fontWeight: "600"
+  },
+  assistanceWrap: {
+    marginTop: 4
+  },
+  assistanceGrid: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    gap: 12
+  },
+  assistCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: "space-between"
+  },
+  assistIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10
+  },
+  assistCardTitle: {
+    fontSize: 15.5,
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: -0.3
+  },
+  assistCardSub: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    color: colors.textSecondary,
+    marginTop: 4
+  },
+  assistLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    marginTop: 10
+  },
+  assistLinkText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.brandAccent
   },
   standardSection: {
-    marginTop: 0,
-    marginBottom: 0
+    marginTop: 4,
+    marginBottom: 8
   },
   standardHeader: {
-    paddingTop: 2,
-    paddingBottom: 2
+    paddingTop: 10,
+    paddingBottom: 6
   },
   skeletonRow: {
     flexDirection: "row",
@@ -714,4 +691,3 @@ const styles = StyleSheet.create({
     gap: 14
   }
 });
-

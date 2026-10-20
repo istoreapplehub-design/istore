@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
 import { useCartStore } from "../../store/useCartStore";
+import { useWishlistStore } from "../../store/useWishlistStore";
 import { useUserStore } from "../../store/useUserStore";
 import { AppHaptics } from "../../lib/haptics";
 
@@ -17,29 +18,35 @@ const TAB_CONFIG: Record<
   }
 > = {
   index: {
-    label: "Discover",
-    activeIcon: "sparkles",
-    inactiveIcon: "sparkles-outline"
+    label: "Home",
+    activeIcon: "home",
+    inactiveIcon: "home-outline"
   },
   shop: {
-    label: "Catalog",
+    label: "Shop",
     activeIcon: "grid",
     inactiveIcon: "grid-outline"
   },
-  flash: {
-    label: "Drops",
-    activeIcon: "flash",
-    inactiveIcon: "flash-outline"
+  favorites: {
+    label: "Favorites",
+    activeIcon: "heart",
+    inactiveIcon: "heart-outline"
   },
   bag: {
     label: "Bag",
     activeIcon: "bag-handle",
     inactiveIcon: "bag-handle-outline"
+  },
+  "account-tab": {
+    label: "Account",
+    activeIcon: "person",
+    inactiveIcon: "person-outline"
   }
 };
 
 export default function TabLayout() {
   const cartItemCount = useCartStore((state) => state.getItemCount());
+  const wishlistCount = useWishlistStore((state) => state.items.length);
   const isAdmin = useUserStore((state) => state.user?.role === "admin");
   const insets = useSafeAreaInsets();
 
@@ -54,17 +61,23 @@ export default function TabLayout() {
       }}
       tabBar={({ state, navigation }) => (
         <View
-          pointerEvents="box-none"
           style={[
-            styles.dockOuter,
-            { paddingBottom: Math.max(insets.bottom, Platform.OS === "ios" ? 16 : 12) }
+            styles.barOuter,
+            { paddingBottom: Math.max(insets.bottom, Platform.OS === "ios" ? 12 : 10) }
           ]}
         >
-          <View style={styles.dock}>
+          <View style={styles.barInner}>
             {state.routes.map((route, index) => {
               const cfg = TAB_CONFIG[route.name];
               if (!cfg) return null;
               const isFocused = state.index === index;
+
+              const badgeCount =
+                route.name === "bag"
+                  ? cartItemCount
+                  : route.name === "favorites"
+                  ? wishlistCount
+                  : 0;
 
               const onPress = () => {
                 AppHaptics.selection();
@@ -84,8 +97,7 @@ export default function TabLayout() {
                   onPress={onPress}
                   style={({ pressed }) => [
                     styles.tabItem,
-                    isFocused && styles.tabItemActive,
-                    pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] }
+                    pressed && { opacity: 0.7 }
                   ]}
                   accessibilityRole="button"
                   accessibilityState={isFocused ? { selected: true } : {}}
@@ -94,23 +106,13 @@ export default function TabLayout() {
                   <View style={styles.iconWrap}>
                     <Ionicons
                       name={isFocused ? cfg.activeIcon : cfg.inactiveIcon}
-                      size={19}
-                      color={isFocused ? "#FFFFFF" : "#8E8E98"}
+                      size={22}
+                      color={isFocused ? colors.text : colors.tabInactive}
                     />
-                    {route.name === "bag" && cartItemCount > 0 && (
-                      <View
-                        style={[
-                          styles.badge,
-                          isFocused && styles.badgeOnActive
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.badgeText,
-                            isFocused && styles.badgeTextOnActive
-                          ]}
-                        >
-                          {cartItemCount > 9 ? "9+" : cartItemCount}
+                    {badgeCount > 0 && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>
+                          {badgeCount > 9 ? "9+" : badgeCount}
                         </Text>
                       </View>
                     )}
@@ -131,98 +133,74 @@ export default function TabLayout() {
         </View>
       )}
     >
-      <Tabs.Screen name="index" options={{ title: "Discover" }} />
-      <Tabs.Screen name="shop" options={{ title: "Catalog" }} />
-      <Tabs.Screen name="flash" options={{ title: "Drops" }} />
+      <Tabs.Screen name="index" options={{ title: "Home" }} />
+      <Tabs.Screen name="shop" options={{ title: "Shop" }} />
+      <Tabs.Screen name="favorites" options={{ title: "Favorites" }} />
       <Tabs.Screen name="bag" options={{ title: "Bag" }} />
+      <Tabs.Screen name="account-tab" options={{ title: "Account" }} />
+      <Tabs.Screen name="flash" options={{ href: null, title: "Special Offers" }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  dockOuter: {
-    backgroundColor: "transparent",
-    paddingHorizontal: 16,
-    paddingTop: 6,
+  barOuter: {
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingTop: 8,
+    paddingHorizontal: 8,
     alignItems: "center"
   },
-  dock: {
+  barInner: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     width: "100%",
-    maxWidth: 460,
-    backgroundColor: "#0D0D12",
-    borderRadius: 36,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.24,
-    shadowRadius: 20,
-    elevation: 10
+    maxWidth: 680
   },
   tabItem: {
     flex: 1,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
-    paddingVertical: 11,
-    paddingHorizontal: 8,
-    borderRadius: 30
-  },
-  tabItemActive: {
-    backgroundColor: colors.brandRed,
-    shadowColor: colors.brandRed,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.38,
-    shadowRadius: 10,
-    elevation: 4
+    paddingVertical: 2
   },
   iconWrap: {
     position: "relative",
+    height: 24,
     alignItems: "center",
     justifyContent: "center"
   },
   tabLabel: {
-    fontSize: 12,
-    letterSpacing: -0.2
+    fontSize: 10.5,
+    marginTop: 3,
+    letterSpacing: -0.1
   },
   tabLabelActive: {
-    color: "#FFFFFF",
-    fontWeight: "800"
+    color: colors.text,
+    fontWeight: "600"
   },
   tabLabelIdle: {
-    color: "#8E8E98",
-    fontWeight: "600"
+    color: colors.tabInactive,
+    fontWeight: "500"
   },
   badge: {
     position: "absolute",
-    top: -7,
+    top: -4,
     right: -10,
     minWidth: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: colors.brandRed,
+    backgroundColor: colors.text,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: "#0D0D12"
-  },
-  badgeOnActive: {
-    backgroundColor: "#FFFFFF",
-    borderColor: colors.brandRed
+    borderColor: "#FFFFFF"
   },
   badgeText: {
     fontSize: 9.5,
-    fontWeight: "900",
+    fontWeight: "700",
     color: "#FFFFFF"
-  },
-  badgeTextOnActive: {
-    color: colors.brandRed
   }
 });
-

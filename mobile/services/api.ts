@@ -250,7 +250,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
         /network|could not connect|timed out|fetch failed|failed to connect|aborted/i.test(msg))
     ) {
       throw new ApiError(
-        `Unable to reach the I-Store server at ${API_URL}`,
+        `Unable to reach the I-Dynamic server at ${API_URL}`,
         "network"
       );
     }

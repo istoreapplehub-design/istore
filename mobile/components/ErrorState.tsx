@@ -57,7 +57,7 @@ export default function ErrorState({
       </View>
       <Text style={styles.title}>
         {kind === "network"
-          ? "Can't connect to I-Store"
+          ? "Can't connect to I-Dynamic"
           : kind === "auth"
           ? "Sign in required"
           : "Something went wrong"}

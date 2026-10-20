@@ -20,6 +20,7 @@ import { getMyOrders } from "../services/api";
 import { getPreferences } from "../lib/preferences";
 import { checkHasUnreadNotifications } from "../lib/notifications";
 import { AppHaptics } from "../lib/haptics";
+import { BrandLogo } from "../components/BrandLogo";
 
 function Row({
   icon,
@@ -116,11 +117,10 @@ export default function AccountScreen() {
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.gate}>
           <Animated.View entering={FadeInDown.springify().damping(16)} style={styles.gateInner}>
-            <Ionicons name="logo-apple" size={44} color={colors.text} />
-            <Text style={styles.gateTitle}>Sign in to I-Store</Text>
+            <BrandLogo size={56} variant="dark" />
+            <Text style={styles.gateTitle}>Sign in to I-Dynamic</Text>
             <Text style={styles.gateBody}>
-              Your bag stays with you either way. Signing in unlocks the parts of I-Store
-              that need to know who you are.
+              Your bag stays with you either way. Signing in unlocks your orders, saved addresses, and personalized benefits on I-Dynamic.
             </Text>
 
             <View style={styles.gatePerks}>
@@ -164,16 +164,20 @@ export default function AccountScreen() {
             </Text>
 
             <View style={styles.gateSupportLinks}>
+              <Pressable onPress={() => router.push("/onboarding" as never)}>
+                <Text style={styles.gateSupportLink}>App Tour</Text>
+              </Pressable>
+              <Text style={styles.gateSupportDot}>·</Text>
+              <Pressable onPress={() => router.push("/warranty" as never)}>
+                <Text style={styles.gateSupportLink}>Warranty</Text>
+              </Pressable>
+              <Text style={styles.gateSupportDot}>·</Text>
+              <Pressable onPress={() => router.push("/returns" as never)}>
+                <Text style={styles.gateSupportLink}>Returns</Text>
+              </Pressable>
+              <Text style={styles.gateSupportDot}>·</Text>
               <Pressable onPress={() => router.push("/help")}>
-                <Text style={styles.gateSupportLink}>Concierge Support</Text>
-              </Pressable>
-              <Text style={styles.gateSupportDot}>·</Text>
-              <Pressable onPress={() => router.push("/legal?type=terms")}>
-                <Text style={styles.gateSupportLink}>Terms</Text>
-              </Pressable>
-              <Text style={styles.gateSupportDot}>·</Text>
-              <Pressable onPress={() => router.push("/legal?type=privacy")}>
-                <Text style={styles.gateSupportLink}>Privacy</Text>
+                <Text style={styles.gateSupportLink}>Support</Text>
               </Pressable>
             </View>
           </Animated.View>
@@ -191,7 +195,7 @@ export default function AccountScreen() {
   const email = user?.email || "";
   const phone = user?.phone || "";
   const initial = name.trim().charAt(0).toUpperCase();
-  const referralCode = `ISTORE-${name
+  const referralCode = `IDYN-${name
     .replace(/[^A-Za-z0-9]/g, "")
     .slice(0, 5)
     .toUpperCase() || "VIP"}26`;
@@ -200,7 +204,7 @@ export default function AccountScreen() {
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Shop official Apple devices on APPLE HUB (I-Store) with my referral code ${referralCode} to get GHS 250 off your first order!`
+        message: `Shop genuine Apple devices on I-Dynamic with my referral code ${referralCode} to get GHS 250 off your first order!`
       });
     } catch {
       // User dismissed share sheet
@@ -334,12 +338,18 @@ export default function AccountScreen() {
           </Group>
         )}
 
-        <Group title="YOUR ORDERS">
+        <Group title="YOUR ORDERS & RETURNS">
           <Row
             icon="receipt-outline"
             label="My Orders"
             value={orderCount !== null ? `${orderCount}` : undefined}
             onPress={() => router.push("/orders")}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="sync-outline"
+            label="Returns & Refunds"
+            onPress={() => router.push("/returns" as never)}
           />
           <View style={styles.divider} />
           <Row
@@ -350,12 +360,18 @@ export default function AccountScreen() {
           />
         </Group>
 
-        <Group title="SAVED">
+        <Group title="SAVED & COMPARE">
           <Row
             icon="heart-outline"
-            label="Wishlist"
+            label="Favorites"
             value={wishlistCount ? `${wishlistCount}` : undefined}
             onPress={() => router.push("/wishlist")}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="git-compare-outline"
+            label="Compare Apple Models"
+            onPress={() => router.push("/compare" as never)}
           />
           <View style={styles.divider} />
           <Row
@@ -365,7 +381,7 @@ export default function AccountScreen() {
           />
         </Group>
 
-        <Group title="PREFERENCES">
+        <Group title="SETTINGS & PREFERENCES">
           <Row
             icon="globe-outline"
             label="Language & Currency"
@@ -379,9 +395,21 @@ export default function AccountScreen() {
             value={defaultRegion || "Not set"}
             onPress={() => router.push("/preferences")}
           />
+          <View style={styles.divider} />
+          <Row
+            icon="sparkles-outline"
+            label="I-Dynamic Welcome Tour"
+            onPress={() => router.push("/onboarding" as never)}
+          />
         </Group>
 
-        <Group title="SUPPORT & SPECIALIST ADVICE">
+        <Group title="WARRANTY & SUPPORT">
+          <Row
+            icon="shield-checkmark-outline"
+            label="Warranty Information"
+            onPress={() => router.push("/warranty" as never)}
+          />
+          <View style={styles.divider} />
           <Row
             icon="chatbubbles-outline"
             label="Concierge Support & Specialist Advice"
@@ -390,7 +418,7 @@ export default function AccountScreen() {
           <View style={styles.divider} />
           <Row
             icon="help-circle-outline"
-            label="Help Center & Contact"
+            label="Help Center & FAQs"
             onPress={() => router.push("/help")}
           />
         </Group>

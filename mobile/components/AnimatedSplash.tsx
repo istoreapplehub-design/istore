@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, {
   Easing,
@@ -13,7 +12,8 @@ import Animated, {
   withSpring,
   withTiming
 } from "react-native-reanimated";
-import { colors, radius } from "../constants/theme";
+import { radius } from "../constants/theme";
+import { BrandLogo } from "./BrandLogo";
 
 interface AnimatedSplashProps {
   ready: boolean;
@@ -24,7 +24,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const containerOpacity = useSharedValue(1);
   const containerScale = useSharedValue(1);
 
-  const logoScale = useSharedValue(0.7);
+  const logoScale = useSharedValue(0.75);
   const logoOpacity = useSharedValue(0);
   const progressWidth = useSharedValue(0);
 
@@ -38,7 +38,6 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   }, [onFinish]);
 
   useEffect(() => {
-    // Apple-style entrance: pristine logo fade & spring
     logoOpacity.value = withTiming(1, { duration: 400 });
     logoScale.value = withSpring(1, { damping: 16, stiffness: 120 });
 
@@ -56,10 +55,9 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   useEffect(() => {
     if (!ready) return;
 
-    // Graceful reveal once ready
     const timer = setTimeout(() => {
       Haptics.selectionAsync().catch(() => {});
-      containerScale.value = withTiming(1.05, {
+      containerScale.value = withTiming(1.04, {
         duration: 360,
         easing: Easing.out(Easing.cubic)
       });
@@ -76,9 +74,8 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
         }
       );
 
-      // Extra guarantee in case worklet doesn't finish
       setTimeout(() => onFinish(), 380);
-    }, 1200);
+    }, 1150);
 
     return () => clearTimeout(timer);
   }, [ready, containerOpacity, containerScale, onFinish]);
@@ -100,29 +97,27 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   return (
     <Animated.View style={[styles.overlay, containerAnimatedStyle]}>
       <View style={styles.centerStage}>
-        {/* Apple Iconic Monogram */}
+        {/* Original I-Dynamic Monogram (ready for custom logo swap) */}
         <Animated.View style={[styles.emblemBox, logoAnimatedStyle]}>
-          <Ionicons name="logo-apple" size={54} color="#FFFFFF" />
+          <BrandLogo size={76} variant="light" />
         </Animated.View>
 
-        {/* Clean Apple-style Typography: I-Store */}
-        <Animated.Text entering={FadeIn.delay(200).duration(450)} style={styles.brandTitle}>
-          I-Store
+        <Animated.Text entering={FadeIn.delay(180).duration(420)} style={styles.brandTitle}>
+          I-Dynamic
         </Animated.Text>
 
-        <Animated.Text entering={FadeIn.delay(350).duration(450)} style={styles.brandSubtitle}>
-          Apple Hub Official Store
+        <Animated.Text entering={FadeIn.delay(320).duration(420)} style={styles.brandSubtitle}>
+          Curated Apple Hardware & Accessories
         </Animated.Text>
 
         {/* Minimal Progress Bar */}
-        <Animated.View entering={FadeInDown.delay(400).duration(350)} style={styles.progressTrack}>
+        <Animated.View entering={FadeInDown.delay(380).duration(350)} style={styles.progressTrack}>
           <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
         </Animated.View>
       </View>
 
-      {/* Subtle Apple-style Footer (Without any 'Accra') */}
-      <Animated.View entering={FadeIn.delay(500).duration(400)} style={styles.bottomFooter}>
-        <Text style={styles.tagline}>DESIGNED FOR EXCELLENCE</Text>
+      <Animated.View entering={FadeIn.delay(480).duration(400)} style={styles.bottomFooter}>
+        <Text style={styles.tagline}>PRECISION · ELEGANCE · PERFORMANCE</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -132,7 +127,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     zIndex: 9999,
-    backgroundColor: "#000000",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden"
@@ -142,37 +137,37 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   emblemBox: {
-    width: 90,
-    height: 90,
+    width: 92,
+    height: 92,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16
+    marginBottom: 14
   },
   brandTitle: {
     fontSize: 34,
     fontWeight: "700",
-    color: "#FFFFFF",
-    letterSpacing: -0.8
+    color: "#1D1D1F",
+    letterSpacing: -0.9
   },
   brandSubtitle: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: "500",
-    color: "rgba(255, 255, 255, 0.55)",
-    letterSpacing: 0.2,
+    color: "#6E6E73",
+    letterSpacing: 0.1,
     marginTop: 4
   },
   progressTrack: {
     width: 120,
     height: 3,
     borderRadius: radius.full,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    backgroundColor: "#E5E5EA",
     marginTop: 28,
     overflow: "hidden"
   },
   progressFill: {
     height: "100%",
     borderRadius: radius.full,
-    backgroundColor: "#FFFFFF"
+    backgroundColor: "#1D1D1F"
   },
   bottomFooter: {
     position: "absolute",
@@ -183,7 +178,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     letterSpacing: 2,
-    color: "rgba(255, 255, 255, 0.32)"
+    color: "#86868B"
   }
 });
 

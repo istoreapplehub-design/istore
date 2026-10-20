@@ -19,32 +19,34 @@ const VALUE_PROPS: ValueProp[] = [
     eyebrow: "Warranty",
     title: "Covered, officially.",
     body: "Every device carries Apple's manufacturer warranty, honoured at authorised service centres.",
-    href: "/help"
+    href: "/warranty"
   },
   {
     icon: "cube-outline",
     eyebrow: "Authenticity",
     title: "Sealed, serial-checked.",
-    body: "Products arrive in original retail packaging with a serial number you can verify on Apple's site."
+    body: "Products arrive in original retail packaging with a serial number you can verify on Apple's site.",
+    href: "/warranty"
   },
   {
-    icon: "card-outline",
-    eyebrow: "Payments",
-    title: "Fast, secure payments.",
-    body: "MTN MoMo, Telecel Cash, AT Money and Visa or Mastercard through Paystack.",
-    href: "/help"
+    icon: "git-compare-outline",
+    eyebrow: "Compare",
+    title: "Side-by-side specs.",
+    body: "Compare processors, cameras, displays, and storage across iPhone, Mac, iPad, and Watch models.",
+    href: "/compare"
   },
   {
-    icon: "bicycle-outline",
-    eyebrow: "Delivery",
-    title: "All 16 regions.",
-    body: "Riders in Accra and Kumasi, tracked courier nationwide. Your fee shows before you pay."
+    icon: "sync-outline",
+    eyebrow: "Returns",
+    title: "7-day return assurance.",
+    body: "Eligible unopened items can be returned within 7 days of delivery with fast refund processing.",
+    href: "/returns"
   },
   {
     icon: "gift-outline",
     eyebrow: "Referral Bonus",
     title: "Refer & earn bonus.",
-    body: "Invite friends with your I-Store referral code — they save GHS 250 and you earn GHS 300 bonus credit on every referral order.",
+    body: "Invite friends with your I-Dynamic referral code — they save GHS 250 and you earn GHS 300 bonus credit.",
     href: "/account"
   }
 ];
@@ -71,7 +73,7 @@ export function ValuePropRail() {
           }}
         >
           <View style={styles.iconCircle}>
-            <Ionicons name={item.icon} size={20} color={colors.brandRed} />
+            <Ionicons name={item.icon} size={20} color={colors.text} />
           </View>
           <Text style={styles.eyebrow}>{item.eyebrow.toUpperCase()}</Text>
           <Text style={styles.title}>{item.title}</Text>
@@ -79,9 +81,9 @@ export function ValuePropRail() {
           {item.href ? (
             <View style={styles.linkRow}>
               <Text style={styles.linkText}>
-                {item.eyebrow === "Referral Bonus" ? "Claim referral bonus" : "Find out more"}
+                {item.eyebrow === "Referral Bonus" ? "Claim referral bonus" : "Learn more"}
               </Text>
-              <Ionicons name="chevron-forward" size={12} color={colors.brandRed} />
+              <Ionicons name="chevron-forward" size={12} color={colors.brandAccent} />
             </View>
           ) : null}
         </Pressable>
@@ -107,21 +109,21 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radius.full,
-    backgroundColor: colors.brandRedSoft,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.brandRedBorder,
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10
   },
   eyebrow: {
     fontSize: 10,
-    fontWeight: "800",
+    fontWeight: "700",
     letterSpacing: 1.1,
-    color: colors.brandRed
+    color: colors.brandAccent
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     letterSpacing: -0.4,
     color: colors.text,
@@ -141,8 +143,8 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 13,
-    fontWeight: "700",
-    color: colors.brandRed
+    fontWeight: "600",
+    color: colors.brandAccent
   }
 });
 

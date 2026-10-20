@@ -45,7 +45,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const STORE_PICKUP_LOCATIONS = [
   {
     id: "flagship-east-legon",
-    name: "I-Store Flagship — East Legon",
+    name: "I-Dynamic Flagship — East Legon",
     address: "Boundary Road, Opp. A&C Mall, East Legon, Accra",
     region: "Greater Accra",
     city: "Accra",
@@ -54,7 +54,7 @@ const STORE_PICKUP_LOCATIONS = [
   },
   {
     id: "studio-accra-mall",
-    name: "I-Store Studio — Accra Mall",
+    name: "I-Dynamic Studio — Accra Mall",
     address: "Tetteh Quarshie Interchange, Shop G12, Accra",
     region: "Greater Accra",
     city: "Accra",
@@ -63,12 +63,33 @@ const STORE_PICKUP_LOCATIONS = [
   },
   {
     id: "hub-kumasi",
-    name: "I-Store Experience — Kumasi City Mall",
+    name: "I-Dynamic Experience — Kumasi City Mall",
     address: "Asokwa, Kumasi City Mall, Shop 24, Kumasi",
     region: "Ashanti",
     city: "Kumasi",
     hours: "Mon–Sat: 9:00 AM – 8:00 PM | Sun: 12:00 PM – 6:00 PM",
     readyTime: "Ready for pickup in 2 hours"
+  }
+];
+
+const PAYMENT_METHODS = [
+  {
+    id: "momo",
+    name: "Mobile Money (MTN · Telecel · AirtelTigo)",
+    subtitle: "Instant MoMo prompt via Paystack",
+    icon: "phone-portrait-outline" as const
+  },
+  {
+    id: "card",
+    name: "Credit / Debit Card (Visa · Mastercard)",
+    subtitle: "3D Secure encrypted card checkout",
+    icon: "card-outline" as const
+  },
+  {
+    id: "bank",
+    name: "Instant Bank Transfer / USSD",
+    subtitle: "Supported Ghanaian banks via Paystack",
+    icon: "business-outline" as const
   }
 ];
 
@@ -123,6 +144,7 @@ export default function CheckoutScreen() {
   // UI state
   const [fulfillmentType, setFulfillmentType] = useState<"delivery" | "pickup">("delivery");
   const [selectedPickupLocation, setSelectedPickupLocation] = useState(STORE_PICKUP_LOCATIONS[0]);
+  const [paymentMethod, setPaymentMethod] = useState<string>("momo");
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showRegionModal, setShowRegionModal] = useState(false);
@@ -350,7 +372,7 @@ export default function CheckoutScreen() {
       {
         key: "register" as const,
         icon: "add-circle-outline" as const,
-        title: "Create an I-Store account",
+        title: "Create an I-Dynamic account",
         body: "Takes about 20 seconds. Worth it if you order more than once."
       }
     ];
@@ -406,7 +428,7 @@ export default function CheckoutScreen() {
           <View style={styles.laneAssurance}>
             <Ionicons name="lock-closed-outline" size={15} color={colors.textSecondary} />
             <Text style={styles.laneAssuranceText}>
-              Payments run through Paystack. I-Store never stores your card details or MoMo
+              Payments run through Paystack. I-Dynamic never stores your card details or MoMo
               credentials.
             </Text>
           </View>
@@ -824,8 +846,39 @@ export default function CheckoutScreen() {
             ) : null}
           </View>
 
-          {/* 2. ORDER SUMMARY */}
-          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Order Summary</Text>
+          {/* PAYMENT METHOD SELECTION */}
+          <Text style={[styles.sectionTitle, { marginTop: 28 }]}>Payment Method</Text>
+          <View style={styles.pickupLocationsList}>
+            {PAYMENT_METHODS.map((pm) => {
+              const selected = paymentMethod === pm.id;
+              return (
+                <Pressable
+                  key={pm.id}
+                  style={[styles.pickupCard, selected && styles.pickupCardSelected]}
+                  onPress={() => {
+                    AppHaptics.selection();
+                    setPaymentMethod(pm.id);
+                  }}
+                >
+                  <View style={styles.pickupHeaderRow}>
+                    <Ionicons
+                      name={selected ? "checkmark-circle" : "ellipse-outline"}
+                      size={20}
+                      color={selected ? colors.brandRed : colors.textSecondary}
+                    />
+                    <Ionicons name={pm.icon} size={18} color={colors.text} />
+                    <Text style={[styles.pickupName, selected && styles.pickupNameSelected]}>
+                      {pm.name}
+                    </Text>
+                  </View>
+                  <Text style={styles.pickupAddress}>{pm.subtitle}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* 2. ORDER SUMMARY & FINAL REVIEW */}
+          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Order Review & Summary</Text>
           <View style={styles.summaryCard}>
             {/* Item rows */}
             {items.map((item, idx) => (

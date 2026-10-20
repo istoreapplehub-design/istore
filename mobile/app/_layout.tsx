@@ -60,7 +60,7 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
         <SafeAreaProvider>
           <View style={styles.webContainer}>
-            <StatusBar style={splashFinished ? "dark" : "light"} />
+            <StatusBar style="dark" />
             {appReady && (
               <Stack
                 initialRouteName="(tabs)"
@@ -83,6 +83,37 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="admin" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="onboarding"
+                options={{
+                  headerShown: false,
+                  animation: "fade"
+                }}
+              />
+              <Stack.Screen
+                name="compare"
+                options={{
+                  headerShown: true,
+                  title: "Compare Models",
+                  headerBackTitle: "Back"
+                }}
+              />
+              <Stack.Screen
+                name="warranty"
+                options={{
+                  headerShown: true,
+                  title: "Warranty Information",
+                  headerBackTitle: "Back"
+                }}
+              />
+              <Stack.Screen
+                name="returns"
+                options={{
+                  headerShown: true,
+                  title: "Returns & Refunds",
+                  headerBackTitle: "Back"
+                }}
+              />
             <Stack.Screen
               name="account"
               options={{

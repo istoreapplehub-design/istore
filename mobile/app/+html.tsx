@@ -15,10 +15,10 @@ export default function Root({ children }: { children: ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
         />
-        <title>I-Store — Apple Hub Worldwide</title>
+        <title>I-Dynamic — Premium Apple Products & Accessories</title>
         <meta
           name="description"
-          content="I-Store — Apple Store inspired monochrome marketplace with secure checkout."
+          content="I-Dynamic — Premium minimalist Apple hardware and accessories shopping experience."
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

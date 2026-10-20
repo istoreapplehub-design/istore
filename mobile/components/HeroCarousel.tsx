@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { Carousel } from "react-native-reanimated-carousel";
 import * as Haptics from "expo-haptics";
 import { colors, formatGHS, radius } from "../constants/theme";
@@ -14,12 +13,21 @@ interface HeroCarouselProps {
   products: Product[];
 }
 
-const SLIDE_HEIGHT = 256;
+const SLIDE_HEIGHT = 264;
+
+const HERO_TAGLINES: Record<string, string> = {
+  iPhone: "Engineered for Apple Intelligence.",
+  Mac: "Supercharged by M5 silicon.",
+  iPad: "Thin. Light. Ultra-capable.",
+  Watch: "Built for endurance and precision.",
+  AirPods: "Immersive acoustic perfection.",
+  Accessories: "Designed to pair seamlessly."
+};
 
 /**
- * Dribbble-inspired Split-Stage Obsidian Titanium Bento Hero:
- * Deep carbon gradient card, ambient crimson glow, editorial left column,
- * and a frosted glass studio pedestal on the right.
+ * Minimalist Apple-Store-inspired Flagship Hero Carousel:
+ * Clean editorial typography, generous whitespace, real product imagery,
+ * and a clear "Shop Now" call-to-action.
  */
 export function HeroCarousel({ products }: HeroCarouselProps) {
   const router = useRouter();
@@ -48,92 +56,64 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
         style={{ width: carouselWidth, height: SLIDE_HEIGHT }}
         itemSize={carouselWidth}
         autoplay
-        autoplayInterval={5200}
+        autoplayInterval={5400}
         data={slides}
         onSnapToItem={(index: number) => setActiveIndex(index)}
         renderItem={({ item }: { item: Product; index: number }) => {
           const image = getProductImage(item);
-          const subtitle = [item.storage, item.condition === "Refurbished" ? "Certified" : "1 Yr Warranty"]
-            .filter(Boolean)
-            .join(" · ");
+          const headline =
+            HERO_TAGLINES[item.category] ||
+            [item.storage, item.warranty].filter(Boolean).join(" · ");
           const hasDiscount = Boolean(
             item.compareAtPriceGHS && item.compareAtPriceGHS > item.priceGHS
           );
-          const discountPct = hasDiscount
-            ? Math.round(
-                (((item.compareAtPriceGHS as number) - item.priceGHS) /
-                  (item.compareAtPriceGHS as number)) *
-                  100
-              )
-            : 0;
 
           return (
             <View style={[styles.slideOuter, { width: carouselWidth }]}>
               <Pressable
                 onPress={() => open(item)}
                 style={({ pressed }) => [
-                  styles.bentoCard,
-                  pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] }
+                  styles.heroCard,
+                  pressed && { opacity: 0.96, transform: [{ scale: 0.995 }] }
                 ]}
               >
-                <LinearGradient
-                  colors={["#181822", "#0B0B10"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-
-                {/* Ambient decorative glow */}
-                <View style={styles.crimsonGlow} />
-
                 {/* Left Editorial Column */}
                 <View style={styles.leftCol}>
-                  <View style={styles.badgeRow}>
-                    <View style={styles.eyebrowPill}>
-                      <View style={styles.eyebrowDot} />
-                      <Text style={styles.eyebrow}>{item.category.toUpperCase()}</Text>
+                  <View>
+                    <View style={styles.eyebrowRow}>
+                      <Text style={styles.eyebrow}>FLAGSHIP · {item.category.toUpperCase()}</Text>
                     </View>
-                    {discountPct > 0 && (
-                      <View style={styles.discountPill}>
-                        <Text style={styles.discountPillText}>-{discountPct}%</Text>
-                      </View>
-                    )}
+
+                    <Text style={styles.title} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.headline} numberOfLines={2}>
+                      {headline}
+                    </Text>
                   </View>
 
-                  <Text style={styles.title} numberOfLines={2}>
-                    {item.name}
-                  </Text>
-                  <Text style={styles.subtitle} numberOfLines={1}>
-                    {subtitle}
-                  </Text>
+                  <View style={styles.bottomLeft}>
+                    <View style={styles.priceBlock}>
+                      <Text style={styles.priceValue}>{formatGHS(item.priceGHS)}</Text>
+                      {hasDiscount && (
+                        <Text style={styles.comparePrice}>
+                          {formatGHS(item.compareAtPriceGHS as number)}
+                        </Text>
+                      )}
+                    </View>
 
-                  <View style={styles.priceBlock}>
-                    <Text style={styles.priceValue}>{formatGHS(item.priceGHS)}</Text>
-                    {hasDiscount && (
-                      <Text style={styles.comparePrice}>
-                        {formatGHS(item.compareAtPriceGHS as number)}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View style={styles.ctaRow}>
-                    <View style={styles.buyPill}>
-                      <Text style={styles.buyPillText}>Shop Now</Text>
-                      <View style={styles.buyArrowCircle}>
-                        <Ionicons name="arrow-forward" size={12} color={colors.brandRed} />
+                    <View style={styles.ctaRow}>
+                      <View style={styles.shopNowBtn}>
+                        <Text style={styles.shopNowText}>Shop Now</Text>
+                        <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
                       </View>
                     </View>
                   </View>
                 </View>
 
-                {/* Right Studio Device Pedestal */}
+                {/* Right Product Stage */}
                 <View style={styles.rightCol}>
                   <View style={styles.pedestal}>
-                    <View style={styles.ratingGlass}>
-                      <Ionicons name="star" size={10} color="#FBBF24" />
-                      <Text style={styles.ratingGlassText}>{item.rating.toFixed(1)}</Text>
-                    </View>
-
                     {image ? (
                       <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
                     ) : (
@@ -189,140 +169,84 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     justifyContent: "center"
   },
-  bentoCard: {
+  heroCard: {
     flex: 1,
-    borderRadius: 28,
+    borderRadius: 24,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: "hidden",
     flexDirection: "row",
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 8
-  },
-  crimsonGlow: {
-    position: "absolute",
-    right: -30,
-    top: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "rgba(225, 29, 72, 0.18)"
+    padding: 18
   },
   leftCol: {
     flex: 1.25,
     justifyContent: "space-between",
-    paddingRight: 10,
-    zIndex: 2
+    paddingRight: 12
   },
-  badgeRow: {
+  eyebrowRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6
-  },
-  eyebrowPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: radius.full
-  },
-  eyebrowDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: colors.brandRed
+    alignItems: "center"
   },
   eyebrow: {
-    fontSize: 9.5,
-    fontWeight: "800",
-    letterSpacing: 1,
-    color: "#FFFFFF"
-  },
-  discountPill: {
-    backgroundColor: colors.brandRed,
-    paddingHorizontal: 7,
-    paddingVertical: 3.5,
-    borderRadius: radius.full
-  },
-  discountPillText: {
-    fontSize: 9.5,
-    fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: 0.3
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.1,
+    color: colors.brandAccent
   },
   title: {
     fontSize: 22,
-    fontWeight: "800",
-    color: "#FFFFFF",
+    fontWeight: "700",
+    color: colors.text,
     letterSpacing: -0.6,
-    lineHeight: 26,
+    lineHeight: 27,
     marginTop: 6
   },
-  subtitle: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "rgba(255,255,255,0.62)",
-    marginTop: 2
+  headline: {
+    fontSize: 13,
+    fontWeight: "400",
+    lineHeight: 18,
+    color: colors.textSecondary,
+    marginTop: 4
+  },
+  bottomLeft: {
+    gap: 10
   },
   priceBlock: {
     flexDirection: "row",
     alignItems: "baseline",
-    gap: 7,
-    marginTop: 8
+    gap: 7
   },
   priceValue: {
-    fontSize: 19,
-    fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: -0.4
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: -0.3
   },
   comparePrice: {
     fontSize: 12,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.42)",
+    fontWeight: "500",
+    color: colors.textTertiary,
     textDecorationLine: "line-through"
   },
   ctaRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10
+    alignItems: "center"
   },
-  buyPill: {
+  shopNowBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: colors.brandRed,
-    paddingLeft: 14,
-    paddingRight: 6,
-    paddingVertical: 6,
-    borderRadius: radius.full,
-    shadowColor: colors.brandRed,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4
+    gap: 6,
+    backgroundColor: colors.text,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: radius.full
   },
-  buyPillText: {
+  shopNowText: {
     color: "#FFFFFF",
-    fontSize: 12.5,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "600",
     letterSpacing: -0.1
-  },
-  buyArrowCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center"
   },
   rightCol: {
     flex: 1,
@@ -332,31 +256,14 @@ const styles = StyleSheet.create({
   pedestal: {
     width: "100%",
     height: "100%",
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
-    padding: 0,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     position: "relative"
-  },
-  ratingGlass: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    backgroundColor: "#0D0D12",
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: radius.full,
-    zIndex: 3
-  },
-  ratingGlassText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#FFFFFF"
   },
   image: {
     width: "100%",
@@ -372,17 +279,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(13,13,18,0.06)",
+    backgroundColor: "rgba(255,255,255,0.92)",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radius.full
+    borderRadius: radius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border
   },
   swatchDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.15)"
+    borderColor: "rgba(0,0,0,0.18)"
   },
   pagination: {
     flexDirection: "row",
@@ -396,14 +305,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.full
   },
   dotActive: {
-    width: 22,
-    backgroundColor: colors.brandRed
+    width: 20,
+    backgroundColor: colors.text
   },
   dotIdle: {
     width: 6,
-    backgroundColor: "#D4D4DA"
+    backgroundColor: "#D2D2D7"
   }
 });
 
 export default HeroCarousel;
-

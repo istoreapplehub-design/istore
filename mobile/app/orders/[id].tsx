@@ -566,31 +566,42 @@ export default function OrderDetailsScreen() {
             onPress={() => {
               Haptics.selectionAsync();
               Share.share({
-                message: `Get ₵250 off your genuine Apple device on I-Store (Ghana) using my VIP referral code: ISTORE-${order.id.slice(0, 6).toUpperCase()}! Download: https://istore.gh`
+                message: `Get ₵250 off your genuine Apple device on I-Dynamic using my VIP referral code: IDYNAMIC-${order.id.slice(0, 6).toUpperCase()}! Download: https://idynamic.com.gh`
               }).catch(() => {});
             }}
           >
             <Ionicons name="share-social-outline" size={17} color="#FFFFFF" />
             <Text style={styles.shareReferralBtnText}>
-              Share Referral Code (ISTORE-{order.id.slice(0, 6).toUpperCase()})
+              Share Referral Code (IDYNAMIC-{order.id.slice(0, 6).toUpperCase()})
             </Text>
           </Pressable>
         </View>
 
         <View style={styles.helpContainer}>
-          <Text style={styles.helpText}>Need help with this order?</Text>
-          <Pressable
-            style={styles.contactBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              Alert.alert(
-                "Customer Support",
-                "You can reach our Accra support team at support@istore.com.gh or +233 24 123 4567."
-              );
-            }}
-          >
-            <Text style={styles.contactBtnText}>Contact Support</Text>
-          </Pressable>
+          <Text style={styles.helpText}>Need help or want to request a return?</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 18, marginTop: 4 }}>
+            <Pressable
+              style={styles.contactBtn}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/returns" as any);
+              }}
+            >
+              <Text style={styles.contactBtnText}>Returns & Refunds</Text>
+            </Pressable>
+            <Pressable
+              style={styles.contactBtn}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                Alert.alert(
+                  "Customer Support",
+                  "You can reach our Accra support team at support@idynamic.com.gh or +233 24 123 4567."
+                );
+              }}
+            >
+              <Text style={styles.contactBtnText}>Contact Support</Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
 

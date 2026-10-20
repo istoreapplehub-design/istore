@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 import { useCartStore } from "../../store/useCartStore";
+import { BrandLogo } from "../../components/BrandLogo";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -114,10 +115,12 @@ export default function RegisterScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.brandSubtitle}>I-Store Apple Hub</Text>
+            <View style={{ marginBottom: 12 }}>
+              <BrandLogo size={38} showWordmark wordmarkSize={19} />
+            </View>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
-              Sign up to track purchases, save your delivery addresses, and receive official Apple warranty support.
+              Sign up with I-Dynamic to track purchases, save your delivery addresses, and receive official Apple warranty support.
             </Text>
           </View>
 
