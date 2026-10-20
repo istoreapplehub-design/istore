@@ -3,7 +3,7 @@ import { Product, Review } from "../types";
 const PHOTO_BASE =
   "https://nxycejiuwpbocaiqwsdt.supabase.co/storage/v1/object/public/product-images/products";
 
-const img = (file: string) => `${PHOTO_BASE}/${file}.jpg?v=apple2`;
+const img = (file: string) => `${PHOTO_BASE}/${file}.jpg?v=apple4`;
 
 function makeReviews(productId: string, baseIdx: number): Review[] {
   const reviewers = [
@@ -89,31 +89,32 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-10-12T10:00:00.000Z",
     colors: [
       {
-        name: "Desert Titanium",
-        hex: "#C5B4A0",
-        images: [img("iphone-15-pro-max-256gb-natural-titanium")]
+        name: "Burgundy Titanium",
+        hex: "#5E2D38",
+        images: [img("iphone-18-pro-max-512gb-burgundy-titanium")]
       },
       {
-        name: "Obsidian Titanium",
+        name: "Glacier Titanium",
+        hex: "#BFCAD0",
+        images: [img("iphone-18-pro-max-512gb-glacier-titanium")]
+      },
+      {
+        name: "Black Titanium",
         hex: "#232426",
-        images: [img("iphone-15-pro-max-256gb-black-titanium")]
+        images: [img("iphone-18-pro-max-512gb-black-titanium")]
       },
       {
-        name: "Sierra Blue Titanium",
-        hex: "#39434F",
-        images: [img("iphone-15-pro-max-256gb-blue-titanium")]
-      },
-      {
-        name: "White Titanium",
-        hex: "#F2F2ED",
-        images: [img("iphone-15-pro-max-256gb-white-titanium")]
+        name: "Silver Titanium",
+        hex: "#E4E5E7",
+        images: [img("iphone-18-pro-max-512gb-silver-titanium")]
       }
     ],
     images: [
-      img("iphone-15-pro-max-256gb-natural-titanium"),
-      img("iphone-15-pro-max-256gb-black-titanium"),
-      img("iphone-15-pro-max-256gb-blue-titanium"),
-      img("iphone-15-pro-max-256gb-white-titanium")
+      img("iphone-18-pro-max-512gb"),
+      img("iphone-18-pro-max-512gb-burgundy-titanium"),
+      img("iphone-18-pro-max-512gb-glacier-titanium"),
+      img("iphone-18-pro-max-512gb-black-titanium"),
+      img("iphone-18-pro-max-512gb-silver-titanium")
     ]
   },
   {
@@ -147,30 +148,20 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-10-14T12:00:00.000Z",
     colors: [
       {
-        name: "Obsidian Titanium",
-        hex: "#1E1F22",
-        images: [img("iphone-15-pro-max-256gb-black-titanium")]
+        name: "Night Sky Titanium",
+        hex: "#222933",
+        images: [img("iphone-duo-1tb-night-sky-titanium")]
       },
       {
-        name: "Natural Titanium",
-        hex: "#9E978E",
-        images: [img("iphone-15-pro-max-256gb-natural-titanium")]
-      },
-      {
-        name: "Pacific Titanium",
-        hex: "#39434F",
-        images: [img("iphone-15-pro-max-256gb-blue-titanium")]
-      },
-      {
-        name: "Starlight Titanium",
-        hex: "#F2F2ED",
-        images: [img("iphone-15-pro-max-256gb-white-titanium")]
+        name: "Star White Titanium",
+        hex: "#F2F1EC",
+        images: [img("iphone-duo-1tb-star-white-titanium")]
       }
     ],
     images: [
-      img("iphone-15-pro-max-256gb-black-titanium"),
-      img("iphone-15-pro-max-256gb-natural-titanium"),
-      img("iphone-15-pro-max-256gb-blue-titanium")
+      img("iphone-duo-1tb"),
+      img("iphone-duo-1tb-night-sky-titanium"),
+      img("iphone-duo-1tb-star-white-titanium")
     ]
   },
   {
@@ -203,19 +194,32 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-10-10T09:00:00.000Z",
     colors: [
       {
-        name: "Natural Titanium",
-        hex: "#9E978E",
-        images: [img("iphone-15-pro-128gb-natural-titanium")]
+        name: "Glacier Titanium",
+        hex: "#BFCAD0",
+        images: [img("iphone-18-pro-256gb-glacier-titanium")]
+      },
+      {
+        name: "Burgundy Titanium",
+        hex: "#5E2D38",
+        images: [img("iphone-18-pro-256gb-burgundy-titanium")]
       },
       {
         name: "Black Titanium",
-        hex: "#28292A",
-        images: [img("iphone-15-pro-128gb-black-titanium")]
+        hex: "#232426",
+        images: [img("iphone-18-pro-256gb-black-titanium")]
+      },
+      {
+        name: "Silver Titanium",
+        hex: "#E4E5E7",
+        images: [img("iphone-18-pro-256gb-silver-titanium")]
       }
     ],
     images: [
-      img("iphone-15-pro-128gb-natural-titanium"),
-      img("iphone-15-pro-128gb-black-titanium")
+      img("iphone-18-pro-256gb"),
+      img("iphone-18-pro-256gb-glacier-titanium"),
+      img("iphone-18-pro-256gb-burgundy-titanium"),
+      img("iphone-18-pro-256gb-black-titanium"),
+      img("iphone-18-pro-256gb-silver-titanium")
     ]
   },
   {
@@ -247,14 +251,17 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     displayOrder: 4,
     createdAt: "2026-10-08T09:00:00.000Z",
     colors: [
-      { name: "Ultramarine Blue", hex: "#6B88C8", images: [img("iphone-15-128gb-blue")] },
-      { name: "Obsidian Black", hex: "#2E3135", images: [img("iphone-15-128gb-black")] },
-      { name: "Rose Pink", hex: "#F4C6D0", images: [img("iphone-15-128gb-pink")] }
+      { name: "Mist Blue", hex: "#9BB6CE", images: [img("iphone-18-256gb-mist-blue")] },
+      { name: "Lavender", hex: "#C8BCE0", images: [img("iphone-18-256gb-lavender")] },
+      { name: "Sage", hex: "#A7B8A5", images: [img("iphone-18-256gb-sage")] },
+      { name: "Obsidian Black", hex: "#2E3135", images: [img("iphone-18-256gb-obsidian-black")] }
     ],
     images: [
-      img("iphone-15-128gb-blue"),
-      img("iphone-15-128gb-black"),
-      img("iphone-15-128gb-pink")
+      img("iphone-18-256gb"),
+      img("iphone-18-256gb-mist-blue"),
+      img("iphone-18-256gb-lavender"),
+      img("iphone-18-256gb-sage"),
+      img("iphone-18-256gb-obsidian-black")
     ]
   },
 
@@ -289,30 +296,26 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-09-15T10:00:00.000Z",
     colors: [
       {
-        name: "Deep Blue Titanium",
-        hex: "#39434F",
-        images: [img("iphone-15-pro-max-256gb-blue-titanium")]
+        name: "Cosmic Orange",
+        hex: "#D96B27",
+        images: [img("iphone-17-pro-max-256gb-cosmic-orange")]
       },
       {
-        name: "Natural Titanium",
-        hex: "#9E978E",
-        images: [img("iphone-15-pro-max-256gb-natural-titanium")]
+        name: "Deep Blue",
+        hex: "#2B3B4E",
+        images: [img("iphone-17-pro-max-256gb-deep-blue")]
       },
       {
-        name: "Black Titanium",
-        hex: "#28292A",
-        images: [img("iphone-15-pro-max-256gb-black-titanium")]
-      },
-      {
-        name: "White Titanium",
-        hex: "#F2F2ED",
-        images: [img("iphone-15-pro-max-256gb-white-titanium")]
+        name: "Silver",
+        hex: "#E3E4E6",
+        images: [img("iphone-17-pro-max-256gb-silver")]
       }
     ],
     images: [
-      img("iphone-15-pro-max-256gb-blue-titanium"),
-      img("iphone-15-pro-max-256gb-natural-titanium"),
-      img("iphone-15-pro-max-256gb-black-titanium")
+      img("iphone-17-pro-max-256gb"),
+      img("iphone-17-pro-max-256gb-cosmic-orange"),
+      img("iphone-17-pro-max-256gb-deep-blue"),
+      img("iphone-17-pro-max-256gb-silver")
     ]
   },
   {
@@ -345,19 +348,26 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-09-12T10:00:00.000Z",
     colors: [
       {
-        name: "Black Titanium",
-        hex: "#28292A",
-        images: [img("iphone-15-pro-128gb-black-titanium")]
+        name: "Deep Blue",
+        hex: "#2B3B4E",
+        images: [img("iphone-17-pro-256gb-deep-blue")]
       },
       {
-        name: "Natural Titanium",
-        hex: "#9E978E",
-        images: [img("iphone-15-pro-128gb-natural-titanium")]
+        name: "Cosmic Orange",
+        hex: "#D96B27",
+        images: [img("iphone-17-pro-256gb-cosmic-orange")]
+      },
+      {
+        name: "Silver",
+        hex: "#E3E4E6",
+        images: [img("iphone-17-pro-256gb-silver")]
       }
     ],
     images: [
-      img("iphone-15-pro-128gb-black-titanium"),
-      img("iphone-15-pro-128gb-natural-titanium")
+      img("iphone-17-pro-256gb"),
+      img("iphone-17-pro-256gb-deep-blue"),
+      img("iphone-17-pro-256gb-cosmic-orange"),
+      img("iphone-17-pro-256gb-silver")
     ]
   },
   {
@@ -389,10 +399,18 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     displayOrder: 7,
     createdAt: "2026-09-10T10:00:00.000Z",
     colors: [
-      { name: "Starlight", hex: "#F9F6EF", images: [img("iphone-14-128gb-starlight")] },
-      { name: "Midnight", hex: "#1C232B", images: [img("iphone-14-128gb-midnight")] }
+      { name: "Sky Blue", hex: "#BFD4E6", images: [img("iphone-17-air-256gb-sky-blue")] },
+      { name: "Light Gold", hex: "#EFE4D2", images: [img("iphone-17-air-256gb-light-gold")] },
+      { name: "Cloud White", hex: "#F5F6F8", images: [img("iphone-17-air-256gb-cloud-white")] },
+      { name: "Space Black", hex: "#222427", images: [img("iphone-17-air-256gb-space-black")] }
     ],
-    images: [img("iphone-14-128gb-starlight"), img("iphone-14-128gb-midnight")]
+    images: [
+      img("iphone-17-air-256gb"),
+      img("iphone-17-air-256gb-sky-blue"),
+      img("iphone-17-air-256gb-light-gold"),
+      img("iphone-17-air-256gb-cloud-white"),
+      img("iphone-17-air-256gb-space-black")
+    ]
   },
 
   // ─── IPHONE 16 SERIES ────────────────────────────────────────────────────
@@ -429,28 +447,30 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
       {
         name: "Desert Titanium",
         hex: "#C4B19B",
-        images: [img("iphone-15-pro-max-256gb-natural-titanium")]
+        images: [img("iphone-16-pro-max-256gb-desert-titanium")]
       },
       {
         name: "White Titanium",
         hex: "#F2F2ED",
-        images: [img("iphone-15-pro-max-256gb-white-titanium")]
+        images: [img("iphone-16-pro-max-256gb-white-titanium")]
       },
       {
         name: "Black Titanium",
         hex: "#28292A",
-        images: [img("iphone-15-pro-max-256gb-black-titanium")]
+        images: [img("iphone-16-pro-max-256gb-black-titanium")]
       },
       {
         name: "Natural Titanium",
         hex: "#9E978E",
-        images: [img("iphone-15-pro-max-256gb-natural-titanium")]
+        images: [img("iphone-16-pro-max-256gb-natural-titanium")]
       }
     ],
     images: [
-      img("iphone-15-pro-max-256gb-white-titanium"),
-      img("iphone-15-pro-max-256gb-natural-titanium"),
-      img("iphone-15-pro-max-256gb-black-titanium")
+      img("iphone-16-pro-max-256gb"),
+      img("iphone-16-pro-max-256gb-desert-titanium"),
+      img("iphone-16-pro-max-256gb-white-titanium"),
+      img("iphone-16-pro-max-256gb-black-titanium"),
+      img("iphone-16-pro-max-256gb-natural-titanium")
     ]
   },
   {
@@ -485,17 +505,24 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
       {
         name: "Natural Titanium",
         hex: "#9E978E",
-        images: [img("iphone-15-pro-128gb-natural-titanium")]
+        images: [img("iphone-16-pro-128gb-natural-titanium")]
       },
       {
         name: "Black Titanium",
         hex: "#28292A",
-        images: [img("iphone-15-pro-128gb-black-titanium")]
+        images: [img("iphone-16-pro-128gb-black-titanium")]
+      },
+      {
+        name: "Desert Titanium",
+        hex: "#C4B19B",
+        images: [img("iphone-16-pro-128gb-desert-titanium")]
       }
     ],
     images: [
-      img("iphone-15-pro-128gb-natural-titanium"),
-      img("iphone-15-pro-128gb-black-titanium")
+      img("iphone-16-pro-128gb"),
+      img("iphone-16-pro-128gb-natural-titanium"),
+      img("iphone-16-pro-128gb-black-titanium"),
+      img("iphone-16-pro-128gb-desert-titanium")
     ]
   },
   {
@@ -527,14 +554,17 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     displayOrder: 10,
     createdAt: "2026-08-15T10:00:00.000Z",
     colors: [
-      { name: "Pink", hex: "#FCE1E4", images: [img("iphone-15-128gb-pink")] },
-      { name: "Blue", hex: "#D4E1E8", images: [img("iphone-15-128gb-blue")] },
-      { name: "Black", hex: "#353839", images: [img("iphone-15-128gb-black")] }
+      { name: "Ultramarine", hex: "#6B88C8", images: [img("iphone-16-128gb-ultramarine")] },
+      { name: "Pink", hex: "#FCE1E4", images: [img("iphone-16-128gb-pink")] },
+      { name: "Teal", hex: "#92B4B6", images: [img("iphone-16-128gb-teal")] },
+      { name: "Black", hex: "#353839", images: [img("iphone-16-128gb-black")] }
     ],
     images: [
-      img("iphone-15-128gb-pink"),
-      img("iphone-15-128gb-blue"),
-      img("iphone-15-128gb-black")
+      img("iphone-16-128gb"),
+      img("iphone-16-128gb-ultramarine"),
+      img("iphone-16-128gb-pink"),
+      img("iphone-16-128gb-teal"),
+      img("iphone-16-128gb-black")
     ]
   },
 
@@ -787,30 +817,20 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-10-13T10:00:00.000Z",
     colors: [
       {
-        name: "Midnight Black",
-        hex: "#1E1F22",
-        images: [img("iphone-15-pro-max-256gb-black-titanium")]
+        name: "Bedrock Gray",
+        hex: "#4A4C50",
+        images: [img("beats-iphone-18-pro-max-case-magsafe-bedrock-gray")]
       },
       {
-        name: "Summit Stone",
-        hex: "#9E978E",
-        images: [img("iphone-15-pro-max-256gb-natural-titanium")]
-      },
-      {
-        name: "Riptide Blue",
-        hex: "#39434F",
-        images: [img("iphone-15-pro-max-256gb-blue-titanium")]
-      },
-      {
-        name: "Sunset Purple",
-        hex: "#7D5B8C",
-        images: [img("ipad-mini-6-64gb-purple")]
+        name: "Burgundy Clear MagSafe",
+        hex: "#5E2D38",
+        images: [img("beats-iphone-18-pro-max-case-magsafe-burgundy-clear-magsafe")]
       }
     ],
     images: [
-      img("iphone-15-pro-max-256gb-black-titanium"),
-      img("iphone-15-pro-max-256gb-natural-titanium"),
-      img("iphone-15-pro-max-256gb-blue-titanium")
+      img("beats-iphone-18-pro-max-case-magsafe"),
+      img("beats-iphone-18-pro-max-case-magsafe-bedrock-gray"),
+      img("beats-iphone-18-pro-max-case-magsafe-burgundy-clear-magsafe")
     ]
   },
   {
@@ -827,7 +847,7 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     description:
       "The all-new Beats Kickstand Case with MagSafe and Camera Control features an integrated lanyard cord that doubles as a fold-out landscape kickstand for hands-free video streaming, FaceTime calls, and StandBy desk clock mode.",
     specs: {
-      compatibility: "iPhone 18 Pro & iPhone 17 Pro",
+      compatibility: "iPhone 18 Pro, iPhone 17 Pro & iPhone Duo",
       standFeature: "Integrated fold-out wrist strap & landscape viewing kickstand",
       cameraControl: "Conductive sapphire crystal Camera Control pass-through",
       magsafe: "Full MagSafe charger and wallet compatibility"
@@ -842,19 +862,20 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     createdAt: "2026-10-07T10:00:00.000Z",
     colors: [
       {
-        name: "Bedrock Gray",
-        hex: "#4A4C50",
-        images: [img("iphone-15-pro-128gb-black-titanium")]
+        name: "Pebble Stone Kickstand",
+        hex: "#8B7D6B",
+        images: [img("beats-iphone-pro-kickstand-case-pebble-stone-kickstand")]
       },
       {
-        name: "Pebble Stone",
-        hex: "#B8B2A6",
-        images: [img("iphone-15-pro-128gb-natural-titanium")]
+        name: "Bedrock Gray",
+        hex: "#4A4C50",
+        images: [img("beats-iphone-pro-kickstand-case-bedrock-gray")]
       }
     ],
     images: [
-      img("iphone-15-pro-128gb-black-titanium"),
-      img("iphone-15-pro-128gb-natural-titanium")
+      img("beats-iphone-pro-kickstand-case"),
+      img("beats-iphone-pro-kickstand-case-pebble-stone-kickstand"),
+      img("beats-iphone-pro-kickstand-case-bedrock-gray")
     ]
   },
   {
@@ -884,10 +905,16 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     displayOrder: 3,
     createdAt: "2026-10-04T10:00:00.000Z",
     colors: [
-      { name: "Obsidian Black", hex: "#28292A", images: [img("iphone-15-128gb-black")] },
-      { name: "Ocean Blue", hex: "#2C5D88", images: [img("iphone-13-128gb-blue")] }
+      { name: "Burgundy TechWoven", hex: "#5E2D38", images: [img("iphone-techwoven-case-magsafe-burgundy-techwoven")] },
+      { name: "Mulberry TechWoven", hex: "#722F4B", images: [img("iphone-techwoven-case-magsafe-mulberry-techwoven")] },
+      { name: "Olive TechWoven", hex: "#5C5B3E", images: [img("iphone-techwoven-case-magsafe-olive-techwoven")] }
     ],
-    images: [img("iphone-15-128gb-black"), img("iphone-13-128gb-blue")]
+    images: [
+      img("iphone-techwoven-case-magsafe"),
+      img("iphone-techwoven-case-magsafe-burgundy-techwoven"),
+      img("iphone-techwoven-case-magsafe-mulberry-techwoven"),
+      img("iphone-techwoven-case-magsafe-olive-techwoven")
+    ]
   },
   {
     id: "prod-iphone-magsafe-wallet-find-my",
@@ -1015,10 +1042,14 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     displayOrder: 1,
     createdAt: "2026-10-06T10:00:00.000Z",
     colors: [
-      { name: "Space Black", hex: "#2E2F33", images: [img("ipad-pro-12-9-m2-256gb-space-gray")] },
-      { name: "Silver", hex: "#E3E4E5", images: [img("ipad-pro-12-9-m2-256gb-silver")] }
+      { name: "Space Black", hex: "#2E2F33", images: [img("ipad-pro-13-m5-512gb-space-black")] },
+      { name: "Silver", hex: "#E3E4E5", images: [img("ipad-pro-13-m5-512gb-silver")] }
     ],
-    images: [img("ipad-pro-12-9-m2-256gb-space-gray"), img("ipad-pro-12-9-m2-256gb-silver")]
+    images: [
+      img("ipad-pro-13-m5-512gb"),
+      img("ipad-pro-13-m5-512gb-space-black"),
+      img("ipad-pro-13-m5-512gb-silver")
+    ]
   },
   {
     id: "prod-macbook-pro-16-m5-max-1tb",
@@ -1048,10 +1079,14 @@ const RAW_CATALOG_2026: Omit<Product, "reviews" | "isActive" | "updatedAt">[] = 
     displayOrder: 1,
     createdAt: "2026-10-03T10:00:00.000Z",
     colors: [
-      { name: "Space Black", hex: "#2E2F33", images: [img("macbook-pro-14-m3-pro-space-black")] },
-      { name: "Silver", hex: "#E2E3E4", images: [img("macbook-pro-14-m3-pro-silver")] }
+      { name: "Space Black", hex: "#2E2F33", images: [img("macbook-pro-16-m5-max-1tb-space-black")] },
+      { name: "Silver", hex: "#E2E3E4", images: [img("macbook-pro-16-m5-max-1tb-silver")] }
     ],
-    images: [img("macbook-pro-14-m3-pro-space-black"), img("macbook-pro-14-m3-pro-silver")]
+    images: [
+      img("macbook-pro-16-m5-max-1tb"),
+      img("macbook-pro-16-m5-max-1tb-space-black"),
+      img("macbook-pro-16-m5-max-1tb-silver")
+    ]
   }
 ];
 

@@ -263,6 +263,33 @@ export default function HomeScreen() {
           />
         </Animated.View>
 
+        {/* FLASH DEALS BANNER */}
+        <Animated.View entering={FadeInDown.delay(50).duration(360)} style={styles.flashDealsSection}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.flashDealsCard,
+              pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] }
+            ]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/deals" as any);
+            }}
+          >
+            <View style={styles.flashDealsLeft}>
+              <View style={styles.flashDealsBadge}>
+                <Ionicons name="flash" size={11} color="#FFFFFF" />
+                <Text style={styles.flashDealsBadgeText}>TODAY'S FLASH DEALS</Text>
+              </View>
+              <Text style={styles.flashDealsTitle}>Limited-Time Apple Drops</Text>
+              <Text style={styles.flashDealsSub}>Save up to ₵1,800 on iPhones, iPads & accessories</Text>
+            </View>
+            <View style={styles.flashDealsBtn}>
+              <Text style={styles.flashDealsBtnText}>View Deals</Text>
+              <Ionicons name="arrow-forward" size={13} color="#FFFFFF" />
+            </View>
+          </Pressable>
+        </Animated.View>
+
         {/* 5. Featured Products in a Clean Product Grid */}
         <Animated.View entering={FadeInDown.delay(60).duration(380)}>
           <SectionHeader
@@ -689,5 +716,70 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     gap: 14
+  },
+  flashDealsSection: {
+    paddingHorizontal: 16,
+    marginTop: 18,
+    marginBottom: 4
+  },
+  flashDealsCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#1D1D1F",
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2
+  },
+  flashDealsLeft: {
+    flex: 1,
+    marginRight: 12
+  },
+  flashDealsBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#0066CC",
+    alignSelf: "flex-start",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: radius.pill,
+    marginBottom: 6
+  },
+  flashDealsBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9.5,
+    fontWeight: "800",
+    letterSpacing: 0.4
+  },
+  flashDealsTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: -0.3
+  },
+  flashDealsSub: {
+    color: "rgba(255, 255, 255, 0.72)",
+    fontSize: 11.5,
+    marginTop: 2
+  },
+  flashDealsBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.16)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill
+  },
+  flashDealsBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700"
   }
 });

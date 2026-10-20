@@ -258,6 +258,19 @@ export default function ShopScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chipsScrollContent}
         >
+          <Pressable
+            style={({ pressed }) => [
+              styles.dealsChip,
+              pressed && { opacity: 0.8 }
+            ]}
+            onPress={() => {
+              AppHaptics.selection();
+              router.push("/deals" as any);
+            }}
+          >
+            <Ionicons name="flash" size={13} color="#0066CC" />
+            <Text style={styles.dealsChipText}>Flash Deals</Text>
+          </Pressable>
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat.value;
             return (
@@ -510,6 +523,22 @@ const styles = StyleSheet.create({
   chipsScrollContent: {
     paddingHorizontal: 16,
     gap: 8
+  },
+  dealsChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 980,
+    backgroundColor: "#F0F6FF",
+    borderWidth: 1,
+    borderColor: "#CCE0FF"
+  },
+  dealsChipText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0066CC"
   },
   chip: {
     paddingHorizontal: 16,

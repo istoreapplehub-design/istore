@@ -114,6 +114,13 @@ export default function RootLayout() {
                   headerBackTitle: "Back"
                 }}
               />
+              <Stack.Screen
+                name="deals"
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_bottom"
+                }}
+              />
             <Stack.Screen
               name="account"
               options={{
