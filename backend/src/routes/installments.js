@@ -11,12 +11,19 @@ const {
   payMilestone,
   confirmMilestone,
   getAdminInstallmentPlans,
+  updateAdminInstallmentSerial,
   verifyNiaSchema,
   calculateInstallmentSchema,
   applyInstallmentSchema
 } = require("../controllers/installmentController");
 const { validate } = require("../middleware/validate");
 const { optionalAuth, requireAuth, requireAdmin } = require("../middleware/auth");
+const { z } = require("zod");
+
+const updateSerialSchema = z.object({
+  serialNumber: z.string().max(100).optional().nullable(),
+  imei: z.string().max(100).optional().nullable()
+});
 
 // Public / Authenticated KYC NIA Check
 router.post("/verify-nia", optionalAuth, validate({ body: verifyNiaSchema }), verifyNia);
@@ -39,5 +46,11 @@ router.post("/confirm-milestone", confirmMilestone);
 
 // Admin installment management
 router.get("/admin/all", requireAdmin, getAdminInstallmentPlans);
+router.patch(
+  "/admin/:id/serial",
+  requireAdmin,
+  validate({ body: updateSerialSchema }),
+  updateAdminInstallmentSerial
+);
 
 module.exports = router;

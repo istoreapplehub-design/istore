@@ -302,4 +302,32 @@ export async function getAdminInstallments(
   );
 }
 
+export async function updateAdminOrderItemSerial(
+  orderId: string,
+  itemId: string,
+  body: { serialNumber?: string | null; imei?: string | null }
+): Promise<{ success: boolean; data: any; message: string }> {
+  return request<{ success: boolean; data: any; message: string }>(
+    `/api/admin/orders/${orderId}/items/${itemId}/serial`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    }
+  );
+}
+
+export async function updateAdminInstallmentSerial(
+  planId: string,
+  body: { serialNumber?: string | null; imei?: string | null }
+): Promise<{ success: boolean; data: any; message: string }> {
+  return request<{ success: boolean; data: any; message: string }>(
+    `/api/installments/admin/${planId}/serial`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    }
+  );
+}
+
+
 

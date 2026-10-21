@@ -668,8 +668,20 @@ export async function verifyDownPayment(payload: {
   );
 }
 
-export async function getMyInstallmentPlans(): Promise<{ success: boolean; data: any[] }> {
-  return request<{ success: boolean; data: any[] }>("/api/installments/my-plans");
+export async function getMyInstallmentPlans(): Promise<{
+  success: boolean;
+  data: any[];
+  creditScore?: number;
+  creditTier?: string;
+  summary?: any;
+}> {
+  return request<{
+    success: boolean;
+    data: any[];
+    creditScore?: number;
+    creditTier?: string;
+    summary?: any;
+  }>("/api/installments/my-plans");
 }
 
 export async function payInstallmentMilestone(payload: {

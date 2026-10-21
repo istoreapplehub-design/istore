@@ -35,7 +35,17 @@ async function listAllOrders(req, res, next) {
         { id: { startsWith: q } },
         { user: { name: { contains: q, mode: "insensitive" } } },
         { user: { phone: { contains: q } } },
-        { shippingAddress: { contains: q, mode: "insensitive" } }
+        { shippingAddress: { contains: q, mode: "insensitive" } },
+        {
+          items: {
+            some: {
+              OR: [
+                { serialNumber: { contains: q, mode: "insensitive" } },
+                { imei: { contains: q, mode: "insensitive" } }
+              ]
+            }
+          }
+        }
       ];
     }
 
@@ -154,8 +164,23 @@ async function getOrderById(req, res, next) {
       where: { id },
       include: {
         items: true,
+        installmentPlan: {
+          include: {
+            milestones: {
+              orderBy: { milestoneIndex: "asc" }
+            },
+            kyc: true
+          }
+        },
         user: {
-          select: { id: true, name: true, phone: true, email: true }
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+            creditScore: true,
+            creditTier: true
+          }
         }
       }
     });
@@ -543,6 +568,55 @@ async function exportOrders(req, res, next) {
   }
 }
 
+/**
+ * 8. PATCH /api/admin/orders/:id/items/:itemId/serial
+ * Assigns or updates Apple Serial Number & IMEI for any order item
+ */
+async function updateOrderItemSerial(req, res, next) {
+  try {
+    const { id: orderId, itemId } = req.params;
+    const { serialNumber, imei } = req.body;
+
+    const item = await prisma.orderItem.findFirst({
+      where: { id: itemId, orderId }
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        error: true,
+        message: "Order item not found"
+      });
+    }
+
+    const updatedItem = await prisma.orderItem.update({
+      where: { id: itemId },
+      data: {
+        serialNumber: serialNumber !== undefined ? (serialNumber ? serialNumber.trim() : null) : undefined,
+        imei: imei !== undefined ? (imei ? imei.trim() : null) : undefined
+      }
+    });
+
+    // If order has an installment plan, sync the serial number and imei to the plan record as well
+    if (serialNumber !== undefined || imei !== undefined) {
+      await prisma.installmentPlan.updateMany({
+        where: { orderId },
+        data: {
+          ...(serialNumber !== undefined ? { serialNumber: serialNumber ? serialNumber.trim() : null } : {}),
+          ...(imei !== undefined ? { imei: imei ? imei.trim() : null } : {})
+        }
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Device Serial Number / IMEI updated successfully",
+      data: updatedItem
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   listAllOrders,
   getOrderById,
@@ -550,5 +624,6 @@ module.exports = {
   getOrderTimeline,
   getRevenueStats,
   getPendingCount,
-  exportOrders
+  exportOrders,
+  updateOrderItemSerial
 };

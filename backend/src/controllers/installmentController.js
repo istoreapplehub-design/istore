@@ -1,6 +1,7 @@
 const { z } = require("zod");
 const prisma = require("../utils/prisma");
 const { verifyGhanaCard } = require("../services/niaService");
+const { adjustUserCreditScore, getCreditTier } = require("../utils/creditScore");
 const axios = require("axios");
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
@@ -122,6 +123,11 @@ async function verifyNia(req, res, next) {
         rawResponse: result.rawResponse
       }
     });
+
+    if (userId) {
+      // Reward Ghana Card identity verification with +30 credit score
+      await adjustUserCreditScore(userId, 30, "Ghana Card verified with NIA");
+    }
 
     res.json({
       success: true,
@@ -433,7 +439,7 @@ async function verifyDownPayment(req, res, next) {
 
 /**
  * GET /api/installments/my-plans
- * Customer endpoint to list their active and past installment plans
+ * Customer endpoint to list their active and past installment plans + credit rating & remaining balance
  */
 async function getMyPlans(req, res, next) {
   try {
@@ -442,6 +448,14 @@ async function getMyPlans(req, res, next) {
 
     if (!userId && !phone) {
       return res.status(401).json({ success: false, error: "Authentication required" });
+    }
+
+    let userRecord = null;
+    if (userId) {
+      userRecord = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, creditScore: true, creditTier: true }
+      });
     }
 
     const plans = await prisma.installmentPlan.findMany({
@@ -462,7 +476,58 @@ async function getMyPlans(req, res, next) {
       orderBy: { createdAt: "desc" }
     });
 
-    res.json({ success: true, data: plans });
+    const creditScore = userRecord?.creditScore || 650;
+    const creditTier = userRecord?.creditTier || getCreditTier(creditScore);
+
+    // Calculate aggregate balances
+    let totalRemainingBalanceGHS = 0;
+    let totalPaidSoFarGHS = 0;
+    let activePlansCount = 0;
+    let upcomingMilestones = [];
+
+    for (const plan of plans) {
+      if (plan.downPaymentPaid) {
+        totalPaidSoFarGHS += plan.downPaymentGHS;
+      }
+      if (plan.status === "active") {
+        activePlansCount++;
+      }
+
+      for (const m of plan.milestones || []) {
+        if (m.status === "paid") {
+          totalPaidSoFarGHS += m.amountGHS;
+        } else if (plan.status === "active") {
+          totalRemainingBalanceGHS += m.amountGHS;
+          upcomingMilestones.push({
+            milestoneId: m.id,
+            planId: plan.id,
+            deviceName: plan.order?.items?.[0]?.name || "Apple Device",
+            milestoneIndex: m.milestoneIndex,
+            dueDate: m.dueDate,
+            amountGHS: m.amountGHS
+          });
+        }
+      }
+    }
+
+    // Sort upcoming milestones by dueDate ascending
+    upcomingMilestones.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+    const nextPayment = upcomingMilestones[0] || null;
+
+    res.json({
+      success: true,
+      data: plans,
+      creditScore,
+      creditTier,
+      summary: {
+        creditScore,
+        creditTier,
+        totalRemainingBalanceGHS: Math.round(totalRemainingBalanceGHS * 100) / 100,
+        totalPaidSoFarGHS: Math.round(totalPaidSoFarGHS * 100) / 100,
+        activePlansCount,
+        nextPayment
+      }
+    });
   } catch (err) {
     next(err);
   }
@@ -616,6 +681,11 @@ async function confirmMilestone(req, res, next) {
       }
     });
 
+    // Credit score rewards for on-time installment repayment
+    if (milestone.plan.userId) {
+      await adjustUserCreditScore(milestone.plan.userId, 20, `Installment milestone #${milestone.milestoneIndex} paid`);
+    }
+
     res.json({
       success: true,
       message: "Installment payment confirmed successfully."
@@ -626,6 +696,57 @@ async function confirmMilestone(req, res, next) {
 }
 
 // ─── ADMIN CONTROLLERS ──────────────────────────────────────────────────────
+
+/**
+ * PATCH /api/admin/installments/:id/serial
+ * Admin endpoint to assign Apple Serial Number and IMEI to an installment plan and its device
+ */
+async function updateAdminInstallmentSerial(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { serialNumber, imei } = req.body;
+
+    const plan = await prisma.installmentPlan.findUnique({
+      where: { id },
+      include: {
+        order: {
+          include: { items: true }
+        }
+      }
+    });
+
+    if (!plan) {
+      return res.status(404).json({ success: false, error: "Installment plan not found" });
+    }
+
+    const updatedPlan = await prisma.installmentPlan.update({
+      where: { id },
+      data: {
+        ...(serialNumber !== undefined ? { serialNumber: serialNumber ? serialNumber.trim() : null } : {}),
+        ...(imei !== undefined ? { imei: imei ? imei.trim() : null } : {})
+      }
+    });
+
+    // Also sync to order item if linked
+    if (plan.order?.items?.[0]) {
+      await prisma.orderItem.update({
+        where: { id: plan.order.items[0].id },
+        data: {
+          ...(serialNumber !== undefined ? { serialNumber: serialNumber ? serialNumber.trim() : null } : {}),
+          ...(imei !== undefined ? { imei: imei ? imei.trim() : null } : {})
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Serial number & IMEI saved to installment plan and order device",
+      data: updatedPlan
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 /**
  * GET /api/admin/installments
@@ -646,7 +767,9 @@ async function getAdminInstallmentPlans(req, res, next) {
       where.OR = [
         { applicantName: { contains: search, mode: "insensitive" } },
         { applicantPhone: { contains: search } },
-        { ghanaCardNumber: { contains: search, mode: "insensitive" } }
+        { ghanaCardNumber: { contains: search, mode: "insensitive" } },
+        { serialNumber: { contains: search, mode: "insensitive" } },
+        { imei: { contains: search, mode: "insensitive" } }
       ];
     }
 
@@ -663,7 +786,17 @@ async function getAdminInstallmentPlans(req, res, next) {
           milestones: {
             orderBy: { milestoneIndex: "asc" }
           },
-          kyc: true
+          kyc: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              email: true,
+              creditScore: true,
+              creditTier: true
+            }
+          }
         },
         orderBy: { createdAt: "desc" }
       }),
@@ -703,5 +836,6 @@ module.exports = {
   getPlanDetails,
   payMilestone,
   confirmMilestone,
-  getAdminInstallmentPlans
+  getAdminInstallmentPlans,
+  updateAdminInstallmentSerial
 };

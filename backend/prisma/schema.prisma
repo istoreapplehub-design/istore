@@ -106,38 +106,44 @@ model Order {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  productId String
-  name      String   // Snapshot at purchase time
-  priceGHS  Float    // Snapshot at purchase time
-  qty       Int      @default(1)
-  color     String?  // Snapshot
-  storage   String?  // Snapshot
-  image     String?  // Snapshot URL
-  createdAt DateTime @default(now())
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id])
+  id           String   @id @default(uuid())
+  orderId      String
+  productId    String
+  name         String   // Snapshot at purchase time
+  priceGHS     Float    // Snapshot at purchase time
+  qty          Int      @default(1)
+  color        String?  // Snapshot
+  storage      String?  // Snapshot
+  image        String?  // Snapshot URL
+  serialNumber String?  // Apple Serial Number e.g. F2LL80R0Q2
+  imei         String?  // IMEI / IMEI2 e.g. 356789012345678
+  createdAt    DateTime @default(now())
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product  @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
+  @@index([serialNumber])
+  @@index([imei])
 }
 
 model User {
-  id         String   @id @default(uuid())
-  supabaseId String?  @unique
-  phone      String   @unique
-  email      String?  @unique
-  name       String
-  role       String   @default("customer") // "customer" | "admin"
-  isActive   Boolean  @default(true)
-  addresses  String   @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
-  orders     Order[]
+  id               String            @id @default(uuid())
+  supabaseId       String?           @unique
+  phone            String            @unique
+  email            String?           @unique
+  name             String
+  role             String            @default("customer") // "customer" | "admin"
+  isActive         Boolean           @default(true)
+  creditScore      Int               @default(650) // 300 - 850
+  creditTier       String            @default("Silver") // Bronze | Silver | Gold | Platinum
+  addresses        String            @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
+  orders           Order[]
   installmentPlans InstallmentPlan[]
   kycVerifications KycVerification[]
-  wishlist   WishlistItem[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  wishlist         WishlistItem[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([role])
 }
@@ -206,11 +212,14 @@ model InstallmentPlan {
   nextOfKinName      String?
   nextOfKinPhone     String?
   
-  // Status and payments
-  downPaymentPaid    Boolean               @default(false)
-  downPaymentRef     String?               // Paystack reference for 60%
-  status             String                @default("pending_downpayment") // pending_downpayment | active | completed | defaulted | cancelled
-  milestones         InstallmentMilestone[]
+  // Status, serial tracking and payments
+  downPaymentPaid       Boolean               @default(false)
+  downPaymentRef        String?               // Paystack reference for 60%
+  status                String                @default("pending_downpayment") // pending_downpayment | active | completed | defaulted | cancelled
+  serialNumber          String?               // Assigned Apple Serial Number
+  imei                  String?               // Assigned IMEI
+  creditScoreAtApproval Int?                  @default(650)
+  milestones            InstallmentMilestone[]
   
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt

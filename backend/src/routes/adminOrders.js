@@ -7,7 +7,8 @@ const {
   getOrderTimeline,
   getRevenueStats,
   getPendingCount,
-  exportOrders
+  exportOrders,
+  updateOrderItemSerial
 } = require("../controllers/adminOrderController");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
@@ -18,6 +19,11 @@ const updateStatusSchema = z.object({
   trackingNumber: z.string().max(100).optional(),
   courier: z.string().max(50).optional(),
   adminNote: z.string().max(500).optional()
+});
+
+const updateSerialSchema = z.object({
+  serialNumber: z.string().max(100).optional().nullable(),
+  imei: z.string().max(100).optional().nullable()
 });
 
 router.use(requireAuth, requireAdmin);
@@ -32,6 +38,11 @@ router.patch(
   "/:id/status",
   validate({ body: updateStatusSchema }),
   updateOrderStatus
+);
+router.patch(
+  "/:id/items/:itemId/serial",
+  validate({ body: updateSerialSchema }),
+  updateOrderItemSerial
 );
 
 module.exports = router;

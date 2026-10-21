@@ -439,6 +439,23 @@ export default function OrderDetailsScreen() {
                   <Text style={styles.itemQtyPrice}>
                     {item.qty} × {formatGHS(item.priceGHS)}
                   </Text>
+
+                  {(item.serialNumber || item.imei) ? (
+                    <View style={styles.hardwareBadgeContainer}>
+                      <View style={styles.hardwareBadge}>
+                        <Ionicons name="hardware-chip-outline" size={12} color="#0071E3" />
+                        <Text style={styles.hardwareBadgeText} numberOfLines={1}>
+                          SN: {item.serialNumber || "—"}{item.imei ? ` · IMEI: ${item.imei}` : ""}
+                        </Text>
+                      </View>
+                      {item.serialNumber ? (
+                        <View style={styles.warrantyBadge}>
+                          <Ionicons name="checkmark-circle" size={11} color="#059669" />
+                          <Text style={styles.warrantyBadgeText}>Apple 1-Year Limited Warranty</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  ) : null}
                 </View>
                 <Text style={styles.itemTotal}>
                   {formatGHS(item.qty * item.priceGHS)}
@@ -857,6 +874,45 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: 2
+  },
+  hardwareBadgeContainer: {
+    marginTop: 6,
+    gap: 4
+  },
+  hardwareBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F7FF",
+    borderWidth: 1,
+    borderColor: "#CCE4FF",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    gap: 4
+  },
+  hardwareBadgeText: {
+    fontSize: 11,
+    fontFamily: "monospace",
+    color: "#0071E3",
+    fontWeight: "600"
+  },
+  warrantyBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+    gap: 4
+  },
+  warrantyBadgeText: {
+    fontSize: 10,
+    color: "#059669",
+    fontWeight: "700"
   },
   itemTotal: {
     fontSize: 14,

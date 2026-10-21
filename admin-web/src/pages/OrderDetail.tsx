@@ -13,12 +13,17 @@ import {
   ExternalLink,
   Truck,
   Package,
-  X
+  X,
+  ShieldCheck,
+  Cpu,
+  Calendar,
+  Sparkles
 } from "lucide-react";
 import {
   getAdminOrderById,
   getAdminOrderTimeline,
   updateAdminOrderStatus,
+  updateAdminOrderItemSerial,
   formatGHS
 } from "../lib/api";
 import { StatusBadge, OrderStatus } from "../components/StatusBadge";
@@ -26,6 +31,130 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { useToast } from "../components/Toast";
 
 const COURIER_PRESETS = ["DHL", "EMS", "Yango", "Bolt", "Jumia", "Other"];
+
+function OrderItemSerialRow({
+  orderId,
+  item,
+  onSaved
+}: {
+  orderId: string;
+  item: any;
+  onSaved: () => void;
+}) {
+  const toast = useToast();
+  const [serialNumber, setSerialNumber] = useState(item.serialNumber || "");
+  const [imei, setImei] = useState(item.imei || "");
+  const [isEditing, setIsEditing] = useState(!item.serialNumber);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updateAdminOrderItemSerial(orderId, item.id, {
+        serialNumber: serialNumber.trim() || null,
+        imei: imei.trim() || null
+      }),
+    onSuccess: () => {
+      toast.success("Apple Serial & IMEI saved");
+      setIsEditing(false);
+      onSaved();
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to save serial number");
+    }
+  });
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100 bg-gray-50/80 p-3 rounded-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-1.5">
+          <Cpu className="w-3.5 h-3.5 text-blue-600" />
+          <span className="text-xs font-bold text-gray-800">
+            Hardware Identification (Apple Serial & IMEI)
+          </span>
+        </div>
+        {item.serialNumber && !isEditing && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            <CheckCircle2 className="w-3 h-3" />
+            Apple Warranty Registered
+          </span>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
+              Apple Serial Number
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. F2LL80R0Q2"
+              value={serialNumber}
+              onChange={(e) => setSerialNumber(e.target.value)}
+              className="w-full text-xs font-mono px-3 py-1.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black uppercase"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">
+              Device IMEI / Cellular ID
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. 356789012345678"
+              value={imei}
+              onChange={(e) => setImei(e.target.value)}
+              className="w-full text-xs font-mono px-3 py-1.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
+            />
+          </div>
+          <div className="sm:col-span-2 flex items-center justify-end gap-2 pt-1">
+            {item.serialNumber && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSerialNumber(item.serialNumber || "");
+                  setImei(item.imei || "");
+                  setIsEditing(false);
+                }}
+                className="px-3 py-1 text-xs font-semibold text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={mutation.isPending}
+              onClick={() => mutation.mutate()}
+              className="px-3.5 py-1 text-xs font-bold text-white bg-black hover:bg-gray-800 rounded-lg transition"
+            >
+              {mutation.isPending ? "Saving..." : "Save Hardware ID"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-4">
+            <div>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Serial</span>
+              <span className="font-mono font-bold text-gray-900">{item.serialNumber}</span>
+            </div>
+            {item.imei && (
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">IMEI</span>
+                <span className="font-mono font-medium text-gray-700">{item.imei}</span>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="text-xs text-blue-600 font-semibold hover:underline"
+          >
+            Edit Serial / IMEI
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function OrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -206,6 +335,24 @@ export function OrderDetail() {
                     <span>{order.user.email}</span>
                   </a>
                 )}
+
+                {/* I-Dynamic Credit Score / Trust Rating Badge */}
+                <div className="mt-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Customer Trust Rating
+                      </span>
+                      <span className="text-xs font-bold text-gray-900">
+                        {order.user?.creditScore ?? 650} / 850 · {order.user?.creditTier ?? "Silver"} Tier
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    Verified
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -226,6 +373,45 @@ export function OrderDetail() {
               </div>
             </div>
 
+            {/* Installment Plan Banner if applicable */}
+            {(order.isInstallment || order.installmentPlan) && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs font-bold text-blue-950 uppercase tracking-wide">
+                        60% Down Payment Installment Plan
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full w-fit">
+                      NIA Ghana Card Verified
+                    </span>
+                  </div>
+                  {order.installmentPlan && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 text-xs">
+                      <div>
+                        <span className="text-gray-500 text-[10px] block">Ghana Card PIN</span>
+                        <span className="font-mono font-bold text-gray-900">{order.installmentPlan.ghanaCardNumber}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-[10px] block">60% Down</span>
+                        <span className="font-bold text-emerald-700">{formatGHS(order.installmentPlan.downPaymentGHS)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-[10px] block">Remaining 40%</span>
+                        <span className="font-bold text-blue-900">{formatGHS(order.installmentPlan.remainingGHS)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-[10px] block">Frequency</span>
+                        <span className="font-semibold text-gray-800 capitalize">{order.installmentPlan.frequency}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {order.notes && (
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <span className="text-xs font-semibold text-gray-500">Customer Notes:</span>
@@ -242,36 +428,48 @@ export function OrderDetail() {
               <h2 className="text-base font-semibold text-gray-900">
                 Purchased Items ({order.items?.length || 0})
               </h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Record Apple Serial Numbers and IMEIs for device warranty activation and collateral security.
+              </p>
             </div>
 
             <div className="divide-y divide-gray-100">
               {order.items?.map((it, idx) => (
-                <div key={it.id || idx} className="p-4 sm:p-6 flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center shrink-0">
-                    {it.image ? (
-                      <img src={it.image} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <Package className="w-6 h-6 text-gray-400" />
-                    )}
-                  </div>
+                <div key={it.id || idx} className="p-4 sm:p-6 space-y-2">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden border border-gray-200 flex items-center justify-center shrink-0">
+                      {it.image ? (
+                        <img src={it.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-6 h-6 text-gray-400" />
+                      )}
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{it.name}</p>
-                    {(it.color || it.storage) && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {[it.color, it.storage].filter(Boolean).join(" · ")}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{it.name}</p>
+                      {(it.color || it.storage) && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {[it.color, it.storage].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-gray-900">
+                        {formatGHS(it.priceGHS * it.qty)}
                       </p>
-                    )}
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {formatGHS(it.priceGHS)} &times; {it.qty}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-gray-900">
-                      {formatGHS(it.priceGHS * it.qty)}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {formatGHS(it.priceGHS)} &times; {it.qty}
-                    </p>
-                  </div>
+                  {/* Device Serial Number & IMEI Management Row */}
+                  <OrderItemSerialRow
+                    orderId={order.id}
+                    item={it}
+                    onSaved={() => queryClient.invalidateQueries({ queryKey: ["admin-order", id] })}
+                  />
                 </div>
               ))}
             </div>

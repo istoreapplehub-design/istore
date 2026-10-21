@@ -189,7 +189,7 @@ export function Orders() {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by order ID, customer name, phone number..."
+              placeholder="Search by order ID, customer, serial number, IMEI, phone..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

@@ -52,6 +52,8 @@ export interface OrderItem {
   color?: string | null;
   storage?: string | null;
   image?: string | null;
+  serialNumber?: string | null;
+  imei?: string | null;
 }
 
 export interface Order {
@@ -62,6 +64,8 @@ export interface Order {
     name: string;
     phone: string;
     email: string | null;
+    creditScore?: number;
+    creditTier?: string;
   };
   items: OrderItem[];
   _count?: { items: number };
@@ -82,6 +86,8 @@ export interface Order {
   shippedAt?: string | null;
   deliveredAt?: string | null;
   cancelledAt?: string | null;
+  isInstallment?: boolean;
+  installmentPlan?: any;
   createdAt: string;
   updatedAt: string;
 }

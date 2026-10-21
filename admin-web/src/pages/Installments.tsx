@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   Calendar,
@@ -9,9 +9,12 @@ import {
   User,
   ShieldCheck,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Cpu,
+  Sparkles
 } from "lucide-react";
-import { getAdminInstallments, formatGHS, timeAgo } from "../lib/api";
+import { getAdminInstallments, updateAdminInstallmentSerial, formatGHS, timeAgo } from "../lib/api";
+import { useToast } from "../components/Toast";
 
 const STATUS_TABS = [
   { id: "all", label: "All Plans" },
@@ -22,10 +25,17 @@ const STATUS_TABS = [
 ];
 
 export function Installments() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
+
+  // Serial editing in modal
+  const [modalSerial, setModalSerial] = useState("");
+  const [modalImei, setModalImei] = useState("");
+  const [isEditingSerial, setIsEditingSerial] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-installments", page, search, statusFilter],
@@ -37,6 +47,34 @@ export function Installments() {
         status: statusFilter !== "all" ? statusFilter : undefined
       })
   });
+
+  const serialMutation = useMutation({
+    mutationFn: () =>
+      updateAdminInstallmentSerial(selectedPlan.id, {
+        serialNumber: modalSerial.trim() || null,
+        imei: modalImei.trim() || null
+      }),
+    onSuccess: (res) => {
+      toast.success("Apple Serial & IMEI saved to installment plan");
+      setSelectedPlan((prev: any) => ({
+        ...prev,
+        serialNumber: res.data.serialNumber,
+        imei: res.data.imei
+      }));
+      setIsEditingSerial(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-installments"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update serial number");
+    }
+  });
+
+  const openInspector = (plan: any) => {
+    setSelectedPlan(plan);
+    setModalSerial(plan.serialNumber || plan.order?.items?.[0]?.serialNumber || "");
+    setModalImei(plan.imei || plan.order?.items?.[0]?.imei || "");
+    setIsEditingSerial(!plan.serialNumber && !plan.order?.items?.[0]?.serialNumber);
+  };
 
   const plans = data?.data || [];
   const meta = data?.meta || { total: 0, page: 1, limit: 15, totalPages: 1 };
@@ -181,6 +219,10 @@ export function Installments() {
                           <div className="font-semibold text-gray-900">{plan.applicantName}</div>
                           <div className="text-xs text-gray-500 font-mono mt-0.5">{plan.ghanaCardNumber}</div>
                           <div className="text-xs text-gray-400 mt-0.5">{plan.applicantPhone}</div>
+                          <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>Score: {plan.user?.creditScore || plan.creditScoreAtApproval || 650} ({plan.user?.creditTier || "Silver"})</span>
+                          </div>
                         </td>
 
                         <td className="px-5 py-4">
@@ -190,6 +232,16 @@ export function Installments() {
                           <div className="text-xs text-gray-400 mt-0.5 font-mono">
                             Order #{plan.orderId.slice(0, 8).toUpperCase()}
                           </div>
+                          {(plan.serialNumber || plan.order?.items?.[0]?.serialNumber) ? (
+                            <div className="mt-1 inline-flex items-center gap-1 font-mono text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                              <Cpu className="w-3 h-3" />
+                              <span>SN: {plan.serialNumber || plan.order?.items?.[0]?.serialNumber}</span>
+                            </div>
+                          ) : (
+                            <span className="mt-1 inline-block text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                              No SN Assigned
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-5 py-4">
@@ -227,7 +279,7 @@ export function Installments() {
 
                         <td className="px-5 py-4 text-right">
                           <button
-                            onClick={() => setSelectedPlan(plan)}
+                            onClick={() => openInspector(plan)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-gray-800 text-xs font-semibold transition"
                           >
                             <span>Inspect KYC</span>
@@ -283,7 +335,7 @@ export function Installments() {
                   </div>
 
                   <button
-                    onClick={() => setSelectedPlan(plan)}
+                    onClick={() => openInspector(plan)}
                     className="w-full py-2 bg-neutral-900 text-white rounded-xl text-xs font-bold text-center"
                   >
                     View Schedule & KYC
@@ -347,6 +399,101 @@ export function Installments() {
                   <span className="font-semibold text-gray-800">
                     {selectedPlan.nextOfKinName} ({selectedPlan.nextOfKinPhone})
                   </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className="text-gray-500 font-medium">Customer Trust Rating:</span>
+                <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  {selectedPlan.user?.creditScore || selectedPlan.creditScoreAtApproval || 650} / 850 ({selectedPlan.user?.creditTier || "Silver"} Tier)
+                </span>
+              </div>
+            </div>
+
+            {/* Apple Hardware Collateral & Serial Number Section */}
+            <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs font-bold text-gray-900">Apple Hardware Collateral & Serial</span>
+                </div>
+                {selectedPlan.serialNumber && !isEditingSerial && (
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Warranty Active
+                  </span>
+                )}
+              </div>
+
+              {isEditingSerial ? (
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">
+                      Apple Serial Number
+                    </label>
+                    <input
+                      type="text"
+                      value={modalSerial}
+                      onChange={(e) => setModalSerial(e.target.value)}
+                      placeholder="e.g. F2LL80R0Q2"
+                      className="w-full text-xs font-mono px-3 py-1.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black uppercase"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">
+                      Device IMEI
+                    </label>
+                    <input
+                      type="text"
+                      value={modalImei}
+                      onChange={(e) => setModalImei(e.target.value)}
+                      placeholder="e.g. 356789012345678"
+                      className="w-full text-xs font-mono px-3 py-1.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    {selectedPlan.serialNumber && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModalSerial(selectedPlan.serialNumber || "");
+                          setModalImei(selectedPlan.imei || "");
+                          setIsEditingSerial(false);
+                        }}
+                        className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={serialMutation.isPending}
+                      onClick={() => serialMutation.mutate()}
+                      className="px-3 py-1 text-xs font-bold text-white bg-black hover:bg-gray-800 rounded-lg transition"
+                    >
+                      {serialMutation.isPending ? "Saving..." : "Save Hardware ID"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-xs">
+                  <div className="space-y-1 font-mono">
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-sans block">Serial Number:</span>
+                      <span className="font-bold text-gray-900">{selectedPlan.serialNumber || "None Assigned"}</span>
+                    </div>
+                    {selectedPlan.imei && (
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-sans block">IMEI:</span>
+                        <span className="text-gray-700">{selectedPlan.imei}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingSerial(true)}
+                    className="text-xs text-blue-600 font-bold hover:underline"
+                  >
+                    Edit Hardware ID
+                  </button>
                 </div>
               )}
             </div>

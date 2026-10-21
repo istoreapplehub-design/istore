@@ -80,6 +80,8 @@ export interface OrderItem {
   color?: string | null;
   storage?: string | null;
   image?: string | null;
+  serialNumber?: string | null;
+  imei?: string | null;
   createdAt?: string;
 }
 
