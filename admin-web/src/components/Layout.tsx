@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  Apple,
   ChevronLeft,
   Headphones,
   Home,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
+import { BrandLogo } from "./BrandLogo";
 import {
   formatGHS,
   getAdminOrders,
@@ -212,10 +212,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col overflow-y-auto px-5 py-6">
           <div className="flex items-center justify-between pb-6 border-b border-gray-100">
             <Link to="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center shadow-sm">
-                <Apple className="w-4 h-4" />
-              </div>
-              <span className="font-extrabold text-gray-900 tracking-tight text-lg">I-Store</span>
+              <BrandLogo size={32} showWordmark wordmarkClassName="font-extrabold text-gray-900 tracking-tight text-lg" />
             </Link>
             <button
               onClick={() => setMobileMenuOpen(false)}
@@ -325,10 +322,11 @@ export function Layout() {
             </button>
             <Link
               to="/dashboard"
-              className="flex items-center gap-1.5 text-gray-800 hover:text-gray-950 font-bold text-base transition"
+              className="flex items-center gap-2 text-gray-800 hover:text-gray-950 font-bold text-base transition"
               title="Back to home"
             >
-              <ChevronLeft className="w-4 h-4 text-gray-500" />
+              <BrandLogo size={24} className="lg:hidden" />
+              <ChevronLeft className="w-4 h-4 text-gray-500 hidden lg:inline" />
               <span>{getPageTitle()}</span>
             </Link>
           </div>

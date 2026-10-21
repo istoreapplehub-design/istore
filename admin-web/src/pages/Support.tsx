@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   XCircle,
   Headphones,
-  CreditCard
+  CreditCard,
+  ChevronLeft
 } from "lucide-react";
 import {
   formatGHS,
@@ -83,6 +84,7 @@ export function Support() {
   const [tab, setTab] = useState<"all" | OrderStatus>("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
 
@@ -139,7 +141,7 @@ export function Support() {
     ? [
         {
           label: "Payment status",
-          text: `Hello ${displayName(active)}, this is I-Store about order ${shortId(
+          text: `Hello ${displayName(active)}, this is I-Dynamics about order ${shortId(
             active
           )}. Your payment channel on file is ${
             CHANNEL_LABELS[active.paymentChannel || ""] || "unconfirmed"
@@ -195,7 +197,7 @@ export function Support() {
 
       <div className="bg-white rounded-3xl border border-[#ebebe9] shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
         {/* ─── LEFT: ORDER QUEUE ─────────────────────────────────────────── */}
-        <div className="lg:col-span-5 border-r border-gray-100 flex flex-col">
+        <div className={`lg:col-span-5 border-r border-gray-100 flex flex-col ${mobileShowDetail ? "hidden lg:flex" : "flex"}`}>
           <div className="p-4 border-b border-gray-100 space-y-3">
             <div className="relative">
               <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -248,7 +250,10 @@ export function Support() {
                   <button
                     key={o.id}
                     type="button"
-                    onClick={() => setSelectedId(o.id)}
+                    onClick={() => {
+                      setSelectedId(o.id);
+                      setMobileShowDetail(true);
+                    }}
                     className={`w-full text-left p-4 transition ${
                       isSelected
                         ? "bg-neutral-50 border-l-4 border-neutral-900"
@@ -288,7 +293,7 @@ export function Support() {
         </div>
 
         {/* ─── RIGHT: CUSTOMER + REPLY ───────────────────────────────────── */}
-        <div className="lg:col-span-7 flex flex-col justify-between bg-[#fafafa]">
+        <div className={`lg:col-span-7 flex flex-col justify-between bg-[#fafafa] ${mobileShowDetail ? "flex" : "hidden lg:flex"}`}>
           {!active ? (
             <div className="p-16 text-center text-gray-400 m-auto">
               <Headphones className="w-12 h-12 mx-auto mb-2 opacity-30" />
@@ -297,6 +302,16 @@ export function Support() {
           ) : (
             <>
               <div className="p-5 bg-white border-b border-gray-100">
+                {/* Mobile Back Button */}
+                <button
+                  type="button"
+                  onClick={() => setMobileShowDetail(false)}
+                  className="lg:hidden mb-3 inline-flex items-center gap-1 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  Back to queue
+                </button>
+
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
@@ -487,7 +502,7 @@ export function Support() {
                   {email ? (
                     <a
                       href={`mailto:${email}?subject=${encodeURIComponent(
-                        `I-Store order ${shortId(active)}`
+                        `I-Dynamics order ${shortId(active)}`
                       )}&body=${encodeURIComponent(draft)}`}
                       className="px-5 py-2.5 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
                     >

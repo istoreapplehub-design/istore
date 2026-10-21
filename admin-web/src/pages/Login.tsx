@@ -5,7 +5,6 @@ import {
   Mail,
   Eye,
   EyeOff,
-  Apple,
   Search,
   Package,
   Boxes,
@@ -17,11 +16,12 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { BrandLogo } from "../components/BrandLogo";
 
 const SLIDES = [
   {
     headline: "Your catalog, orders and revenue in one clean console",
-    sub: "Sign in to work from live store data — every figure on these screens is read straight from the I-Store database.",
+    sub: "Sign in to work from live store data — every figure on these screens is read straight from the I-Dynamics database.",
     cards: [
       {
         icon: LayoutDashboard,
@@ -151,10 +151,7 @@ export function Login() {
           <div>
             {/* Brand Logo Header */}
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center shadow-sm">
-                <Apple className="w-4 h-4" />
-              </div>
-              <span className="font-extrabold text-xl tracking-tight text-gray-900">I-Store</span>
+              <BrandLogo size={36} showWordmark wordmarkClassName="font-extrabold text-xl tracking-tight text-gray-900" />
             </div>
 
             {/* Title & Subtitle */}
@@ -164,7 +161,7 @@ export function Login() {
                 <span>Admin Operations Portal</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Welcome to I-Store
+                Welcome to I-Dynamics
               </h1>
               <p className="mt-2 text-sm text-gray-500 leading-relaxed">
                 Sign in to manage store catalog, orders, and fulfillment.
@@ -193,7 +190,7 @@ export function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@istore.com"
+                    placeholder="admin@ghanaapps.shop"
                     className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 text-sm text-gray-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition"
                   />
                 </div>
@@ -242,7 +239,7 @@ export function Login() {
 
           {/* Footer Copyright */}
           <div className="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-2">
-            <span>Copyright © I-Store. All Rights Reserved.</span>
+            <span>Copyright © I-Dynamics. All Rights Reserved.</span>
 <span>Apple hardware retail, Accra</span>
           </div>
         </div>

@@ -162,81 +162,152 @@ export function Admins() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50/80 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold">
-                <tr>
-                  <th className="py-3.5 px-6">Name</th>
-                  <th className="py-3.5 px-6">Email</th>
-                  <th className="py-3.5 px-6">Phone</th>
-                  <th className="py-3.5 px-6">Added</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 font-normal">
-                {admins.map((adm) => {
-                  const isSelf = adm.id === currentUser?.id;
-                  const addedDate = adm.createdAt
-                    ? new Date(adm.createdAt).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric"
-                      })
-                    : "—";
+          <div>
+            {/* ─── MOBILE VIEW: VERTICAL STACKED CARDS (md:hidden) ─── */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {admins.map((adm) => {
+                const isSelf = adm.id === currentUser?.id;
+                const addedDate = adm.createdAt
+                  ? new Date(adm.createdAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric"
+                    })
+                  : "—";
 
-                  return (
-                    <tr key={adm.id} className="hover:bg-gray-50/60 transition">
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-black text-white font-semibold text-xs flex items-center justify-center shrink-0">
-                            {adm.name ? adm.name.slice(0, 2).toUpperCase() : "AD"}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900 flex items-center gap-2">
-                              <span>{adm.name || "Unnamed"}</span>
-                              {isSelf && (
-                                <span className="px-2 py-0.5 text-[10px] font-bold bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-full">
-                                  You
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-xs text-gray-400 capitalize">{adm.role}</span>
-                          </div>
+                return (
+                  <div key={adm.id} className="p-4 flex flex-col gap-3 hover:bg-gray-50/60 transition">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-black text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                          {adm.name ? adm.name.slice(0, 2).toUpperCase() : "AD"}
                         </div>
-                      </td>
+                        <div>
+                          <div className="font-semibold text-gray-900 flex items-center gap-1.5">
+                            <span>{adm.name || "Unnamed"}</span>
+                            {isSelf && (
+                              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-full">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400 capitalize">{adm.role}</span>
+                        </div>
+                      </div>
 
-                      <td className="py-4 px-6 text-gray-700 font-medium">
-                        {adm.email || "—"}
-                      </td>
+                      <button
+                        type="button"
+                        disabled={isSelf || demoteMutation.isPending}
+                        title={isSelf ? "You cannot demote yourself" : "Demote to customer"}
+                        onClick={() => setAdminToDemote(adm)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                          isSelf
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
+                        }`}
+                      >
+                        Demote
+                      </button>
+                    </div>
 
-                      <td className="py-4 px-6 text-gray-600 font-mono text-xs">
-                        {adm.phone || "—"}
-                      </td>
+                    <div className="bg-gray-50/80 rounded-xl p-3 text-xs space-y-1.5 border border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Email:</span>
+                        <span className="font-medium text-gray-800 truncate max-w-[200px]">
+                          {adm.email || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Phone:</span>
+                        <span className="font-mono text-gray-700">{adm.phone || "—"}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Added:</span>
+                        <span className="text-gray-600">{addedDate}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                      <td className="py-4 px-6 text-gray-500 text-xs">
-                        {addedDate}
-                      </td>
+            {/* ─── DESKTOP VIEW: HORIZONTAL TABLE (hidden md:block) ─── */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600">
+                <thead className="bg-gray-50/80 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                  <tr>
+                    <th className="py-3.5 px-6">Name</th>
+                    <th className="py-3.5 px-6">Email</th>
+                    <th className="py-3.5 px-6">Phone</th>
+                    <th className="py-3.5 px-6">Added</th>
+                    <th className="py-3.5 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 font-normal">
+                  {admins.map((adm) => {
+                    const isSelf = adm.id === currentUser?.id;
+                    const addedDate = adm.createdAt
+                      ? new Date(adm.createdAt).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric"
+                        })
+                      : "—";
 
-                      <td className="py-4 px-6 text-right">
-                        <button
-                          type="button"
-                          disabled={isSelf || demoteMutation.isPending}
-                          title={isSelf ? "You cannot demote yourself" : "Demote to customer"}
-                          onClick={() => setAdminToDemote(adm)}
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                            isSelf
-                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                              : "bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
-                          }`}
-                        >
-                          Demote
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={adm.id} className="hover:bg-gray-50/60 transition">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-black text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                              {adm.name ? adm.name.slice(0, 2).toUpperCase() : "AD"}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900 flex items-center gap-2">
+                                <span>{adm.name || "Unnamed"}</span>
+                                {isSelf && (
+                                  <span className="px-2 py-0.5 text-[10px] font-bold bg-neutral-100 text-neutral-900 border border-neutral-300 rounded-full">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400 capitalize">{adm.role}</span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-6 text-gray-700 font-medium">
+                          {adm.email || "—"}
+                        </td>
+
+                        <td className="py-4 px-6 text-gray-600 font-mono text-xs">
+                          {adm.phone || "—"}
+                        </td>
+
+                        <td className="py-4 px-6 text-gray-500 text-xs">
+                          {addedDate}
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            type="button"
+                            disabled={isSelf || demoteMutation.isPending}
+                            title={isSelf ? "You cannot demote yourself" : "Demote to customer"}
+                            onClick={() => setAdminToDemote(adm)}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                              isSelf
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-neutral-100 text-neutral-900 hover:bg-neutral-200"
+                            }`}
+                          >
+                            Demote
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

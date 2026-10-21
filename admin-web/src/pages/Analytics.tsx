@@ -248,31 +248,33 @@ export function Analytics() {
                 </Empty>
               ) : (
                 <>
-                  <div className="h-56 flex items-end justify-between gap-2 sm:gap-4 border-b border-gray-100 pb-2">
-                    {dailyData.map((d) => {
-                      const heightPct = (d.revenueGHS / maxDaily) * 100;
-                      return (
-                        <div
-                          key={d.date}
-                          className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
-                        >
+                  <div className="overflow-x-auto pb-2 -mx-2 px-2">
+                    <div className="h-56 min-w-[320px] sm:min-w-0 flex items-end justify-between gap-2 sm:gap-4 border-b border-gray-100 pb-2">
+                      {dailyData.map((d) => {
+                        const heightPct = (d.revenueGHS / maxDaily) * 100;
+                        return (
                           <div
-                            title={`${formatGHS(d.revenueGHS)} · ${d.orderCount} order${
-                              d.orderCount === 1 ? "" : "s"
-                            }`}
-                            style={{ height: `${d.revenueGHS > 0 ? Math.max(heightPct, 4) : 1}%` }}
-                            className={`w-full max-w-[34px] rounded-t-lg transition duration-200 ${
-                              d.revenueGHS > 0
-                                ? "bg-neutral-900 hover:bg-neutral-700 cursor-pointer"
-                                : "bg-gray-100"
-                            }`}
-                          />
-                          <span className="text-[10px] font-semibold text-gray-400 mt-1">
-                            {dayLabel(d.date)}
-                          </span>
-                        </div>
-                      );
-                    })}
+                            key={d.date}
+                            className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
+                          >
+                            <div
+                              title={`${formatGHS(d.revenueGHS)} · ${d.orderCount} order${
+                                d.orderCount === 1 ? "" : "s"
+                              }`}
+                              style={{ height: `${d.revenueGHS > 0 ? Math.max(heightPct, 4) : 1}%` }}
+                              className={`w-full max-w-[34px] rounded-t-lg transition duration-200 ${
+                                d.revenueGHS > 0
+                                  ? "bg-neutral-900 hover:bg-neutral-700 cursor-pointer"
+                                  : "bg-gray-100"
+                              }`}
+                            />
+                            <span className="text-[10px] font-semibold text-gray-400 mt-1">
+                              {dayLabel(d.date)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">

@@ -229,9 +229,93 @@ export function Orders() {
         </div>
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Container: Mobile Vertical Cards + Desktop Horizontal Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* ─── MOBILE VIEW: VERTICAL STACKED CARDS (md:hidden) ─── */}
+        <div className="md:hidden divide-y divide-gray-100">
+          {isLoading ? (
+            <div className="px-6 py-12 text-center text-gray-400 text-xs">
+              Loading orders registry...
+            </div>
+          ) : orders.length > 0 ? (
+            orders.map((ord) => {
+              const shortId = `#${ord.id.slice(0, 8).toUpperCase()}`;
+              const customerName = ord.shippingAddress?.fullName || ord.user?.name || "Customer";
+              const phone = ord.shippingAddress?.phone || ord.user?.phone || "";
+              const itemCount = ord.itemCount ?? ord._count?.items ?? ord.items?.length ?? 0;
+
+              return (
+                <div
+                  key={ord.id}
+                  onClick={() => navigate(`/orders/${ord.id}`)}
+                  className="p-4 hover:bg-gray-50/80 active:bg-gray-100/70 transition cursor-pointer flex flex-col gap-3"
+                >
+                  {/* Card Header: ID, Date, Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-xs text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-md">
+                        {shortId}
+                      </span>
+                      <span className="text-[11px] text-gray-400">
+                        {new Date(ord.createdAt).toLocaleDateString("en-GH", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </span>
+                    </div>
+                    <StatusBadge status={ord.status} size="sm" />
+                  </div>
+
+                  {/* Customer & Amount Row */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-semibold text-gray-900 text-sm block truncate">
+                        {customerName}
+                      </span>
+                      {phone ? (
+                        <span className="text-xs text-gray-400 font-mono block mt-0.5">{phone}</span>
+                      ) : null}
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <div className="font-extrabold text-base text-gray-900">
+                        {formatGHS(ord.totalGHS)}
+                      </div>
+                      <div className="text-[11px] font-medium text-gray-500 capitalize">
+                        {ord.paymentChannel ? ord.paymentChannel.replace("_", " ") : "Pending"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer: Items Count & Action */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-50 text-xs">
+                    <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-md font-semibold text-[11px]">
+                      {itemCount} {itemCount === 1 ? "item" : "items"}
+                    </span>
+
+                    <span className="inline-flex items-center gap-1 font-semibold text-neutral-900">
+                      View details
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="px-6 py-16 text-center text-gray-400">
+              <Receipt className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-base font-semibold text-gray-700">No orders found</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Check your search filters or wait for customer checkouts.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ─── DESKTOP VIEW: HORIZONTAL TABLE (hidden md:block) ─── */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100">
               <tr>
