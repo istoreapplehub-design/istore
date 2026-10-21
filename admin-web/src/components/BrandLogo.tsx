@@ -8,7 +8,7 @@ interface BrandLogoProps {
 }
 
 /**
- * Official I-Dynamics Brand Emblem.
+ * Official I-Dynamic Brand Emblem.
  * Designed with the signature "I·D" geometric architectural monogram
  * with the electric blue dynamic connector node.
  */
@@ -62,7 +62,7 @@ export function BrandLogo({
   return (
     <div className="flex items-center gap-2.5">
       {badge}
-      <span className={wordmarkClassName}>I-Dynamics</span>
+      <span className={wordmarkClassName}>I-Dynamic</span>
     </div>
   );
 }

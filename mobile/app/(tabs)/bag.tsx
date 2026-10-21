@@ -15,7 +15,8 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -33,6 +34,8 @@ import { Product } from "../../types";
 export default function BagScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isTabletOrPc = width >= 860;
   const [editMode, setEditMode] = useState(false);
 
   // Cart & Wishlist state
@@ -183,43 +186,45 @@ export default function BagScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 1. Header */}
       <View style={styles.header}>
-        <View style={styles.headerTitleCol}>
-          <Text style={styles.headerEyebrow}>I-DYNAMIC STORE</Text>
-          <Text style={styles.headerTitle}>Review your Bag.</Text>
-          <Text style={styles.headerSubtitle}>
-            {totalItemCount === 0
-              ? "Free delivery and 7-day returns on every order."
-              : `${totalItemCount} ${totalItemCount === 1 ? "item" : "items"} · Free Express Delivery in Ghana`}
-          </Text>
-        </View>
+        <View style={styles.headerInner}>
+          <View style={styles.headerTitleCol}>
+            <Text style={styles.headerEyebrow}>I-DYNAMIC STORE</Text>
+            <Text style={styles.headerTitle}>Review your Bag.</Text>
+            <Text style={styles.headerSubtitle}>
+              {totalItemCount === 0
+                ? "Free delivery and 7-day returns on every order."
+                : `${totalItemCount} ${totalItemCount === 1 ? "item" : "items"} · Free Express Delivery in Ghana`}
+            </Text>
+          </View>
 
-        {items.length > 0 && (
-          <View style={styles.headerActionRow}>
-            {editMode && (
+          {items.length > 0 && (
+            <View style={styles.headerActionRow}>
+              {editMode && (
+                <Pressable
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={handleClearBag}
+                  style={({ pressed }) => [styles.clearBagBtn, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={styles.clearBagText}>Clear All</Text>
+                </Pressable>
+              )}
               <Pressable
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                onPress={handleClearBag}
-                style={({ pressed }) => [styles.clearBagBtn, pressed && { opacity: 0.7 }]}
+                onPress={handleToggleEdit}
+                style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.6 }]}
               >
-                <Text style={styles.clearBagText}>Clear All</Text>
+                <Text style={styles.editText}>{editMode ? "Done" : "Edit"}</Text>
               </Pressable>
-            )}
-            <Pressable
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              onPress={handleToggleEdit}
-              style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.6 }]}
-            >
-              <Text style={styles.editText}>{editMode ? "Done" : "Edit"}</Text>
-            </Pressable>
-            <Pressable
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              onPress={handleHelpPress}
-              style={({ pressed }) => [styles.helpBtn, pressed && { opacity: 0.7 }]}
-            >
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.brandAccent} />
-            </Pressable>
-          </View>
-        )}
+              <Pressable
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={handleHelpPress}
+                style={({ pressed }) => [styles.helpBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.brandAccent} />
+              </Pressable>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* 2. Empty State */}
@@ -279,6 +284,7 @@ export default function BagScreen() {
                     key={prod.id}
                     style={({ pressed }) => [
                       styles.emptyPopularCard,
+                      isTabletOrPc && { width: "23.5%" },
                       pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }
                     ]}
                     onPress={() => {
@@ -317,420 +323,457 @@ export default function BagScreen() {
         <View style={styles.contentWrapper}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              isTabletOrPc && styles.desktopScrollContent
+            ]}
           >
-            {/* Delivery & In-Store Pickup Banner */}
-            <View style={styles.fulfillmentBanner}>
-              <View style={styles.fulfillmentItem}>
-                <View style={styles.fulfillmentIconCircle}>
-                  <Ionicons name="airplane-outline" size={16} color={colors.text} />
-                </View>
-                <View style={styles.fulfillmentTextCol}>
-                  <Text style={styles.fulfillmentTitle}>Free Express Delivery</Text>
-                  <Text style={styles.fulfillmentSubtitle}>Next-day dispatch in Greater Accra & Kumasi</Text>
-                </View>
-              </View>
-
-              <View style={styles.fulfillmentDivider} />
-
-              <View style={styles.fulfillmentItem}>
-                <View style={styles.fulfillmentIconCircle}>
-                  <Ionicons name="storefront-outline" size={16} color={colors.text} />
-                </View>
-                <View style={styles.fulfillmentTextCol}>
-                  <Text style={styles.fulfillmentTitle}>In-Store Pickup</Text>
-                  <Text style={styles.fulfillmentSubtitle}>Airport City & Accra Mall (ready in 1 hr)</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Cart Items List */}
-            <View style={styles.itemsListContainer}>
-              {items.map((item, index) => {
-                const thumb = getStoredImage(item.image);
-                const isLast = index === items.length - 1;
-                const wishlisted = isWishlisted(item.productId);
-
-                return (
-                  <Animated.View
-                    key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
-                    layout={Layout.springify()}
-                    entering={FadeIn}
-                    exiting={FadeOut.duration(200)}
-                    style={[styles.itemCard, !isLast && styles.itemBorderBottom]}
-                  >
-                    {/* Thumbnail Container */}
-                    <Pressable
-                      onPress={() => {
-                        Haptics.selectionAsync();
-                        // Find matching slug if available
-                        const match = CATALOG_2026.find((c) => c.id === item.productId || c.name === item.name);
-                        if (match) router.push(`/product/${match.slug}`);
-                      }}
-                      style={styles.itemImageWrapper}
-                    >
-                      {thumb ? (
-                        <Image
-                          source={{ uri: thumb }}
-                          style={styles.itemImage}
-                          resizeMode="contain"
-                        />
-                      ) : (
-                        <View style={styles.itemImageFallback}>
-                          <ProductVisual glyphSize={32} />
-                        </View>
-                      )}
-                    </Pressable>
-
-                    {/* Details Column */}
-                    <View style={styles.itemDetails}>
-                      <Text style={styles.itemName} numberOfLines={2}>
-                        {item.name}
-                      </Text>
-
-                      {/* Specs / Finish chips */}
-                      <View style={styles.specsRow}>
-                        {item.color ? (
-                          <View style={styles.specChip}>
-                            <View style={styles.colorDot} />
-                            <Text style={styles.specChipText}>{item.color}</Text>
-                          </View>
-                        ) : null}
-
-                        {item.storage ? (
-                          <View style={styles.specChip}>
-                            <Text style={styles.specChipText}>{item.storage}</Text>
-                          </View>
-                        ) : null}
-                      </View>
-
-                      {/* Price Display */}
-                      <View style={styles.priceContainer}>
-                        <PriceTag price={item.priceGHS} size="md" />
-                      </View>
-
-                      {/* Controls Row: Stepper + Quick Actions */}
-                      <View style={styles.controlsRow}>
-                        {/* Stepper */}
-                        <View style={styles.stepperContainer}>
-                          <Pressable
-                            disabled={item.qty <= 1}
-                            style={({ pressed }) => [
-                              styles.stepperBtn,
-                              item.qty <= 1 && styles.stepperBtnDisabled,
-                              pressed && item.qty > 1 && { opacity: 0.6 }
-                            ]}
-                            onPress={() => {
-                              if (item.qty > 1) {
-                                Haptics.selectionAsync();
-                                updateQty(
-                                  item.productId,
-                                  item.qty - 1,
-                                  item.color,
-                                  item.storage
-                                );
-                              }
-                            }}
-                          >
-                            <Ionicons
-                              name="remove"
-                              size={15}
-                              color={item.qty <= 1 ? colors.textTertiary : colors.text}
-                            />
-                          </Pressable>
-
-                          <Text style={styles.stepperQty}>{item.qty}</Text>
-
-                          <Pressable
-                            disabled={item.qty >= 10}
-                            style={({ pressed }) => [
-                              styles.stepperBtn,
-                              item.qty >= 10 && styles.stepperBtnDisabled,
-                              pressed && item.qty < 10 && { opacity: 0.6 }
-                            ]}
-                            onPress={() => {
-                              if (item.qty < 10) {
-                                Haptics.selectionAsync();
-                                updateQty(
-                                  item.productId,
-                                  item.qty + 1,
-                                  item.color,
-                                  item.storage
-                                );
-                              }
-                            }}
-                          >
-                            <Ionicons
-                              name="add"
-                              size={15}
-                              color={item.qty >= 10 ? colors.textTertiary : colors.text}
-                            />
-                          </Pressable>
-                        </View>
-
-                        {/* Save for later & Remove micro-actions */}
-                        <View style={styles.itemMicroActions}>
-                          <Pressable
-                            hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                            style={({ pressed }) => [styles.microActionBtn, pressed && { opacity: 0.6 }]}
-                            onPress={() => handleSaveForLater(item.productId, item.name)}
-                          >
-                            <Ionicons
-                              name={wishlisted ? "heart" : "heart-outline"}
-                              size={18}
-                              color={wishlisted ? "#E11D48" : colors.textSecondary}
-                            />
-                          </Pressable>
-
-                          <Pressable
-                            hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-                            style={({ pressed }) => [
-                              styles.microActionBtn,
-                              editMode && styles.microActionBtnEdit,
-                              pressed && { opacity: 0.6 }
-                            ]}
-                            onPress={() => {
-                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                              removeItem(item.productId, item.color, item.storage);
-                            }}
-                          >
-                            <Ionicons
-                              name={editMode ? "trash" : "trash-outline"}
-                              size={18}
-                              color={editMode ? "#DC2626" : colors.textSecondary}
-                            />
-                          </Pressable>
-                        </View>
-                      </View>
+            <View style={[styles.mainLayout, isTabletOrPc && styles.desktopLayout]}>
+              {/* Left Column (Items & Recommended) */}
+              <View style={[styles.leftCol, isTabletOrPc && styles.desktopLeftCol]}>
+                {/* Delivery & In-Store Pickup Banner */}
+                <View style={[styles.fulfillmentBanner, isTabletOrPc && { marginHorizontal: 0 }]}>
+                  <View style={styles.fulfillmentItem}>
+                    <View style={styles.fulfillmentIconCircle}>
+                      <Ionicons name="airplane-outline" size={16} color={colors.text} />
                     </View>
-                  </Animated.View>
-                );
-              })}
-            </View>
+                    <View style={styles.fulfillmentTextCol}>
+                      <Text style={styles.fulfillmentTitle}>Free Express Delivery</Text>
+                      <Text style={styles.fulfillmentSubtitle}>Next-day dispatch in Greater Accra & Kumasi</Text>
+                    </View>
+                  </View>
 
-            {/* 4. Recommended Add-Ons Carousel */}
-            {recommendedAccessories.length > 0 && (
-              <View style={styles.recommendedSection}>
-                <View style={styles.recommendedHeader}>
-                  <View>
-                    <Text style={styles.recommendedEyebrow}>FREQUENTLY BOUGHT TOGETHER</Text>
-                    <Text style={styles.recommendedTitle}>Add the perfect companion.</Text>
+                  <View style={styles.fulfillmentDivider} />
+
+                  <View style={styles.fulfillmentItem}>
+                    <View style={styles.fulfillmentIconCircle}>
+                      <Ionicons name="storefront-outline" size={16} color={colors.text} />
+                    </View>
+                    <View style={styles.fulfillmentTextCol}>
+                      <Text style={styles.fulfillmentTitle}>In-Store Pickup</Text>
+                      <Text style={styles.fulfillmentSubtitle}>Airport City & Accra Mall (ready in 1 hr)</Text>
+                    </View>
                   </View>
                 </View>
 
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.recommendedScroll}
-                >
-                  {recommendedAccessories.map((acc) => {
-                    const accThumb = getStoredImage(acc.images?.[0]);
+                {/* Cart Items List */}
+                <View style={[styles.itemsListContainer, isTabletOrPc && { marginHorizontal: 0 }]}>
+                  {items.map((item, index) => {
+                    const thumb = getStoredImage(item.image);
+                    const isLast = index === items.length - 1;
+                    const wishlisted = isWishlisted(item.productId);
+
                     return (
-                      <View key={acc.id} style={styles.recommendedCard}>
-                        <View style={styles.recommendedImageWrapper}>
-                          {accThumb ? (
+                      <Animated.View
+                        key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
+                        layout={Layout.springify()}
+                        entering={FadeIn}
+                        exiting={FadeOut.duration(200)}
+                        style={[styles.itemCard, !isLast && styles.itemBorderBottom]}
+                      >
+                        {/* Thumbnail Container */}
+                        <Pressable
+                          onPress={() => {
+                            Haptics.selectionAsync();
+                            // Find matching slug if available
+                            const match = CATALOG_2026.find((c) => c.id === item.productId || c.name === item.name);
+                            if (match) router.push(`/product/${match.slug}`);
+                          }}
+                          style={styles.itemImageWrapper}
+                        >
+                          {thumb ? (
                             <Image
-                              source={{ uri: accThumb }}
-                              style={styles.recommendedImage}
+                              source={{ uri: thumb }}
+                              style={styles.itemImage}
                               resizeMode="contain"
                             />
                           ) : (
-                            <ProductVisual category="accessories" glyphSize={30} />
+                            <View style={styles.itemImageFallback}>
+                              <ProductVisual glyphSize={32} />
+                            </View>
                           )}
-                        </View>
-
-                        <Text style={styles.recommendedItemName} numberOfLines={2}>
-                          {acc.name}
-                        </Text>
-                        <Text style={styles.recommendedItemPrice}>{formatGHS(acc.priceGHS)}</Text>
-
-                        <Pressable
-                          style={({ pressed }) => [
-                            styles.recommendedAddBtn,
-                            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
-                          ]}
-                          onPress={() => handleAddRecommended(acc)}
-                        >
-                          <Ionicons name="add" size={14} color="#FFFFFF" style={{ marginRight: 2 }} />
-                          <Text style={styles.recommendedAddBtnText}>Add</Text>
                         </Pressable>
-                      </View>
+
+                        {/* Details Column */}
+                        <View style={styles.itemDetails}>
+                          <Text style={styles.itemName} numberOfLines={2}>
+                            {item.name}
+                          </Text>
+
+                          {/* Specs / Finish chips */}
+                          <View style={styles.specsRow}>
+                            {item.color ? (
+                              <View style={styles.specChip}>
+                                <View style={styles.colorDot} />
+                                <Text style={styles.specChipText}>{item.color}</Text>
+                              </View>
+                            ) : null}
+
+                            {item.storage ? (
+                              <View style={styles.specChip}>
+                                <Text style={styles.specChipText}>{item.storage}</Text>
+                              </View>
+                            ) : null}
+                          </View>
+
+                          {/* Price Display */}
+                          <View style={styles.priceContainer}>
+                            <PriceTag price={item.priceGHS} size="md" />
+                          </View>
+
+                          {/* Controls Row: Stepper + Quick Actions */}
+                          <View style={styles.controlsRow}>
+                            {/* Stepper */}
+                            <View style={styles.stepperContainer}>
+                              <Pressable
+                                disabled={item.qty <= 1}
+                                style={({ pressed }) => [
+                                  styles.stepperBtn,
+                                  item.qty <= 1 && styles.stepperBtnDisabled,
+                                  pressed && item.qty > 1 && { opacity: 0.6 }
+                                ]}
+                                onPress={() => {
+                                  if (item.qty > 1) {
+                                    Haptics.selectionAsync();
+                                    updateQty(
+                                      item.productId,
+                                      item.qty - 1,
+                                      item.color,
+                                      item.storage
+                                    );
+                                  }
+                                }}
+                              >
+                                <Ionicons
+                                  name="remove"
+                                  size={15}
+                                  color={item.qty <= 1 ? colors.textTertiary : colors.text}
+                                />
+                              </Pressable>
+
+                              <Text style={styles.stepperQty}>{item.qty}</Text>
+
+                              <Pressable
+                                disabled={item.qty >= 10}
+                                style={({ pressed }) => [
+                                  styles.stepperBtn,
+                                  item.qty >= 10 && styles.stepperBtnDisabled,
+                                  pressed && item.qty < 10 && { opacity: 0.6 }
+                                ]}
+                                onPress={() => {
+                                  if (item.qty < 10) {
+                                    Haptics.selectionAsync();
+                                    updateQty(
+                                      item.productId,
+                                      item.qty + 1,
+                                      item.color,
+                                      item.storage
+                                    );
+                                  }
+                                }}
+                              >
+                                <Ionicons
+                                  name="add"
+                                  size={15}
+                                  color={item.qty >= 10 ? colors.textTertiary : colors.text}
+                                />
+                              </Pressable>
+                            </View>
+
+                            {/* Save for later & Remove micro-actions */}
+                            <View style={styles.itemMicroActions}>
+                              <Pressable
+                                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                                style={({ pressed }) => [styles.microActionBtn, pressed && { opacity: 0.6 }]}
+                                onPress={() => handleSaveForLater(item.productId, item.name)}
+                              >
+                                <Ionicons
+                                  name={wishlisted ? "heart" : "heart-outline"}
+                                  size={18}
+                                  color={wishlisted ? "#E11D48" : colors.textSecondary}
+                                />
+                              </Pressable>
+
+                              <Pressable
+                                hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                                style={({ pressed }) => [
+                                  styles.microActionBtn,
+                                  editMode && styles.microActionBtnEdit,
+                                  pressed && { opacity: 0.6 }
+                                ]}
+                                onPress={() => {
+                                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                  removeItem(item.productId, item.color, item.storage);
+                                }}
+                              >
+                                <Ionicons
+                                  name={editMode ? "trash" : "trash-outline"}
+                                  size={18}
+                                  color={editMode ? "#DC2626" : colors.textSecondary}
+                                />
+                              </Pressable>
+                            </View>
+                          </View>
+                        </View>
+                      </Animated.View>
                     );
                   })}
-                </ScrollView>
-              </View>
-            )}
+                </View>
 
-            {/* 5. Promo Code Voucher Section */}
-            <View style={styles.promoSection}>
-              <Text style={styles.promoTitle}>Have a promo code?</Text>
-              {appliedPromo ? (
-                <View style={styles.appliedPromoCard}>
-                  <View style={styles.appliedPromoLeft}>
-                    <Ionicons name="pricetag" size={18} color="#059669" />
-                    <View style={{ marginLeft: 10 }}>
-                      <Text style={styles.appliedPromoCode}>{appliedPromo.code}</Text>
-                      <Text style={styles.appliedPromoDetail}>
-                        {appliedPromo.percent}% discount applied (-{formatGHS(discountAmount)})
-                      </Text>
+                {/* 4. Recommended Add-Ons Carousel */}
+                {recommendedAccessories.length > 0 && (
+                  <View style={[styles.recommendedSection, isTabletOrPc && { paddingHorizontal: 0 }]}>
+                    <View style={styles.recommendedHeader}>
+                      <View>
+                        <Text style={styles.recommendedEyebrow}>FREQUENTLY BOUGHT TOGETHER</Text>
+                        <Text style={styles.recommendedTitle}>Add the perfect companion.</Text>
+                      </View>
+                    </View>
+
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.recommendedScroll}
+                    >
+                      {recommendedAccessories.map((acc) => {
+                        const accThumb = getStoredImage(acc.images?.[0]);
+                        return (
+                          <View key={acc.id} style={styles.recommendedCard}>
+                            <View style={styles.recommendedImageWrapper}>
+                              {accThumb ? (
+                                <Image
+                                  source={{ uri: accThumb }}
+                                  style={styles.recommendedImage}
+                                  resizeMode="contain"
+                                />
+                              ) : (
+                                <ProductVisual category="accessories" glyphSize={30} />
+                              )}
+                            </View>
+
+                            <Text style={styles.recommendedItemName} numberOfLines={2}>
+                              {acc.name}
+                            </Text>
+                            <Text style={styles.recommendedItemPrice}>{formatGHS(acc.priceGHS)}</Text>
+
+                            <Pressable
+                              style={({ pressed }) => [
+                                styles.recommendedAddBtn,
+                                pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+                              ]}
+                              onPress={() => handleAddRecommended(acc)}
+                            >
+                              <Ionicons name="add" size={14} color="#FFFFFF" style={{ marginRight: 2 }} />
+                              <Text style={styles.recommendedAddBtnText}>Add</Text>
+                            </Pressable>
+                          </View>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              {/* Right Column (Summary, Promo, Assurances) */}
+              <View style={[styles.rightCol, isTabletOrPc && styles.desktopRightCol]}>
+                {/* 5. Promo Code Voucher Section */}
+                <View style={[styles.promoSection, isTabletOrPc && { marginHorizontal: 0, marginTop: 14 }]}>
+                  <Text style={styles.promoTitle}>Have a promo code?</Text>
+                  {appliedPromo ? (
+                    <View style={styles.appliedPromoCard}>
+                      <View style={styles.appliedPromoLeft}>
+                        <Ionicons name="pricetag" size={18} color="#059669" />
+                        <View style={{ marginLeft: 10 }}>
+                          <Text style={styles.appliedPromoCode}>{appliedPromo.code}</Text>
+                          <Text style={styles.appliedPromoDetail}>
+                            {appliedPromo.percent}% discount applied (-{formatGHS(discountAmount)})
+                          </Text>
+                        </View>
+                      </View>
+                      <Pressable
+                        onPress={handleRemovePromo}
+                        style={({ pressed }) => [styles.removePromoBtn, pressed && { opacity: 0.6 }]}
+                      >
+                        <Ionicons name="close" size={18} color={colors.textSecondary} />
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <View>
+                      <View style={styles.promoInputRow}>
+                        <TextInput
+                          style={styles.promoInput}
+                          placeholder="e.g. IDYNAMIC10, WELCOME10"
+                          placeholderTextColor={colors.textTertiary}
+                          value={promoCodeInput}
+                          onChangeText={(val) => {
+                            setPromoCodeInput(val);
+                            if (promoError) setPromoError(null);
+                          }}
+                          autoCapitalize="characters"
+                          autoCorrect={false}
+                        />
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.promoApplyBtn,
+                            !promoCodeInput.trim() && styles.promoApplyBtnDisabled,
+                            pressed && { opacity: 0.8 }
+                          ]}
+                          disabled={!promoCodeInput.trim()}
+                          onPress={handleApplyPromo}
+                        >
+                          <Text style={styles.promoApplyBtnText}>Apply</Text>
+                        </Pressable>
+                      </View>
+                      {promoError ? (
+                        <Text style={styles.promoErrorText}>{promoError}</Text>
+                      ) : null}
+                      {promoSuccessMsg ? (
+                        <Text style={styles.promoSuccessText}>{promoSuccessMsg}</Text>
+                      ) : null}
+                    </View>
+                  )}
+                </View>
+
+                {/* 6. Order Summary Card */}
+                <View style={[styles.summaryCard, isTabletOrPc && { marginHorizontal: 0, marginTop: 16 }]}>
+                  <Text style={styles.summaryCardHeader}>Order Summary</Text>
+
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Subtotal</Text>
+                    <Text style={styles.summaryValue}>{formatGHS(subtotalGHS)}</Text>
+                  </View>
+
+                  <View style={[styles.summaryRow, { marginTop: 12 }]}>
+                    <Text style={styles.summaryLabel}>Shipping & Handling</Text>
+                    <View style={styles.freeShippingBadge}>
+                      <Text style={styles.freeShippingText}>FREE</Text>
                     </View>
                   </View>
-                  <Pressable
-                    onPress={handleRemovePromo}
-                    style={({ pressed }) => [styles.removePromoBtn, pressed && { opacity: 0.6 }]}
-                  >
-                    <Ionicons name="close" size={18} color={colors.textSecondary} />
-                  </Pressable>
-                </View>
-              ) : (
-                <View>
-                  <View style={styles.promoInputRow}>
-                    <TextInput
-                      style={styles.promoInput}
-                      placeholder="e.g. IDYNAMIC10, WELCOME10"
-                      placeholderTextColor={colors.textTertiary}
-                      value={promoCodeInput}
-                      onChangeText={(val) => {
-                        setPromoCodeInput(val);
-                        if (promoError) setPromoError(null);
-                      }}
-                      autoCapitalize="characters"
-                      autoCorrect={false}
-                    />
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.promoApplyBtn,
-                        !promoCodeInput.trim() && styles.promoApplyBtnDisabled,
-                        pressed && { opacity: 0.8 }
-                      ]}
-                      disabled={!promoCodeInput.trim()}
-                      onPress={handleApplyPromo}
-                    >
-                      <Text style={styles.promoApplyBtnText}>Apply</Text>
-                    </Pressable>
+
+                  <View style={[styles.summaryRow, { marginTop: 12 }]}>
+                    <Text style={styles.summaryLabel}>Estimated VAT / Tax</Text>
+                    <Text style={styles.summaryTaxIncluded}>Included</Text>
                   </View>
-                  {promoError ? (
-                    <Text style={styles.promoErrorText}>{promoError}</Text>
-                  ) : null}
-                  {promoSuccessMsg ? (
-                    <Text style={styles.promoSuccessText}>{promoSuccessMsg}</Text>
-                  ) : null}
-                </View>
-              )}
-            </View>
 
-            {/* 6. Confidence & Assurance Card */}
-            <View style={styles.confidenceCard}>
-              <View style={styles.confidenceItem}>
-                <Ionicons name="shield-checkmark" size={20} color={colors.brandAccent} />
-                <View style={styles.confidenceTextCol}>
-                  <Text style={styles.confidenceTitle}>1-Year Official Apple Warranty</Text>
-                  <Text style={styles.confidenceSubtitle}>Honoured at all authorised service centres</Text>
-                </View>
-              </View>
+                  {appliedPromo && (
+                    <View style={[styles.summaryRow, { marginTop: 12 }]}>
+                      <Text style={styles.summaryDiscountLabel}>
+                        Discount ({appliedPromo.code})
+                      </Text>
+                      <Text style={styles.summaryDiscountValue}>
+                        -{formatGHS(discountAmount)}
+                      </Text>
+                    </View>
+                  )}
 
-              <View style={styles.confidenceDivider} />
+                  <View style={styles.summaryDivider} />
 
-              <View style={styles.confidenceItem}>
-                <Ionicons name="cube" size={20} color={colors.brandAccent} />
-                <View style={styles.confidenceTextCol}>
-                  <Text style={styles.confidenceTitle}>100% Sealed Factory Packaging</Text>
-                  <Text style={styles.confidenceSubtitle}>With original verifiable Apple serial numbers</Text>
-                </View>
-              </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryTotalLabel}>Total</Text>
+                    <Text style={styles.summaryTotalValue}>
+                      {formatGHS(finalTotalGHS)}
+                    </Text>
+                  </View>
 
-              <View style={styles.confidenceDivider} />
-
-              <View style={styles.confidenceItem}>
-                <Ionicons name="refresh-circle" size={20} color={colors.brandAccent} />
-                <View style={styles.confidenceTextCol}>
-                  <Text style={styles.confidenceTitle}>7-Day Easy Return Assurance</Text>
-                  <Text style={styles.confidenceSubtitle}>Quick exchange or full money-back guarantee</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* 7. Order Summary Card */}
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryCardHeader}>Order Summary</Text>
-
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>{formatGHS(subtotalGHS)}</Text>
-              </View>
-
-              <View style={[styles.summaryRow, { marginTop: 12 }]}>
-                <Text style={styles.summaryLabel}>Shipping & Handling</Text>
-                <View style={styles.freeShippingBadge}>
-                  <Text style={styles.freeShippingText}>FREE</Text>
-                </View>
-              </View>
-
-              <View style={[styles.summaryRow, { marginTop: 12 }]}>
-                <Text style={styles.summaryLabel}>Estimated VAT / Tax</Text>
-                <Text style={styles.summaryTaxIncluded}>Included</Text>
-              </View>
-
-              {appliedPromo && (
-                <View style={[styles.summaryRow, { marginTop: 12 }]}>
-                  <Text style={styles.summaryDiscountLabel}>
-                    Discount ({appliedPromo.code})
+                  <Text style={styles.summaryNote}>
+                    Prices in Ghanaian Cedis (GHS). Includes all Apple warranties, transit insurance, and complimentary delivery.
                   </Text>
-                  <Text style={styles.summaryDiscountValue}>
-                    -{formatGHS(discountAmount)}
-                  </Text>
+
+                  {/* Desktop / Tablet Direct Checkout Button */}
+                  {isTabletOrPc && (
+                    <View style={styles.desktopCheckoutBox}>
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.checkoutBtn,
+                          styles.desktopCheckoutBtn,
+                          pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
+                        ]}
+                        onPress={handleCheckout}
+                      >
+                        <Text style={styles.checkoutBtnText}>Check Out</Text>
+                        <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                      </Pressable>
+
+                      <View style={[styles.paymentMethodsRow, { marginTop: 10 }]}>
+                        <Ionicons name="lock-closed" size={12} color={colors.textTertiary} />
+                        <Text style={styles.paymentMethodsText}>
+                          Encrypted Checkout · MTN MoMo · Telecel · Visa
+                        </Text>
+                      </View>
+                    </View>
+                  )}
                 </View>
-              )}
 
-              <View style={styles.summaryDivider} />
+                {/* 7. Confidence & Assurance Card */}
+                <View style={[styles.confidenceCard, isTabletOrPc && { marginHorizontal: 0, marginTop: 16 }]}>
+                  <View style={styles.confidenceItem}>
+                    <Ionicons name="shield-checkmark" size={20} color={colors.brandAccent} />
+                    <View style={styles.confidenceTextCol}>
+                      <Text style={styles.confidenceTitle}>1-Year Official Apple Warranty</Text>
+                      <Text style={styles.confidenceSubtitle}>Honoured at all authorised service centres</Text>
+                    </View>
+                  </View>
 
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryTotalLabel}>Total</Text>
-                <Text style={styles.summaryTotalValue}>
-                  {formatGHS(finalTotalGHS)}
-                </Text>
+                  <View style={styles.confidenceDivider} />
+
+                  <View style={styles.confidenceItem}>
+                    <Ionicons name="cube" size={20} color={colors.brandAccent} />
+                    <View style={styles.confidenceTextCol}>
+                      <Text style={styles.confidenceTitle}>100% Sealed Factory Packaging</Text>
+                      <Text style={styles.confidenceSubtitle}>With original verifiable Apple serial numbers</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.confidenceDivider} />
+
+                  <View style={styles.confidenceItem}>
+                    <Ionicons name="refresh-circle" size={20} color={colors.brandAccent} />
+                    <View style={styles.confidenceTextCol}>
+                      <Text style={styles.confidenceTitle}>7-Day Easy Return Assurance</Text>
+                      <Text style={styles.confidenceSubtitle}>Quick exchange or full money-back guarantee</Text>
+                    </View>
+                  </View>
+                </View>
               </View>
-
-              <Text style={styles.summaryNote}>
-                Prices in Ghanaian Cedis (GHS). Includes all Apple Ghana warranties, secure insurance, and complimentary delivery.
-              </Text>
             </View>
           </ScrollView>
 
-          {/* 8. Sticky Bottom Checkout Bar */}
-          <View
-            style={[
-              styles.stickyBar,
-              { paddingBottom: Math.max(insets.bottom, 16) }
-            ]}
-          >
-            <View style={styles.stickyBarTop}>
-              <View style={styles.stickyPriceCol}>
-                <Text style={styles.stickyTotalLabel}>Total</Text>
-                <Text style={styles.stickyTotalPrice}>
-                  {formatGHS(finalTotalGHS)}
-                </Text>
+          {/* 8. Sticky Bottom Checkout Bar (Mobile Only) */}
+          {!isTabletOrPc && (
+            <View
+              style={[
+                styles.stickyBar,
+                { paddingBottom: Math.max(insets.bottom, 16) }
+              ]}
+            >
+              <View style={styles.stickyBarTop}>
+                <View style={styles.stickyPriceCol}>
+                  <Text style={styles.stickyTotalLabel}>Total</Text>
+                  <Text style={styles.stickyTotalPrice}>
+                    {formatGHS(finalTotalGHS)}
+                  </Text>
+                </View>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.checkoutBtn,
+                    pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
+                  ]}
+                  onPress={handleCheckout}
+                >
+                  <Text style={styles.checkoutBtnText}>Check Out</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                </Pressable>
               </View>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.checkoutBtn,
-                  pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
-                ]}
-                onPress={handleCheckout}
-              >
-                <Text style={styles.checkoutBtnText}>Check Out</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
-              </Pressable>
+              <View style={styles.paymentMethodsRow}>
+                <Ionicons name="lock-closed" size={12} color={colors.textTertiary} />
+                <Text style={styles.paymentMethodsText}>
+                  Encrypted Checkout · MTN MoMo · Telecel · Visa · Mastercard
+                </Text>
+              </View>
             </View>
-
-            <View style={styles.paymentMethodsRow}>
-              <Ionicons name="lock-closed" size={12} color={colors.textTertiary} />
-              <Text style={styles.paymentMethodsText}>
-                Encrypted Checkout · MTN MoMo · Telecel · Visa · Mastercard
-              </Text>
-            </View>
-          </View>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -743,15 +786,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#FBFBFD"
   },
   header: {
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border
+  },
+  headerInner: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 14,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border
+    maxWidth: 1200,
+    width: "100%",
+    alignSelf: "center"
   },
   headerTitleCol: {
     flex: 1,
@@ -962,6 +1010,41 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 170
+  },
+  desktopScrollContent: {
+    paddingBottom: 60
+  },
+  mainLayout: {
+    width: "100%"
+  },
+  desktopLayout: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    maxWidth: 1200,
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    gap: 32
+  },
+  leftCol: {
+    width: "100%"
+  },
+  desktopLeftCol: {
+    flex: 1.35
+  },
+  rightCol: {
+    width: "100%"
+  },
+  desktopRightCol: {
+    width: 380,
+    maxWidth: 400
+  },
+  desktopCheckoutBox: {
+    marginTop: 20
+  },
+  desktopCheckoutBtn: {
+    width: "100%",
+    justifyContent: "center"
   },
 
   // Fulfillment Banner

@@ -55,9 +55,15 @@ const SORT_LABELS: Record<SortOption, string> = {
 export default function ShopScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const containerWidth = Math.min(width, 820);
-  const numColumns = containerWidth >= 680 ? 3 : 2;
-  const cardWidth = Math.floor((containerWidth - 32 - 12 * (numColumns - 1)) / numColumns);
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 768 && width < 1024;
+  const maxContainer = isDesktop ? 1200 : isTablet ? 960 : 820;
+  const containerWidth = Math.min(width, maxContainer);
+  const numColumns = isDesktop ? 4 : isTablet ? 3 : 2;
+  const gridGap = isDesktop ? 16 : 12;
+  const cardWidth = Math.floor(
+    (containerWidth - 32 - gridGap * (numColumns - 1)) / numColumns
+  );
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string; sort?: string }>();
 

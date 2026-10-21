@@ -32,7 +32,11 @@ const HERO_TAGLINES: Record<string, string> = {
 export function HeroCarousel({ products }: HeroCarouselProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const carouselWidth = Math.min(width, 820);
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 768 && width < 1024;
+  const maxContainer = isDesktop ? 1200 : isTablet ? 960 : 820;
+  const carouselWidth = Math.min(width, maxContainer);
+  const slideHeight = isDesktop ? 320 : isTablet ? 290 : 264;
   const [activeIndex, setActiveIndex] = useState(0);
 
   const slides = useMemo(
@@ -53,7 +57,7 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
     <View style={styles.container}>
       <Carousel<Product>
         loop
-        style={{ width: carouselWidth, height: SLIDE_HEIGHT }}
+        style={{ width: carouselWidth, height: slideHeight }}
         itemSize={carouselWidth}
         autoplay
         autoplayInterval={5400}
@@ -74,6 +78,7 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
                 onPress={() => open(item)}
                 style={({ pressed }) => [
                   styles.heroCard,
+                  { minHeight: slideHeight - 12 },
                   pressed && { opacity: 0.96, transform: [{ scale: 0.995 }] }
                 ]}
               >

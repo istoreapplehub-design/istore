@@ -150,7 +150,10 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: 8,
     paddingHorizontal: 8,
-    alignItems: "center"
+    alignItems: "center",
+    width: "100%",
+    maxWidth: 1280,
+    alignSelf: "center"
   },
   barInner: {
     flexDirection: "row",

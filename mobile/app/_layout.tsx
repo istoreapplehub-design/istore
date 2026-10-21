@@ -243,9 +243,10 @@ const styles = StyleSheet.create({
   webContainer: {
     flex: 1,
     width: "100%",
-    maxWidth: 820,
+    maxWidth: 1280,
     alignSelf: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
+    position: "relative"
   }
 });
 

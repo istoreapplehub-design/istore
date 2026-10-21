@@ -24,9 +24,15 @@ import SkeletonLoader from "../../components/SkeletonLoader";
 export default function FavoritesTabScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const containerWidth = Math.min(width, 820);
-  const numColumns = containerWidth >= 680 ? 3 : 2;
-  const cardWidth = Math.floor((containerWidth - 32 - 12 * (numColumns - 1)) / numColumns);
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 768 && width < 1024;
+  const numColumns = isDesktop ? 4 : isTablet ? 3 : 2;
+  const maxContainer = isDesktop ? 1200 : isTablet ? 960 : 820;
+  const containerWidth = Math.min(width, maxContainer);
+  const gridGap = isDesktop ? 16 : 12;
+  const cardWidth = Math.floor(
+    (containerWidth - 32 - gridGap * (numColumns - 1)) / numColumns
+  );
   const { items: wishlistIds, clear: clearWishlist } = useWishlistStore();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -139,7 +145,7 @@ export default function FavoritesTabScreen() {
           data={displayedProducts}
           keyExtractor={(item) => item.id}
           numColumns={numColumns}
-          columnWrapperStyle={styles.columnWrapper}
+          columnWrapperStyle={[styles.columnWrapper, { gap: gridGap }]}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={

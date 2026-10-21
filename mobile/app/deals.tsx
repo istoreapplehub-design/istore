@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -24,6 +25,16 @@ const CATEGORIES = ["All", "iPhone", "Mac", "iPad", "Watch", "AirPods", "Accesso
 export default function FlashDealsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 768 && width < 1024;
+  const numColumns = isDesktop ? 4 : isTablet ? 3 : 2;
+  const maxContainer = isDesktop ? 1200 : isTablet ? 960 : 820;
+  const containerWidth = Math.min(width, maxContainer);
+  const gridGap = isDesktop ? 16 : 12;
+  const cardWidth = Math.floor(
+    (containerWidth - 32 - gridGap * (numColumns - 1)) / numColumns
+  );
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,15 +125,16 @@ export default function FlashDealsScreen() {
       </View>
 
       <FlatList
+        key={`deals-cols-${numColumns}`}
         data={filteredDeals}
         keyExtractor={(item) => item.id}
-        numColumns={2}
+        numColumns={numColumns}
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: insets.bottom + 40 }
         ]}
         showsVerticalScrollIndicator={false}
-        columnWrapperStyle={styles.columnWrapper}
+        columnWrapperStyle={[styles.columnWrapper, { gap: gridGap }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -244,7 +256,7 @@ export default function FlashDealsScreen() {
           <ProductCard
             product={item}
             variant="grid"
-            style={styles.cardItem}
+            style={{ width: cardWidth, maxWidth: cardWidth }}
           />
         )}
       />

@@ -61,7 +61,8 @@ export default function ProductDetailScreen() {
   const insets = useSafeAreaInsets();
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { width } = useWindowDimensions();
-  const carouselWidth = Math.min(width, 820);
+  const isDesktopOrTablet = width >= 860;
+  const carouselWidth = isDesktopOrTablet ? Math.min(width * 0.45, 520) : Math.min(width, 820);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [compatibleAccessories, setCompatibleAccessories] = useState<Product[]>([]);
@@ -428,36 +429,38 @@ export default function ProductDetailScreen() {
           topBarAnimatedStyle
         ]}
       >
-        <Pressable
-          style={styles.circleBtn}
-          hitSlop={8}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.back();
-          }}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </Pressable>
-
-        <View style={styles.navRightRow}>
-          <Pressable style={styles.circleBtn} hitSlop={8} onPress={handleShare}>
-            <Ionicons name="share-outline" size={20} color={colors.text} />
-          </Pressable>
-
+        <View style={styles.navBarInner}>
           <Pressable
             style={styles.circleBtn}
             hitSlop={8}
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              toggleWishlist(product.id);
+              Haptics.selectionAsync();
+              router.back();
             }}
           >
-            <Ionicons
-              name={isWishlisted ? "heart" : "heart-outline"}
-              size={22}
-              color={isWishlisted ? colors.badge : colors.text}
-            />
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
           </Pressable>
+
+          <View style={styles.navRightRow}>
+            <Pressable style={styles.circleBtn} hitSlop={8} onPress={handleShare}>
+              <Ionicons name="share-outline" size={20} color={colors.text} />
+            </Pressable>
+
+            <Pressable
+              style={styles.circleBtn}
+              hitSlop={8}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                toggleWishlist(product.id);
+              }}
+            >
+              <Ionicons
+                name={isWishlisted ? "heart" : "heart-outline"}
+                size={22}
+                color={isWishlisted ? colors.badge : colors.text}
+              />
+            </Pressable>
+          </View>
         </View>
       </Animated.View>
 
@@ -468,8 +471,11 @@ export default function ProductDetailScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        {/* ─── 2. IMAGE CAROUSEL ────────────────────────────────────────── */}
-        <View style={[styles.carouselContainer, { width: carouselWidth, alignSelf: "center" }]}>
+        {/* ─── 2. PRODUCT MAIN CONTENT (Responsive Split on Desktop/Tablet) ── */}
+        <View style={[styles.mainLayout, isDesktopOrTablet && styles.desktopSplitLayout]}>
+          {/* Left: Product Media Gallery */}
+          <View style={[styles.carouselCol, isDesktopOrTablet && styles.desktopCarouselCol]}>
+            <View style={[styles.carouselContainer, { width: carouselWidth, alignSelf: "center" }]}>
           {activeImages.length === 0 ? (
             <View style={[styles.imageSlide, { width: carouselWidth }]}>
               <ProductVisual category={product.category} glyphSize={110} />
@@ -521,10 +527,12 @@ export default function ProductDetailScreen() {
               )}
             </>
           )}
-        </View>
+            </View>
+          </View>
 
-        {/* ─── 3. PRODUCT INFO ──────────────────────────────────────────── */}
-        <View style={styles.infoContainer}>
+          {/* Right: Product Details, Config & CTA */}
+          <View style={[styles.infoCol, isDesktopOrTablet && styles.desktopInfoCol]}>
+            <View style={[styles.infoContainer, isDesktopOrTablet && { paddingHorizontal: 0, paddingTop: 0 }]}>
           <Text style={styles.categoryEyebrow}>
             {product.category.toUpperCase()}
           </Text>
@@ -851,102 +859,107 @@ export default function ProductDetailScreen() {
             )}
           </View>
         </View>
+        </View>
+        </View>
 
-        {/* ─── 10. COMPATIBLE ACCESSORIES ───────────────────────────────── */}
-        {compatibleAccessories.length > 0 && product.category !== "Accessories" && (
-          <View style={styles.relatedSection}>
-            <SectionHeader
-              title="Compatible Accessories"
-              subtitle="Cases, MagSafe chargers & essentials designed to pair"
-              onSeeAll={() => router.push("/(tabs)/shop?category=Accessories")}
-            />
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={compatibleAccessories}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.relatedListContent}
-              renderItem={({ item }) => (
-                <ProductCard product={item} variant="grid" />
-              )}
-            />
-          </View>
-        )}
-
-        {/* ─── 10B. RELATED PRODUCTS ────────────────────────────────────── */}
-        {product.relatedProducts && product.relatedProducts.length > 0 && (
-          <View style={styles.relatedSection}>
-            <SectionHeader title="Related Products" />
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={product.relatedProducts}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.relatedListContent}
-              renderItem={({ item }) => (
-                <ProductCard product={item} variant="grid" />
-              )}
-            />
-          </View>
-        )}
-      </Animated.ScrollView>
-
-      {/* ─── 11. STICKY BOTTOM BAR (APP STORE STYLE) ───────────────────── */}
-      <Animated.View
-        style={[
-          styles.stickyBottomBar,
-          { paddingBottom: Math.max(insets.bottom, 12) },
-          stickyBarAnimatedStyle
-        ]}
-      >
-        <View style={styles.stickyLeft}>
-          {activeImages[0] ? (
-            <Image
-              source={{ uri: activeImages[0] }}
-              style={styles.stickyThumb}
-              resizeMode="contain"
-            />
-          ) : (
-            <View style={styles.stickyThumbFallback}>
-              <ProductVisual category={product.category} glyphSize={20} />
+        {/* ─── 10. COMPATIBLE ACCESSORIES & RELATED ────────────────────────── */}
+        <View style={[styles.bottomSection, isDesktopOrTablet && styles.desktopBottomSection]}>
+          {compatibleAccessories.length > 0 && product.category !== "Accessories" && (
+            <View style={styles.relatedSection}>
+              <SectionHeader
+                title="Compatible Accessories"
+                subtitle="Cases, MagSafe chargers & essentials designed to pair"
+                onSeeAll={() => router.push("/(tabs)/shop?category=Accessories")}
+              />
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={compatibleAccessories}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.relatedListContent}
+                renderItem={({ item }) => (
+                  <ProductCard product={item} variant="grid" />
+                )}
+              />
             </View>
           )}
-          <View style={styles.stickyMeta}>
-            <Text style={styles.stickyTitle} numberOfLines={1}>
-              {product.name}
-            </Text>
-            <PriceTag price={effectivePriceGHS} size="sm" />
+
+          {product.relatedProducts && product.relatedProducts.length > 0 && (
+            <View style={styles.relatedSection}>
+              <SectionHeader title="Related Products" />
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={product.relatedProducts}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.relatedListContent}
+                renderItem={({ item }) => (
+                  <ProductCard product={item} variant="grid" />
+                )}
+              />
+            </View>
+          )}
+        </View>
+      </Animated.ScrollView>
+
+      {/* ─── 11. STICKY BOTTOM BAR (APP STORE STYLE - Mobile Only) ──────── */}
+      {!isDesktopOrTablet && (
+        <Animated.View
+          style={[
+            styles.stickyBottomBar,
+            { paddingBottom: Math.max(insets.bottom, 12) },
+            stickyBarAnimatedStyle
+          ]}
+        >
+          <View style={styles.stickyLeft}>
+            {activeImages[0] ? (
+              <Image
+                source={{ uri: activeImages[0] }}
+                style={styles.stickyThumb}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.stickyThumbFallback}>
+                <ProductVisual category={product.category} glyphSize={20} />
+              </View>
+            )}
+            <View style={styles.stickyMeta}>
+              <Text style={styles.stickyTitle} numberOfLines={1}>
+                {product.name}
+              </Text>
+              <PriceTag price={effectivePriceGHS} size="sm" />
+            </View>
           </View>
-        </View>
 
-        <View style={styles.stickyRightActions}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-            style={[styles.stickyWishlistBtn, isWishlisted && styles.stickyWishlistBtnActive]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              toggleWishlist(product.id);
-            }}
-          >
-            <Ionicons
-              name={isWishlisted ? "heart" : "heart-outline"}
-              size={20}
-              color={isWishlisted ? colors.brandRed : colors.text}
-            />
-          </Pressable>
+          <View style={styles.stickyRightActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              style={[styles.stickyWishlistBtn, isWishlisted && styles.stickyWishlistBtnActive]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                toggleWishlist(product.id);
+              }}
+            >
+              <Ionicons
+                name={isWishlisted ? "heart" : "heart-outline"}
+                size={20}
+                color={isWishlisted ? colors.brandRed : colors.text}
+              />
+            </Pressable>
 
-          <Pressable
-            style={[styles.stickyCta, isOutOfStock && { opacity: 0.5 }]}
-            disabled={isOutOfStock}
-            onPress={handleAddToCart}
-          >
-            <Text style={styles.stickyCtaText}>
-              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
-            </Text>
-          </Pressable>
-        </View>
-      </Animated.View>
+            <Pressable
+              style={[styles.stickyCta, isOutOfStock && { opacity: 0.5 }]}
+              disabled={isOutOfStock}
+              onPress={handleAddToCart}
+            >
+              <Text style={styles.stickyCtaText}>
+                {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+              </Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      )}
 
       {/* ─── 12. REVIEW COMPOSER SHEET ─────────────────────────────────── */}
       <Modal
@@ -1073,10 +1086,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 20,
+    paddingHorizontal: spacing.md
+  },
+  navBarInner: {
+    width: "100%",
+    maxWidth: 1200,
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.md
+    justifyContent: "space-between"
   },
   circleBtn: {
     width: 40,
@@ -1094,6 +1112,43 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 140
+  },
+  mainLayout: {
+    width: "100%"
+  },
+  desktopSplitLayout: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    maxWidth: 1200,
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    gap: 40,
+    marginTop: 20
+  },
+  carouselCol: {
+    width: "100%"
+  },
+  desktopCarouselCol: {
+    flex: 1,
+    maxWidth: 540,
+    alignItems: "center"
+  },
+  infoCol: {
+    width: "100%"
+  },
+  desktopInfoCol: {
+    flex: 1.25
+  },
+  bottomSection: {
+    width: "100%"
+  },
+  desktopBottomSection: {
+    maxWidth: 1200,
+    width: "100%",
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    marginTop: 24
   },
   carouselContainer: {
     height: IMAGE_CAROUSEL_HEIGHT,

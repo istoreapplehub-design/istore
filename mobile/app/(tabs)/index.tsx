@@ -40,11 +40,17 @@ const EDITORIAL_GAP = 14;
 export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const stageWidth = Math.min(width, 820);
-  const numCols = stageWidth >= 680 ? 3 : 2;
-  const gridGap = 12;
-  const cardWidth = Math.floor((stageWidth - 32 - gridGap * (numCols - 1)) / numCols);
-  const editorialWidth = Math.min(Math.max(stageWidth - 64, 270), 330);
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 768 && width < 1024;
+  const maxContainer = isDesktop ? 1200 : isTablet ? 960 : 820;
+  const stageWidth = Math.min(width, maxContainer);
+  const numCols = isDesktop ? 4 : isTablet ? 3 : 2;
+  const gridGap = isDesktop ? 16 : 12;
+  const horizontalPadding = isDesktop ? 20 : 16;
+  const cardWidth = Math.floor(
+    (stageWidth - horizontalPadding * 2 - gridGap * (numCols - 1)) / numCols
+  );
+  const editorialWidth = isDesktop ? 340 : Math.min(Math.max(stageWidth - 64, 270), 330);
 
   const { featured, newArrivals, bestSellers, loading, error, refetch } = useHomeData();
   const { deals, products, endsAt, error: flashError } = useFlashDeals();
@@ -316,7 +322,7 @@ export default function HomeScreen() {
               <SkeletonProductCard />
             </View>
           ) : (
-            <View style={styles.bentoGrid}>
+            <View style={[styles.bentoGrid, { gap: gridGap, paddingHorizontal: horizontalPadding }]}>
               {filteredFeatured.map((item) => (
                 <ProductCard
                   key={item.id}

@@ -141,7 +141,7 @@ export function Support() {
     ? [
         {
           label: "Payment status",
-          text: `Hello ${displayName(active)}, this is I-Dynamics about order ${shortId(
+          text: `Hello ${displayName(active)}, this is I-Dynamic about order ${shortId(
             active
           )}. Your payment channel on file is ${
             CHANNEL_LABELS[active.paymentChannel || ""] || "unconfirmed"
@@ -502,7 +502,7 @@ export function Support() {
                   {email ? (
                     <a
                       href={`mailto:${email}?subject=${encodeURIComponent(
-                        `I-Dynamics order ${shortId(active)}`
+                        `I-Dynamic order ${shortId(active)}`
                       )}&body=${encodeURIComponent(draft)}`}
                       className="px-5 py-2.5 border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
                     >
