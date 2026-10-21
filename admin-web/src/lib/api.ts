@@ -284,3 +284,22 @@ export function timeAgo(iso?: string | null): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+// ─────────────────────────────────────────
+// Installment Plans (Admin)
+// ─────────────────────────────────────────
+export async function getAdminInstallments(
+  params: Record<string, string | number | boolean | undefined> = {}
+): Promise<{ success: boolean; data: any[]; meta: any; stats: any }> {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, String(value));
+    }
+  });
+  const qs = query.toString();
+  return request<{ success: boolean; data: any[]; meta: any; stats: any }>(
+    `/api/installments/admin/all${qs ? `?${qs}` : ""}`
+  );
+}
+
+

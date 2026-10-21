@@ -591,3 +591,111 @@ export async function verifyPayment(
   return request<VerifyPaymentResponse>(`/api/paystack/verify/${reference}`);
 }
 
+// ─── INSTALLMENTS & NIA GHANA CARD API ──────────────────────────────────────
+
+export async function verifyNiaGhanaCard(payload: {
+  nationalId: string;
+  fullName: string;
+  dob?: string;
+  phone?: string;
+}): Promise<{ success: boolean; data: any; message?: string }> {
+  return request<{ success: boolean; data: any; message?: string }>(
+    "/api/installments/verify-nia",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export async function calculateInstallmentBreakdown(payload: {
+  totalAmountGHS: number;
+  frequency: "weekly" | "monthly";
+  duration?: number;
+}): Promise<{ success: boolean; data: any }> {
+  return request<{ success: boolean; data: any }>("/api/installments/calculate", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function applyInstallmentPlan(payload: {
+  orderId: string;
+  nationalId: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  frequency: "weekly" | "monthly";
+  totalInstallments?: number;
+  gpsAddress?: string;
+  occupation?: string;
+  employer?: string;
+  nextOfKinName?: string;
+  nextOfKinPhone?: string;
+}): Promise<{ success: boolean; data: any; message?: string }> {
+  return request<{ success: boolean; data: any; message?: string }>(
+    "/api/installments/apply",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export async function initializeDownPayment(payload: {
+  planId: string;
+  email?: string;
+}): Promise<{ success: boolean; data: any }> {
+  return request<{ success: boolean; data: any }>(
+    "/api/installments/initialize-downpayment",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export async function verifyDownPayment(payload: {
+  reference: string;
+  planId: string;
+}): Promise<{ success: boolean; data: any; message?: string }> {
+  return request<{ success: boolean; data: any; message?: string }>(
+    "/api/installments/verify-downpayment",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export async function getMyInstallmentPlans(): Promise<{ success: boolean; data: any[] }> {
+  return request<{ success: boolean; data: any[] }>("/api/installments/my-plans");
+}
+
+export async function payInstallmentMilestone(payload: {
+  milestoneId: string;
+  email?: string;
+}): Promise<{ success: boolean; data: any }> {
+  return request<{ success: boolean; data: any }>(
+    "/api/installments/pay-milestone",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export async function confirmInstallmentMilestone(payload: {
+  milestoneId: string;
+  reference: string;
+}): Promise<{ success: boolean; message?: string }> {
+  return request<{ success: boolean; message?: string }>(
+    "/api/installments/confirm-milestone",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+

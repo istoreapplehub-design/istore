@@ -347,6 +347,12 @@ export default function AccountScreen() {
           />
           <View style={styles.divider} />
           <Row
+            icon="calendar-outline"
+            label="Installment Plans (60% Down)"
+            onPress={() => router.push("/installments" as never)}
+          />
+          <View style={styles.divider} />
+          <Row
             icon="sync-outline"
             label="Returns & Refunds"
             onPress={() => router.push("/returns" as never)}

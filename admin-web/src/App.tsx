@@ -8,6 +8,7 @@ import { Products } from "./pages/Products";
 import { ProductForm } from "./pages/ProductForm";
 import { Orders } from "./pages/Orders";
 import { OrderDetail } from "./pages/OrderDetail";
+import { Installments } from "./pages/Installments";
 import { Admins } from "./pages/Admins";
 import { Analytics } from "./pages/Analytics";
 import { Support } from "./pages/Support";
@@ -38,6 +39,7 @@ export function App() {
         <Route path="products/:id/edit" element={<ProductForm />} />
         <Route path="orders" element={<Orders />} />
         <Route path="orders/:id" element={<OrderDetail />} />
+        <Route path="installments" element={<Installments />} />
         <Route path="admins" element={<Admins />} />
         <Route path="support" element={<Support />} />
         <Route path="settings" element={<Settings />} />

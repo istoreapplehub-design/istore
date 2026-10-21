@@ -11,6 +11,7 @@ const userRouter = require("./routes/user");
 const reviewsRouter = require("./routes/reviews");
 const ordersRouter = require("./routes/orders");
 const paystackRouter = require("./routes/paystack");
+const installmentsRouter = require("./routes/installments");
 const authRouter = require("./routes/auth");
 const adminProductsRouter = require("./routes/adminProducts");
 const adminUploadsRouter = require("./routes/adminUploads");
@@ -51,6 +52,7 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/user", userRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/paystack", paystackRouter);
+app.use("/api/installments", installmentsRouter);
 
 // ─── 4. HEALTH CHECK ────────────────────────────────────────────────────────
 app.get(["/", "/api/health"], (req, res) => {

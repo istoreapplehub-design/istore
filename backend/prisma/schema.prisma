@@ -95,6 +95,8 @@ model Order {
   shippedAt        DateTime?
   deliveredAt      DateTime?
   cancelledAt      DateTime?
+  isInstallment    Boolean     @default(false)
+  installmentPlan  InstallmentPlan?
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
@@ -131,6 +133,8 @@ model User {
   isActive   Boolean  @default(true)
   addresses  String   @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
   orders     Order[]
+  installmentPlans InstallmentPlan[]
+  kycVerifications KycVerification[]
   wishlist   WishlistItem[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -150,3 +154,89 @@ model WishlistItem {
   @@unique([userId, productId])
   @@index([userId])
 }
+
+model KycVerification {
+  id              String   @id @default(uuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  nationalId      String   // Ghana Card: GHA-XXXXXXXXX-X
+  fullName        String
+  dob             String?  // YYYY-MM-DD
+  gender          String?
+  phone           String?
+  verifiedAt      DateTime @default(now())
+  provider        String   @default("NIA") // NIA | IdentityPass | Prembly | simulated
+  status          String   @default("verified") // verified | failed | pending
+  photoUrl        String?
+  rawResponse     String?  // Encrypted or JSON string
+  plans           InstallmentPlan[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([nationalId])
+  @@index([userId])
+}
+
+model InstallmentPlan {
+  id                 String                @id @default(uuid())
+  orderId            String                @unique
+  order              Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId             String?
+  user               User?                 @relation(fields: [userId], references: [id])
+  kycId              String?
+  kyc                KycVerification?      @relation(fields: [kycId], references: [id])
+  
+  // Financial calculation breakdown
+  totalAmountGHS     Float
+  downPaymentPercent Float                 @default(60.0) // 60%
+  downPaymentGHS     Float                 // 60% of total
+  remainingGHS       Float                 // 40% of total
+  frequency          String                // "weekly" | "monthly"
+  totalInstallments  Int                   // e.g. 4 for weekly, 2 for monthly
+  installmentAmountGHS Float               // remaining / totalInstallments
+  
+  // Applicant details
+  applicantName      String
+  applicantPhone     String
+  applicantEmail     String?
+  ghanaCardNumber    String                // GHA-XXXXXXXXX-X
+  gpsAddress         String?
+  occupation         String?
+  employer           String?
+  nextOfKinName      String?
+  nextOfKinPhone     String?
+  
+  // Status and payments
+  downPaymentPaid    Boolean               @default(false)
+  downPaymentRef     String?               // Paystack reference for 60%
+  status             String                @default("pending_downpayment") // pending_downpayment | active | completed | defaulted | cancelled
+  milestones         InstallmentMilestone[]
+  
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([ghanaCardNumber])
+}
+
+model InstallmentMilestone {
+  id               String          @id @default(uuid())
+  planId           String
+  plan             InstallmentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  milestoneIndex   Int             // 1, 2, 3, etc.
+  dueDate          DateTime
+  amountGHS        Float
+  status           String          @default("pending") // pending | paid | overdue | waived
+  paidAt           DateTime?
+  paymentReference String?
+  paymentChannel   String?
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([planId])
+  @@index([status])
+  @@index([dueDate])
+}
+

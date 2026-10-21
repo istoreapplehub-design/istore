@@ -28,7 +28,7 @@ import { useCartStore } from "../store/useCartStore";
 import { useUserStore } from "../store/useUserStore";
 import { getPreferences } from "../lib/preferences";
 import { GHANA_REGIONS, getDeliveryQuote } from "../constants/config";
-import { colors, formatGHS } from "../constants/theme";
+import { colors, formatGHS, radius } from "../constants/theme";
 import {
   createGuestOrder,
   createOrder,
@@ -39,6 +39,8 @@ import { Order, ShippingAddress } from "../types";
 import { AppHaptics } from "../lib/haptics";
 import PaystackCheckoutModal from "../components/PaystackCheckoutModal";
 import { ProductVisual, getStoredImage } from "../components/ProductVisual";
+import { InstallmentApplicationModal } from "../components/InstallmentApplicationModal";
+import { initializeDownPayment, verifyDownPayment } from "../services/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -145,6 +147,9 @@ export default function CheckoutScreen() {
   const [fulfillmentType, setFulfillmentType] = useState<"delivery" | "pickup">("delivery");
   const [selectedPickupLocation, setSelectedPickupLocation] = useState(STORE_PICKUP_LOCATIONS[0]);
   const [paymentMethod, setPaymentMethod] = useState<string>("momo");
+  const [paymentPlanType, setPaymentPlanType] = useState<"full" | "installment">("full");
+  const [showInstallmentModal, setShowInstallmentModal] = useState(false);
+  const [installmentPlan, setInstallmentPlan] = useState<any>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showRegionModal, setShowRegionModal] = useState(false);
@@ -172,6 +177,9 @@ export default function CheckoutScreen() {
     ? Math.round((subtotalGHS * appliedDiscount.percent) / 100)
     : 0;
   const totalGHS = Math.max(0, subtotalGHS - discountAmount + (deliveryFee || 0));
+  const downPaymentAmountGHS = Math.round(totalGHS * 0.6 * 100) / 100;
+  const remainingInstallmentGHS = Math.round((totalGHS - downPaymentAmountGHS) * 100) / 100;
+  const payableTodayGHS = paymentPlanType === "installment" ? downPaymentAmountGHS : totalGHS;
 
   // Validation
   const cleanPhone = phone.replace(/[\s-]/g, "");
@@ -294,6 +302,39 @@ export default function CheckoutScreen() {
         : await createOrder(orderBody, userId);
 
       setCreatedOrder(order);
+
+      // If user selected installment plan and hasn't completed application yet, open modal
+      if (paymentPlanType === "installment" && !installmentPlan) {
+        setShowInstallmentModal(true);
+        return;
+      }
+
+      // If user is paying 60% down payment for an approved plan
+      if (paymentPlanType === "installment" && installmentPlan) {
+        const downInit = await initializeDownPayment({
+          planId: installmentPlan.id,
+          email: cleanEmail
+        });
+
+        if (downInit.data?.isSimulation) {
+          await verifyDownPayment({
+            reference: downInit.data.reference,
+            planId: installmentPlan.id
+          });
+          clearCart();
+          router.replace(
+            `/order-success?orderId=${order.id}&installment=1${needsGuestEmail ? `&guest=1&email=${encodeURIComponent(cleanEmail)}` : ""}`
+          );
+          return;
+        } else {
+          setPaystackData({
+            authorization_url: downInit.data.authorization_url,
+            reference: downInit.data.reference
+          });
+          setShowPaystack(true);
+          return;
+        }
+      }
 
       const paymentInit = needsGuestEmail
         ? await initializePayment(order.id, { email: cleanEmail })
@@ -847,7 +888,74 @@ export default function CheckoutScreen() {
           </View>
 
           {/* PAYMENT METHOD SELECTION */}
-          <Text style={[styles.sectionTitle, { marginTop: 28 }]}>Payment Method</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 28 }]}>Payment Options</Text>
+
+          {/* Payment Plan Mode: Full vs 60% Installments */}
+          <View style={styles.planSelectionContainer}>
+            <Pressable
+              style={[
+                styles.planOptionCard,
+                paymentPlanType === "full" && styles.planOptionCardSelected
+              ]}
+              onPress={() => {
+                AppHaptics.selection();
+                setPaymentPlanType("full");
+              }}
+            >
+              <View style={styles.planOptionHeader}>
+                <Ionicons
+                  name={paymentPlanType === "full" ? "checkmark-circle" : "ellipse-outline"}
+                  size={20}
+                  color={paymentPlanType === "full" ? colors.brandAccent : colors.textSecondary}
+                />
+                <Text style={[styles.planOptionTitle, paymentPlanType === "full" && styles.planOptionTitleSelected]}>
+                  Full Payment (100%)
+                </Text>
+              </View>
+              <Text style={styles.planOptionSub}>Pay {formatGHS(totalGHS)} in full today</Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.planOptionCard,
+                paymentPlanType === "installment" && styles.planOptionCardSelected
+              ]}
+              onPress={() => {
+                AppHaptics.selection();
+                setPaymentPlanType("installment");
+              }}
+            >
+              <View style={styles.planOptionHeader}>
+                <Ionicons
+                  name={paymentPlanType === "installment" ? "checkmark-circle" : "ellipse-outline"}
+                  size={20}
+                  color={paymentPlanType === "installment" ? colors.brandAccent : colors.textSecondary}
+                />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={[styles.planOptionTitle, paymentPlanType === "installment" && styles.planOptionTitleSelected]}>
+                    Pay 60% Down Now
+                  </Text>
+                  <View style={styles.planBadge}>
+                    <Text style={styles.planBadgeText}>GHANA CARD NIA</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.planOptionSub}>
+                Pay {formatGHS(downPaymentAmountGHS)} today, then choose weekly or monthly for remaining {formatGHS(remainingInstallmentGHS)}
+              </Text>
+
+              {installmentPlan && (
+                <View style={styles.planReadyBox}>
+                  <Ionicons name="checkmark-circle" size={15} color="#059669" />
+                  <Text style={styles.planReadyText}>
+                    Verified with NIA ({installmentPlan.ghanaCardNumber}) · {installmentPlan.frequency.toUpperCase()} schedule ready
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
+
+          <Text style={[styles.sectionTitle, { marginTop: 22 }]}>Payment Method (For Today's Amount)</Text>
           <View style={styles.pickupLocationsList}>
             {PAYMENT_METHODS.map((pm) => {
               const selected = paymentMethod === pm.id;
@@ -983,9 +1091,36 @@ export default function CheckoutScreen() {
             <View style={styles.breakdownDivider} />
 
             <View style={styles.breakdownRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>Total Order Value</Text>
               <Text style={styles.totalValue}>{formatGHS(totalGHS)}</Text>
             </View>
+
+            {paymentPlanType === "installment" && (
+              <>
+                <View style={[styles.breakdownRow, { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderColor: colors.border }]}>
+                  <View>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: colors.brandAccent }}>
+                      Due Today (60% Down Payment)
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                      {installmentPlan ? `${installmentPlan.frequency.toUpperCase()} plan chosen` : "Application required"}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 18, fontWeight: "800", color: colors.brandAccent }}>
+                    {formatGHS(downPaymentAmountGHS)}
+                  </Text>
+                </View>
+
+                <View style={[styles.breakdownRow, { marginTop: 6 }]}>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                    Remaining 40% Balance
+                  </Text>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: colors.text }}>
+                    {formatGHS(remainingInstallmentGHS)}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
         </ScrollView>
 
@@ -1014,7 +1149,11 @@ export default function CheckoutScreen() {
               </View>
             ) : (
               <Text style={styles.payBtnText}>
-                Pay {formatGHS(totalGHS)} with Paystack
+                {paymentPlanType === "installment" && !installmentPlan
+                  ? "Apply for 60% Installments (NIA Verification)"
+                  : paymentPlanType === "installment"
+                  ? `Pay 60% Down (${formatGHS(downPaymentAmountGHS)})`
+                  : `Pay ${formatGHS(totalGHS)} with Paystack`}
               </Text>
             )}
           </Pressable>
@@ -1154,6 +1293,23 @@ export default function CheckoutScreen() {
           onCancel={handlePaystackCancel}
         />
       )}
+
+      {/* 60% Installments Application & NIA Live Verification Modal */}
+      <InstallmentApplicationModal
+        visible={showInstallmentModal}
+        orderTotalGHS={totalGHS}
+        orderId={createdOrder?.id}
+        defaultFullName={fullName}
+        defaultPhone={phone}
+        defaultEmail={email}
+        onClose={() => setShowInstallmentModal(false)}
+        onApplicationCompleted={(plan) => {
+          setInstallmentPlan(plan);
+          setShowInstallmentModal(false);
+          // Automatically trigger the 60% down payment
+          handleCheckout();
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -1235,6 +1391,70 @@ const styles = StyleSheet.create({
     height: 80,
     paddingTop: 12,
     textAlignVertical: "top"
+  },
+  // Plan Selection Styles
+  planSelectionContainer: {
+    gap: 12,
+    marginBottom: 20
+  },
+  planOptionCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    padding: 14
+  },
+  planOptionCardSelected: {
+    borderColor: colors.brandAccent,
+    backgroundColor: "rgba(0,102,204,0.03)"
+  },
+  planOptionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 4
+  },
+  planOptionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text
+  },
+  planOptionTitleSelected: {
+    color: colors.brandAccent
+  },
+  planOptionSub: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginLeft: 30,
+    lineHeight: 16
+  },
+  planBadge: {
+    backgroundColor: "#059669",
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.pill
+  },
+  planBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.5
+  },
+  planReadyBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(5,150,105,0.08)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginTop: 8,
+    marginLeft: 30
+  },
+  planReadyText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#059669"
   },
   regionPickerBtn: {
     height: 52,

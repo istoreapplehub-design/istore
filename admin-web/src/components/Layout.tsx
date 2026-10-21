@@ -14,7 +14,8 @@ import {
   User,
   Users,
   Bell,
-  X
+  X,
+  CreditCard
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
@@ -175,6 +176,7 @@ export function Layout() {
   const navMenuItems = [
     { label: "Home", path: "/dashboard", icon: Home },
     { label: "Orders", path: "/orders", icon: ShoppingBag, badge: pendingOrders > 0 ? pendingOrders : null },
+    { label: "Installments", path: "/installments", icon: CreditCard },
     { label: "Products", path: "/products", icon: Package },
     { label: "Customers", path: "/admins", icon: Users },
     { label: "Analytics", path: "/analytics", icon: TrendingUp },

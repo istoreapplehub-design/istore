@@ -97,6 +97,8 @@ export interface Order {
   status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
   courier?: string | null;
   trackingNumber?: string | null;
+  isInstallment?: boolean;
+  installmentPlan?: InstallmentPlan | null;
   notes?: string | null;
   paidAt?: string | null;
   shippedAt?: string | null;
@@ -128,3 +130,57 @@ export interface PaginatedResponse<T> {
     ratingBreakdown?: Record<number, number>;
   };
 }
+
+export interface InstallmentMilestone {
+  id: string;
+  planId: string;
+  milestoneIndex: number;
+  dueDate: string;
+  amountGHS: number;
+  status: "pending" | "paid" | "overdue" | "waived";
+  paidAt?: string | null;
+  paymentReference?: string | null;
+  paymentChannel?: string | null;
+  notes?: string | null;
+}
+
+export interface InstallmentPlan {
+  id: string;
+  orderId: string;
+  userId?: string | null;
+  kycId?: string | null;
+  totalAmountGHS: number;
+  downPaymentPercent: number; // 60
+  downPaymentGHS: number; // 60%
+  remainingGHS: number; // 40%
+  frequency: "weekly" | "monthly";
+  totalInstallments: number;
+  installmentAmountGHS: number;
+  applicantName: string;
+  applicantPhone: string;
+  applicantEmail?: string | null;
+  ghanaCardNumber: string;
+  gpsAddress?: string | null;
+  occupation?: string | null;
+  employer?: string | null;
+  nextOfKinName?: string | null;
+  nextOfKinPhone?: string | null;
+  downPaymentPaid: boolean;
+  downPaymentRef?: string | null;
+  status: "pending_downpayment" | "active" | "completed" | "defaulted" | "cancelled";
+  milestones?: InstallmentMilestone[];
+  order?: Order;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KycVerificationResult {
+  kycId: string;
+  nationalId: string;
+  fullName: string;
+  dob?: string | null;
+  gender?: string | null;
+  photoUrl?: string | null;
+  verifiedAt: string;
+}
+
