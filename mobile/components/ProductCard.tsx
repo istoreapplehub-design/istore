@@ -189,7 +189,7 @@ export function ProductCard({
             sharedTransitionTag={`product-image-${product.id}`}
             source={{ uri: imageUrl }}
             style={styles.gridImage}
-            resizeMode="cover"
+            resizeMode="contain"
             accessibilityLabel={product.name}
           />
         ) : (
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    padding: 0,
+    padding: 12,
     overflow: "hidden",
     position: "relative"
   },

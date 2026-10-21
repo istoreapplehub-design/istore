@@ -56,7 +56,7 @@ export function FlashDealCard({ product, variant = "card", style }: FlashDealCar
     >
       <View style={styles.imageWrap}>
         {image ? (
-          <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+          <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
         ) : (
           <ProductVisual category={product.category} glyphSize={34} />
         )}
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    padding: 0,
+    padding: 10,
     overflow: "hidden"
   },
   image: {

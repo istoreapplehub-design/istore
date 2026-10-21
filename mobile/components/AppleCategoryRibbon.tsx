@@ -87,7 +87,7 @@ export function AppleCategoryRibbon({
               ]}
             >
               {thumb && item.slug !== "All" ? (
-                <Image source={{ uri: thumb }} style={styles.thumb} resizeMode="cover" />
+                <Image source={{ uri: thumb }} style={styles.thumb} resizeMode="contain" />
               ) : (
                 <Ionicons
                   name={item.icon}
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    padding: 0
+    padding: 2
   },
   thumbCircleActive: {
     backgroundColor: colors.brandRed

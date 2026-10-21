@@ -240,7 +240,7 @@ export default function HomeScreen() {
                       <Image
                         source={{ uri: image }}
                         style={styles.editorialImage}
-                        resizeMode="cover"
+                        resizeMode="contain"
                       />
                     ) : (
                       <View style={styles.editorialImageFallback}>
@@ -506,9 +506,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border
   },
   editorialStage: {
-    height: 204,
+    height: 220,
     backgroundColor: "#FFFFFF",
-    padding: 0,
+    paddingTop: 36,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
     overflow: "hidden",
     position: "relative",
     alignItems: "center",

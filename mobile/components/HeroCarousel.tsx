@@ -120,7 +120,7 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
                 <View style={styles.rightCol}>
                   <View style={styles.pedestal}>
                     {image ? (
-                      <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
+                      <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
                     ) : (
                       <ProductVisual
                         category={item.category}
@@ -268,7 +268,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    position: "relative"
+    position: "relative",
+    padding: 12
   },
   image: {
     width: "100%",
