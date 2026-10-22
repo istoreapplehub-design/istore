@@ -192,8 +192,8 @@ export default function BagScreen() {
             <Text style={styles.headerTitle}>Review your Bag.</Text>
             <Text style={styles.headerSubtitle}>
               {totalItemCount === 0
-                ? "Free delivery and 7-day returns on every order."
-                : `${totalItemCount} ${totalItemCount === 1 ? "item" : "items"} · Free Express Delivery in Ghana`}
+                ? "Review items in your bag."
+                : `${totalItemCount} ${totalItemCount === 1 ? "item" : "items"}`}
             </Text>
           </View>
 
@@ -331,31 +331,6 @@ export default function BagScreen() {
             <View style={[styles.mainLayout, isTabletOrPc && styles.desktopLayout]}>
               {/* Left Column (Items & Recommended) */}
               <View style={[styles.leftCol, isTabletOrPc && styles.desktopLeftCol]}>
-                {/* Delivery & In-Store Pickup Banner */}
-                <View style={[styles.fulfillmentBanner, isTabletOrPc && { marginHorizontal: 0 }]}>
-                  <View style={styles.fulfillmentItem}>
-                    <View style={styles.fulfillmentIconCircle}>
-                      <Ionicons name="airplane-outline" size={16} color={colors.text} />
-                    </View>
-                    <View style={styles.fulfillmentTextCol}>
-                      <Text style={styles.fulfillmentTitle}>Free Express Delivery</Text>
-                      <Text style={styles.fulfillmentSubtitle}>Next-day dispatch in Greater Accra & Kumasi</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.fulfillmentDivider} />
-
-                  <View style={styles.fulfillmentItem}>
-                    <View style={styles.fulfillmentIconCircle}>
-                      <Ionicons name="storefront-outline" size={16} color={colors.text} />
-                    </View>
-                    <View style={styles.fulfillmentTextCol}>
-                      <Text style={styles.fulfillmentTitle}>In-Store Pickup</Text>
-                      <Text style={styles.fulfillmentSubtitle}>Airport City & Accra Mall (ready in 1 hr)</Text>
-                    </View>
-                  </View>
-                </View>
-
                 {/* Cart Items List */}
                 <View style={[styles.itemsListContainer, isTabletOrPc && { marginHorizontal: 0 }]}>
                   {items.map((item, index) => {
@@ -693,46 +668,8 @@ export default function BagScreen() {
                         <Text style={styles.checkoutBtnText}>Check Out</Text>
                         <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
                       </Pressable>
-
-                      <View style={[styles.paymentMethodsRow, { marginTop: 10 }]}>
-                        <Ionicons name="lock-closed" size={12} color={colors.textTertiary} />
-                        <Text style={styles.paymentMethodsText}>
-                          Encrypted Checkout · MTN MoMo · Telecel · Visa
-                        </Text>
-                      </View>
                     </View>
                   )}
-                </View>
-
-                {/* 7. Confidence & Assurance Card */}
-                <View style={[styles.confidenceCard, isTabletOrPc && { marginHorizontal: 0, marginTop: 16 }]}>
-                  <View style={styles.confidenceItem}>
-                    <Ionicons name="shield-checkmark" size={20} color={colors.brandAccent} />
-                    <View style={styles.confidenceTextCol}>
-                      <Text style={styles.confidenceTitle}>1-Year Official Apple Warranty</Text>
-                      <Text style={styles.confidenceSubtitle}>Honoured at all authorised service centres</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.confidenceDivider} />
-
-                  <View style={styles.confidenceItem}>
-                    <Ionicons name="cube" size={20} color={colors.brandAccent} />
-                    <View style={styles.confidenceTextCol}>
-                      <Text style={styles.confidenceTitle}>100% Sealed Factory Packaging</Text>
-                      <Text style={styles.confidenceSubtitle}>With original verifiable Apple serial numbers</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.confidenceDivider} />
-
-                  <View style={styles.confidenceItem}>
-                    <Ionicons name="refresh-circle" size={20} color={colors.brandAccent} />
-                    <View style={styles.confidenceTextCol}>
-                      <Text style={styles.confidenceTitle}>7-Day Easy Return Assurance</Text>
-                      <Text style={styles.confidenceSubtitle}>Quick exchange or full money-back guarantee</Text>
-                    </View>
-                  </View>
                 </View>
               </View>
             </View>
@@ -764,13 +701,6 @@ export default function BagScreen() {
                   <Text style={styles.checkoutBtnText}>Check Out</Text>
                   <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
                 </Pressable>
-              </View>
-
-              <View style={styles.paymentMethodsRow}>
-                <Ionicons name="lock-closed" size={12} color={colors.textTertiary} />
-                <Text style={styles.paymentMethodsText}>
-                  Encrypted Checkout · MTN MoMo · Telecel · Visa · Mastercard
-                </Text>
               </View>
             </View>
           )}

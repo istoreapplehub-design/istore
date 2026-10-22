@@ -124,7 +124,7 @@ export default function RootLayout() {
             <Stack.Screen
               name="account"
               options={{
-                headerShown: true,
+                headerShown: false,
                 title: "Account",
                 headerBackTitle: "Back"
               }}
