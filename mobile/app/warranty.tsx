@@ -11,7 +11,7 @@ const COVERAGE_ITEMS = [
   {
     icon: "shield-checkmark-outline" as const,
     title: "1-Year Official Apple Limited Warranty",
-    body: "Every new iPhone, Mac, iPad, Apple Watch, AirPods, and accessory purchased on I-Dynamic includes a full 12-month manufacturer hardware warranty."
+    body: "Every new iPhone, Mac, iPad, Apple Watch, AirPods, and accessory purchased on LesTrades includes a full 12-month manufacturer hardware warranty."
   },
   {
     icon: "barcode-outline" as const,
@@ -26,7 +26,7 @@ const COVERAGE_ITEMS = [
   {
     icon: "sync-outline" as const,
     title: "Priority Replacement for DOA Units",
-    body: "If a sealed device exhibits a verified factory defect within 7 days of delivery, I-Dynamic provides an expedited unit replacement."
+    body: "If a sealed device exhibits a verified factory defect within 7 days of delivery, LesTrades provides an expedited unit replacement."
   }
 ];
 
@@ -43,10 +43,10 @@ export default function WarrantyScreen() {
           <View style={styles.heroIconWrap}>
             <Ionicons name="shield-checkmark" size={28} color="#FFFFFF" />
           </View>
-          <Text style={styles.heroEyebrow}>THE I-DYNAMIC PROTECTION PROMISE</Text>
+          <Text style={styles.heroEyebrow}>THE LESTRADES PROTECTION PROMISE</Text>
           <Text style={styles.heroTitle}>Official Warranty & Authenticity Coverage</Text>
           <Text style={styles.heroBody}>
-            Every product sold by I-Dynamic is sourced through official distribution channels and backed by comprehensive hardware protection.
+            Every product sold by LesTrades is sourced through official distribution channels and backed by comprehensive hardware protection.
           </Text>
         </View>
 
@@ -95,7 +95,7 @@ export default function WarrantyScreen() {
         <Text style={styles.sectionTitle}>Need Warranty Support?</Text>
         <View style={styles.supportCard}>
           <Text style={styles.supportText}>
-            Have your I-Dynamic order number and device serial number ready. Our technical specialists will guide you through diagnostics or service intake.
+            Have your LesTrades order number and device serial number ready. Our technical specialists will guide you through diagnostics or service intake.
           </Text>
           <View style={styles.supportActions}>
             <Pressable

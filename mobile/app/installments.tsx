@@ -137,7 +137,7 @@ export default function InstallmentsScreen() {
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      {/* 1. I-Dynamic Trust Rating / Credit Score Card */}
+      {/* 1. LesTrades Trust Rating / Credit Score Card */}
       <View style={styles.creditCard}>
         <View style={styles.creditCardTop}>
           <View style={styles.creditBadgeRow}>
@@ -152,7 +152,7 @@ export default function InstallmentsScreen() {
               <Text style={styles.niaVerifiedText}>NIA VERIFIED</Text>
             </View>
           </View>
-          <Text style={styles.creditTitle}>I-Dynamic Trust Rating</Text>
+          <Text style={styles.creditTitle}>LesTrades Trust Rating</Text>
         </View>
 
         <View style={styles.scoreRow}>

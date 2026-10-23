@@ -50,7 +50,7 @@ export default function ReturnsAndRefundsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.headerBlock}>
-          <Text style={styles.eyebrow}>I-DYNAMIC ASSURANCE</Text>
+          <Text style={styles.eyebrow}>LESTRADES ASSURANCE</Text>
           <Text style={styles.title}>Returns & Refunds</Text>
           <Text style={styles.subtitle}>
             Simple, transparent return eligibility and refund tracking for your peace of mind.

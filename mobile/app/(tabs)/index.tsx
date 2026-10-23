@@ -445,10 +445,10 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* The I-Dynamic Standard */}
+        {/* The LesTrades Standard */}
         <Animated.View entering={FadeInDown.delay(160).duration(420)} style={styles.standardSection}>
           <SectionHeader
-            title="The I-Dynamic Standard"
+            title="The LesTrades Standard"
             subtitle="Engineered for peace of mind on every order"
             style={styles.standardHeader}
           />

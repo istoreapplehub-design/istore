@@ -79,13 +79,13 @@
     </text>
   </g>
 
-  <!-- Bottom Brand Sub-Pill: "I-DYNAMIC" -->
+  <!-- Bottom Brand Sub-Pill: "LESTRADES" -->
   <g transform="translate(512, 770)">
     <rect x="-195" y="-30" width="390" height="60" rx="30" fill="#141418" stroke="#0071E3" stroke-width="2.5"/>
     <text x="0" y="9" text-anchor="middle"
           font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif"
           font-size="22" font-weight="800" letter-spacing="11" fill="#FFFFFF">
-      I-DYNAMIC
+      LESTRADES
     </text>
   </g>
 </svg>

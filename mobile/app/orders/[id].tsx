@@ -583,13 +583,13 @@ export default function OrderDetailsScreen() {
             onPress={() => {
               Haptics.selectionAsync();
               Share.share({
-                message: `Get ₵250 off your genuine Apple device on I-Dynamic using my VIP referral code: IDYNAMIC-${order.id.slice(0, 6).toUpperCase()}! Download: https://idynamic.com.gh`
+                message: `Get ₵250 off your purchase on LesTrades using my VIP referral code: LESTRADES-${order.id.slice(0, 6).toUpperCase()}!`
               }).catch(() => {});
             }}
           >
             <Ionicons name="share-social-outline" size={17} color="#FFFFFF" />
             <Text style={styles.shareReferralBtnText}>
-              Share Referral Code (IDYNAMIC-{order.id.slice(0, 6).toUpperCase()})
+              Share Referral Code (LESTRADES-{order.id.slice(0, 6).toUpperCase()})
             </Text>
           </Pressable>
         </View>

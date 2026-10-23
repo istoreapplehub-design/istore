@@ -52,7 +52,7 @@ async function verifyGhanaCard({ nationalId, fullName, dob, phone }) {
         {
           headers: {
             "x-api-key": NIA_API_KEY,
-            "app-id": process.env.NIA_APP_ID || "i-dynamic-gh",
+            "app-id": process.env.NIA_APP_ID || "lestrades-gh",
             "Content-Type": "application/json"
           },
           timeout: 12000

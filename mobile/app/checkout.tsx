@@ -46,30 +46,21 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const STORE_PICKUP_LOCATIONS = [
   {
-    id: "flagship-east-legon",
-    name: "I-Dynamic Flagship — East Legon",
-    address: "Boundary Road, Opp. A&C Mall, East Legon, Accra",
-    region: "Greater Accra",
-    city: "Accra",
-    hours: "Mon–Sat: 9:00 AM – 8:00 PM | Sun: 12:00 PM – 6:00 PM",
+    id: "ucc-campus",
+    name: "LesTrades Hub — UCC Campus",
+    address: "UCC Campus, Cape Coast, Central Region",
+    region: "Central",
+    city: "Cape Coast",
+    hours: "Mon–Sat: 8:30 AM – 7:30 PM | Sun: 12:00 PM – 6:00 PM",
     readyTime: "Ready for pickup in 1 hour"
   },
   {
-    id: "studio-accra-mall",
-    name: "I-Dynamic Studio — Accra Mall",
-    address: "Tetteh Quarshie Interchange, Shop G12, Accra",
-    region: "Greater Accra",
-    city: "Accra",
-    hours: "Mon–Sat: 9:00 AM – 9:00 PM | Sun: 10:00 AM – 8:00 PM",
-    readyTime: "Ready for pickup in 1 hour"
-  },
-  {
-    id: "hub-kumasi",
-    name: "I-Dynamic Experience — Kumasi City Mall",
-    address: "Asokwa, Kumasi City Mall, Shop 24, Kumasi",
-    region: "Ashanti",
-    city: "Kumasi",
-    hours: "Mon–Sat: 9:00 AM – 8:00 PM | Sun: 12:00 PM – 6:00 PM",
+    id: "cape-coast-central",
+    name: "LesTrades Station — Cape Coast",
+    address: "Commercial Area, Cape Coast, Central Region",
+    region: "Central",
+    city: "Cape Coast",
+    hours: "Mon–Sat: 9:00 AM – 7:00 PM",
     readyTime: "Ready for pickup in 2 hours"
   }
 ];
@@ -413,7 +404,7 @@ export default function CheckoutScreen() {
       {
         key: "register" as const,
         icon: "add-circle-outline" as const,
-        title: "Create an I-Dynamic account",
+        title: "Create a LesTrades account",
         body: "Takes about 20 seconds. Worth it if you order more than once."
       }
     ];
@@ -469,7 +460,7 @@ export default function CheckoutScreen() {
           <View style={styles.laneAssurance}>
             <Ionicons name="lock-closed-outline" size={15} color={colors.textSecondary} />
             <Text style={styles.laneAssuranceText}>
-              Payments run through Paystack. I-Dynamic never stores your card details or MoMo
+              Payments run through Paystack. LesTrades never stores your card details or MoMo
               credentials.
             </Text>
           </View>

@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";
+import { StyleSheet, Text, View, Image, ViewStyle, StyleProp } from "react-native";
 import { colors } from "../constants/theme";
 
 interface BrandLogoProps {
@@ -11,21 +11,17 @@ interface BrandLogoProps {
 }
 
 /**
- * Original I-Dynamic Brand Emblem.
- * Designed as a clean, geometric architectural monogram ("I·D")
- * ready to be swapped when a custom PNG/SVG logo asset is uploaded.
+ * LesTrades Official Brand Logo & Monogram.
+ * Features the signature 3D folded blue ribbon emblem and italic wordmark.
  */
 export function BrandLogo({
   size = 38,
-  variant = "dark",
+  variant = "light",
   showWordmark = false,
   wordmarkSize = 18,
   style
 }: BrandLogoProps) {
-  const isDark = variant === "dark";
-  const borderRadius = Math.round(size * 0.28);
-  const fontSize = Math.round(size * 0.42);
-  const dotSize = Math.max(4, Math.round(size * 0.11));
+  const borderRadius = Math.round(size * 0.24);
 
   const badge = (
     <View
@@ -35,48 +31,18 @@ export function BrandLogo({
           width: size,
           height: size,
           borderRadius,
-          backgroundColor: isDark ? "#1D1D1F" : "#FFFFFF",
-          borderWidth: isDark ? 1 : 1.5,
-          borderColor: isDark ? "rgba(255,255,255,0.14)" : "#1D1D1F"
+          backgroundColor: "#FFFFFF",
+          borderWidth: 1,
+          borderColor: "rgba(4, 101, 179, 0.14)"
         },
         !showWordmark && style
       ]}
     >
-      <View style={styles.innerLockup}>
-        <Text
-          style={[
-            styles.monogramI,
-            {
-              fontSize,
-              color: isDark ? "#FFFFFF" : "#1D1D1F"
-            }
-          ]}
-        >
-          I
-        </Text>
-        <View
-          style={[
-            styles.dynamicNode,
-            {
-              width: dotSize,
-              height: dotSize,
-              borderRadius: dotSize / 2,
-              backgroundColor: "#0066CC"
-            }
-          ]}
-        />
-        <Text
-          style={[
-            styles.monogramD,
-            {
-              fontSize,
-              color: isDark ? "#FFFFFF" : "#1D1D1F"
-            }
-          ]}
-        >
-          D
-        </Text>
-      </View>
+      <Image
+        source={require("../assets/images/lestrades-emblem.png")}
+        style={{ width: Math.round(size * 0.88), height: Math.round(size * 0.88) }}
+        resizeMode="contain"
+      />
     </View>
   );
 
@@ -87,9 +53,14 @@ export function BrandLogo({
   return (
     <View style={[styles.wordmarkRow, style]}>
       {badge}
-      <Text style={[styles.wordmarkText, { fontSize: wordmarkSize }]}>
-        I-Dynamic
-      </Text>
+      <View style={styles.textCol}>
+        <Text style={[styles.wordmarkText, { fontSize: wordmarkSize }]}>
+          LesTrades
+        </Text>
+        <Text style={[styles.taglineText, { fontSize: Math.max(9, Math.round(wordmarkSize * 0.52)) }]}>
+          Quality for Less
+        </Text>
+      </View>
     </View>
   );
 }
@@ -100,32 +71,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden"
   },
-  innerLockup: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 1.5
-  },
-  monogramI: {
-    fontWeight: "800",
-    letterSpacing: -0.5
-  },
-  dynamicNode: {
-    marginHorizontal: 0.5
-  },
-  monogramD: {
-    fontWeight: "800",
-    letterSpacing: -0.5
-  },
   wordmarkRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10
   },
+  textCol: {
+    justifyContent: "center"
+  },
   wordmarkText: {
-    fontWeight: "700",
-    color: colors.text,
-    letterSpacing: -0.4
+    fontStyle: "italic",
+    fontWeight: "800",
+    color: "#0465B3",
+    letterSpacing: -0.6
+  },
+  taglineText: {
+    fontStyle: "italic",
+    fontWeight: "600",
+    color: "#0465B3",
+    letterSpacing: 0.1,
+    marginTop: -1
   }
 });
 

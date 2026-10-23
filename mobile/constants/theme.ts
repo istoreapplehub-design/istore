@@ -7,21 +7,22 @@ export const colors = {
   text: "#1D1D1F",
   textSecondary: "#6E6E73",
   textTertiary: "#86868B",
-  accent: "#1D1D1F",          // Deep charcoal primary actions
-  accentDark: "#0A0A0A",      // Deep carbon stage
-  brandAccent: "#0066CC",     // Restrained editorial blue accent
-  brandRed: "#0066CC",        // Restrained primary interactive accent (Apple-Store style)
-  brandRedDark: "#004C99",    // Deep blue press state
-  brandRedSoft: "rgba(0, 102, 204, 0.08)", // Soft blue tint for pills/badges
-  brandRedBorder: "rgba(0, 102, 204, 0.20)",
+  accent: "#0465B3",          // LesTrades royal electric blue
+  accentDark: "#034E8C",      // Deep blue press state
+  brandAccent: "#0465B3",     // LesTrades brand blue
+  brandHighlight: "#1CC0FB",  // Cyan highlight from LesTrades logo
+  brandRed: "#0465B3",        // Primary interactive accent
+  brandRedDark: "#034E8C",    // Deep blue press state
+  brandRedSoft: "rgba(4, 101, 179, 0.08)", // Soft blue tint for pills/badges
+  brandRedBorder: "rgba(4, 101, 179, 0.20)",
   success: "#1D1D1F",
   danger: "#D92D20",          // Destructive alert accent
-  badge: "#1D1D1F",           // Minimalist charcoal notification badges
+  badge: "#0465B3",           // LesTrades blue badge
   gold: "#F59E0B",
   border: "#E5E5EA",
   cardShadow: "rgba(0, 0, 0, 0.04)",
   tabInactive: "#86868B",
-  star: "#1D1D1F",            // Minimalist rating stars
+  star: "#0465B3",            // Rating stars
   gradientBottom: "rgba(0, 0, 0, 0.78)",
   gradientTop: "rgba(0, 0, 0, 0)",
   imageBg: "#FFFFFF"

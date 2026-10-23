@@ -21,7 +21,7 @@ interface AppHeaderProps {
 }
 
 /**
- * Global I-Dynamic minimalist header:
+ * Global LesTrades minimalist header:
  * Original brand identity on the left, and clean Search, Favorites, and Bag indicators on the right.
  */
 export function AppHeader({
@@ -55,10 +55,10 @@ export function AppHeader({
           onPress={() => press(() => router.push("/(tabs)"))}
           style={styles.brand}
         >
-          <BrandLogo size={36} variant="dark" />
+          <BrandLogo size={36} variant="light" />
           <View style={styles.brandTextCol}>
-            <Text style={styles.wordmark}>I-Dynamic</Text>
-            <Text style={styles.eyebrow}>PREMIUM TECH</Text>
+            <Text style={styles.wordmark}>LesTrades</Text>
+            <Text style={styles.eyebrow}>QUALITY FOR LESS</Text>
           </View>
         </Pressable>
 
@@ -158,17 +158,20 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   wordmark: {
-    fontSize: 19,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-    color: colors.text
+    fontSize: 20,
+    fontStyle: "italic",
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    color: "#0465B3"
   },
   eyebrow: {
     fontSize: 8.5,
-    fontWeight: "600",
-    letterSpacing: 1.2,
-    color: colors.textSecondary,
-    marginTop: 1
+    fontStyle: "italic",
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    color: "#0465B3",
+    opacity: 0.85,
+    marginTop: 0
   },
   actions: {
     flexDirection: "row",

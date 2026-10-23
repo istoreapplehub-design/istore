@@ -117,10 +117,10 @@ export default function AccountScreen() {
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.gate}>
           <Animated.View entering={FadeInDown.springify().damping(16)} style={styles.gateInner}>
-            <BrandLogo size={56} variant="dark" />
-            <Text style={styles.gateTitle}>Sign in to I-Dynamic</Text>
+            <BrandLogo size={56} variant="light" />
+            <Text style={styles.gateTitle}>Sign in to LesTrades</Text>
             <Text style={styles.gateBody}>
-              Your bag stays with you either way. Signing in unlocks your orders, saved addresses, and personalized benefits on I-Dynamic.
+              Your bag stays with you either way. Signing in unlocks your orders, saved addresses, and personalized benefits on LesTrades.
             </Text>
 
             <View style={styles.gatePerks}>
@@ -204,7 +204,7 @@ export default function AccountScreen() {
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Shop genuine Apple devices on I-Dynamic with my referral code ${referralCode} to get GHS 250 off your first order!`
+        message: `Shop genuine tech on LesTrades with my referral code ${referralCode} to get GHS 250 off your first order!`
       });
     } catch {
       // User dismissed share sheet
@@ -404,7 +404,7 @@ export default function AccountScreen() {
           <View style={styles.divider} />
           <Row
             icon="sparkles-outline"
-            label="I-Dynamic Welcome Tour"
+            label="LesTrades Welcome Tour"
             onPress={() => router.push("/onboarding" as never)}
           />
         </Group>

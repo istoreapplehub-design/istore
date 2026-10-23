@@ -338,7 +338,7 @@ export default function ProductDetailScreen() {
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Check out the ${product.name} at I-Dynamic: ₵${effectivePriceGHS.toLocaleString("en-GH")}`
+        message: `Check out the ${product.name} at LesTrades: ₵${effectivePriceGHS.toLocaleString("en-GH")}`
       });
     } catch {
       // Ignored

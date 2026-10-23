@@ -76,7 +76,7 @@ export default function PreferencesScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.pageHeader}>
           <Text style={typography.bodySmall}>
-            How I-Dynamic speaks, alerts, prices and delivers to you.
+            How LesTrades speaks, alerts, prices and delivers to you.
           </Text>
         </View>
 

@@ -97,17 +97,17 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   return (
     <Animated.View style={[styles.overlay, containerAnimatedStyle]}>
       <View style={styles.centerStage}>
-        {/* Original I-Dynamic Monogram (ready for custom logo swap) */}
+        {/* Official LesTrades Brand Emblem */}
         <Animated.View style={[styles.emblemBox, logoAnimatedStyle]}>
-          <BrandLogo size={76} variant="light" />
+          <BrandLogo size={90} variant="light" />
         </Animated.View>
 
         <Animated.Text entering={FadeIn.delay(180).duration(420)} style={styles.brandTitle}>
-          I-Dynamic
+          LesTrades
         </Animated.Text>
 
         <Animated.Text entering={FadeIn.delay(320).duration(420)} style={styles.brandSubtitle}>
-          Curated Apple Hardware & Accessories
+          Quality for Less
         </Animated.Text>
 
         {/* Minimal Progress Bar */}
@@ -117,7 +117,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
       </View>
 
       <Animated.View entering={FadeIn.delay(480).duration(400)} style={styles.bottomFooter}>
-        <Text style={styles.tagline}>PRECISION · ELEGANCE · PERFORMANCE</Text>
+        <Text style={styles.tagline}>UCC CAMPUS · CAPE COAST</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -144,30 +144,32 @@ const styles = StyleSheet.create({
     marginBottom: 14
   },
   brandTitle: {
-    fontSize: 34,
-    fontWeight: "700",
-    color: "#1D1D1F",
-    letterSpacing: -0.9
+    fontSize: 36,
+    fontStyle: "italic",
+    fontWeight: "800",
+    color: "#0465B3",
+    letterSpacing: -0.7
   },
   brandSubtitle: {
-    fontSize: 13.5,
-    fontWeight: "500",
-    color: "#6E6E73",
-    letterSpacing: 0.1,
+    fontSize: 14.5,
+    fontStyle: "italic",
+    fontWeight: "600",
+    color: "#0465B3",
+    letterSpacing: 0.2,
     marginTop: 4
   },
   progressTrack: {
     width: 120,
     height: 3,
     borderRadius: radius.full,
-    backgroundColor: "#E5E5EA",
+    backgroundColor: "rgba(4, 101, 179, 0.12)",
     marginTop: 28,
     overflow: "hidden"
   },
   progressFill: {
     height: "100%",
     borderRadius: radius.full,
-    backgroundColor: "#1D1D1F"
+    backgroundColor: "#0465B3"
   },
   bottomFooter: {
     position: "absolute",
@@ -175,10 +177,11 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   tagline: {
-    fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 2,
-    color: "#86868B"
+    fontSize: 10.5,
+    fontWeight: "700",
+    letterSpacing: 1.8,
+    color: "#0465B3",
+    opacity: 0.75
   }
 });
 

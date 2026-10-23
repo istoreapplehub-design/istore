@@ -36,10 +36,11 @@ export const GHANA_REGIONS = [
 
 export type GhanaRegion = (typeof GHANA_REGIONS)[number];
 
-export const UBER_SUPPORTED_REGIONS = ["Greater Accra", "Ashanti"] as const;
+export const UBER_SUPPORTED_REGIONS = ["Central", "Greater Accra", "Ashanti"] as const;
 export type UberSupportedRegion = (typeof UBER_SUPPORTED_REGIONS)[number];
 
 export const UBER_REGION_FEE_MAP: Record<string, number> = {
+  Central: 15.0,
   "Greater Accra": 25.0,
   Ashanti: 40.0
 };

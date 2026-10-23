@@ -52,7 +52,7 @@ const FAQS: Faq[] = [
   },
   {
     q: "Are the products genuine?",
-    a: "Every device sold on I-Dynamic is genuine, new and sealed, sourced through authorized distribution channels with full manufacturer warranty valid in Ghana."
+    a: "Every device sold on LesTrades is genuine, new and sealed, sourced through authorized distribution channels with full manufacturer warranty valid in Ghana."
   },
   {
     q: "Which regions do you deliver to?",
@@ -88,7 +88,7 @@ export default function HelpScreen() {
       >
         <View style={styles.pageHeader}>
           <Text style={typography.bodySmall}>
-            Answers, order tools, warranty coverage, and ways to reach the I-Dynamic team.
+            Answers, order tools, warranty coverage, and ways to reach the LesTrades team.
           </Text>
         </View>
 
@@ -213,7 +213,7 @@ export default function HelpScreen() {
         </View>
 
         <Text style={styles.footnote}>
-          Accra support team · Mon–Sat 8am–8pm, Sun 12pm–6pm (GMT)
+          UCC Campus, Cape Coast support team · Mon–Sat 8am–8pm, Sun 12pm–6pm (GMT)
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -58,13 +58,13 @@ const SLIDES: OnboardingSlide[] = [
   {
     id: "assurance",
     eyebrow: "SEAMLESS CHECKOUT & WARRANTY",
-    title: "Protected by the I-Dynamic Standard.",
+    title: "Protected by the LesTrades Standard.",
     description:
-      "Check out effortlessly with Mobile Money or Card via Paystack, track your delivery in real time, and enjoy 1-Year Official Apple Warranty coverage.",
+      "Check out effortlessly with Mobile Money or Card via Paystack, track your delivery in real time, and enjoy quality assurance and hardware warranty protection.",
     icon: "shield-checkmark-outline",
     highlights: [
-      "Same-day express dispatch in Accra & Kumasi",
-      "1-Year Official Apple Warranty & 7-day returns",
+      "Express dispatch from UCC Campus & nationwide",
+      "Full warranty support & 7-day returns",
       "Dedicated specialist concierge support"
     ]
   }
@@ -103,8 +103,8 @@ export default function OnboardingScreen() {
       {/* Top Bar */}
       <View style={styles.topBar}>
         <View style={styles.brandRow}>
-          <BrandLogo size={32} variant="dark" />
-          <Text style={styles.brandName}>I-Dynamic</Text>
+          <BrandLogo size={32} variant="light" />
+          <Text style={styles.brandName}>LesTrades</Text>
         </View>
         <Pressable
           hitSlop={10}
@@ -203,9 +203,10 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 18,
-    fontWeight: "700",
+    fontStyle: "italic",
+    fontWeight: "800",
     letterSpacing: -0.5,
-    color: colors.text
+    color: "#0465B3"
   },
   skipBtn: {
     paddingHorizontal: 10,

@@ -46,7 +46,7 @@ const VALUE_PROPS: ValueProp[] = [
     icon: "gift-outline",
     eyebrow: "Referral Bonus",
     title: "Refer & earn bonus.",
-    body: "Invite friends with your I-Dynamic referral code — they save GHS 250 and you earn GHS 300 bonus credit.",
+    body: "Invite friends with your LesTrades referral code — they save GHS 250 and you earn GHS 300 bonus credit.",
     href: "/account"
   }
 ];

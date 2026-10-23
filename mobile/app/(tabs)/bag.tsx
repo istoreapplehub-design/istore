@@ -157,20 +157,20 @@ export default function BagScreen() {
   const handleHelpPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert(
-      "I-Dynamic Specialist Support",
+      "LesTrades Specialist Support",
       "Need advice choosing finishes, configurations, or checking delivery times?",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "WhatsApp Specialist",
           onPress: () => {
-            Linking.openURL("https://wa.me/233240000000?text=Hello%20I-Dynamic,%20I%20need%20help%20with%20my%20order");
+            Linking.openURL("https://wa.me/233506151109?text=Hello%20LesTrades,%20I%20need%20help%20with%20my%20order");
           }
         },
         {
           text: "Call Store",
           onPress: () => {
-            Linking.openURL("tel:+233240000000");
+            Linking.openURL("tel:+233506151109");
           }
         }
       ]
@@ -188,7 +188,7 @@ export default function BagScreen() {
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <View style={styles.headerTitleCol}>
-            <Text style={styles.headerEyebrow}>I-DYNAMIC STORE</Text>
+            <Text style={styles.headerEyebrow}>LESTRADES STORE</Text>
             <Text style={styles.headerTitle}>Review your Bag.</Text>
             <Text style={styles.headerSubtitle}>
               {totalItemCount === 0
