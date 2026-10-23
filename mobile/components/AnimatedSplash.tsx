@@ -116,9 +116,6 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
         </Animated.View>
       </View>
 
-      <Animated.View entering={FadeIn.delay(480).duration(400)} style={styles.bottomFooter}>
-        <Text style={styles.tagline}>UCC CAMPUS · CAPE COAST</Text>
-      </Animated.View>
     </Animated.View>
   );
 }

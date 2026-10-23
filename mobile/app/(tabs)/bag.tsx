@@ -164,13 +164,13 @@ export default function BagScreen() {
         {
           text: "WhatsApp Specialist",
           onPress: () => {
-            Linking.openURL("https://wa.me/233506151109?text=Hello%20LesTrades,%20I%20need%20help%20with%20my%20order");
+            Linking.openURL("https://wa.me/233242826590?text=Hello%20LesTrades,%20I%20need%20help%20with%20my%20order");
           }
         },
         {
           text: "Call Store",
           onPress: () => {
-            Linking.openURL("tel:+233506151109");
+            Linking.openURL("tel:+233242826590");
           }
         }
       ]
@@ -650,9 +650,6 @@ export default function BagScreen() {
                     </Text>
                   </View>
 
-                  <Text style={styles.summaryNote}>
-                    Prices in Ghanaian Cedis (GHS). Includes all Apple warranties, transit insurance, and complimentary delivery.
-                  </Text>
 
                   {/* Desktop / Tablet Direct Checkout Button */}
                   {isTabletOrPc && (

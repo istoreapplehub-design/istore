@@ -9,11 +9,6 @@ import { SUPPORT_PHONE_DISPLAY, SUPPORT_WHATSAPP_URL } from "../constants/suppor
 
 const COVERAGE_ITEMS = [
   {
-    icon: "shield-checkmark-outline" as const,
-    title: "1-Year Official Apple Limited Warranty",
-    body: "Every new iPhone, Mac, iPad, Apple Watch, AirPods, and accessory purchased on LesTrades includes a full 12-month manufacturer hardware warranty."
-  },
-  {
     icon: "barcode-outline" as const,
     title: "Serial Number Authenticity Guarantee",
     body: "Every device arrives factory-sealed with an official Apple serial number that can be verified directly on checkcoverage.apple.com upon unboxing."
