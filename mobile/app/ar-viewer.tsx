@@ -10,7 +10,7 @@ import {
   Text,
   View
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -232,8 +232,39 @@ export default function ArViewerScreen() {
 
   const handleLaunchAr = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const ext = Platform.OS === "android" ? "glb" : "usdz";
-    const assetUrl = `${MODELS_BASE}/${activeDevice.key}.${ext}`;
+
+    const usdzUrl = `${MODELS_BASE}/${activeDevice.key}.usdz`;
+    const glbUrl = `${MODELS_BASE}/${activeDevice.key}.glb`;
+    const assetUrl = Platform.OS === "android" ? glbUrl : usdzUrl;
+
+    if (Platform.OS !== "ios" && Platform.OS !== "android") {
+      // Web: hand the USDZ to the browser (Safari on macOS/iOS renders Quick Look)
+      Linking.openURL(assetUrl).catch(() => {
+        Alert.alert("AR on Web", "Open this page in Safari on an Apple device for AR Quick Look.");
+      });
+      return;
+    }
+
+    // Native-only Turbo module: required lazily so the web bundle never evaluates it
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { openAR, isARAvailable, ErrorCodes } =
+      require("react-native-ar-preview") as typeof import("react-native-ar-preview");
+
+    let available = false;
+    try {
+      available = await isARAvailable();
+    } catch {
+      available = false;
+    }
+    if (!available) {
+      Alert.alert(
+        "AR Not Available",
+        Platform.OS === "ios"
+          ? "This device does not support ARKit world tracking, so AR Quick Look cannot open."
+          : "This device needs AR Core + Google Scene Viewer to view 3D models in your space."
+      );
+      return;
+    }
 
     try {
       const probe = await fetch(assetUrl, { method: "HEAD" });
@@ -246,30 +277,27 @@ export default function ArViewerScreen() {
       return;
     }
 
-    if (Platform.OS === "ios") {
-      // AR Quick Look: Safari opens the USDZ natively with plane detection & true 1:1 scale
-      Linking.openURL(assetUrl).catch(() => {
-        Alert.alert("Could Not Open AR Quick Look", "Tap the button again or open the link from Safari.");
-      });
-      return;
-    }
-
-    if (Platform.OS === "android") {
-      // Scene Viewer: Google's native AR renderer, consumes the GLB at true scale
-      const viewerUrl = `https://ar.google.com/viewer?url=${encodeURIComponent(assetUrl)}&title=${encodeURIComponent(activeDevice.name)}`;
-      Linking.openURL(viewerUrl).catch(() => {
+    try {
+      await openAR({ usdz: usdzUrl, glb: glbUrl }, { scale: "auto" });
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      if (code === ErrorCodes.AR_UNAVAILABLE) {
         Alert.alert(
-          "Scene Viewer Not Available",
-          "This device needs AR Core + Scene Viewer (or Google Play Services for AR) to view 3D models in your space."
+          "AR Not Available",
+          `No system AR viewer could open on this ${Platform.OS === "ios" ? "iPhone" : "Android"} device.`
         );
-      });
-      return;
+      } else if (code === ErrorCodes.DOWNLOAD_FAILED) {
+        Alert.alert(
+          "Could Not Load AR Model",
+          `${activeDevice.name}'s 3D model could not be downloaded from ${assetUrl}. Check that the LesTrades backend is reachable and try again.`
+        );
+      } else {
+        Alert.alert(
+          "AR Preview Failed",
+          (e as Error)?.message || "The system AR viewer could not be launched. Please try again."
+        );
+      }
     }
-
-    // Web: hand the USDZ to the browser (Safari on macOS/iOS renders Quick Look)
-    Linking.openURL(assetUrl).catch(() => {
-      Alert.alert("AR on Web", "Open this page in Safari on an Apple device for AR Quick Look.");
-    });
   };
 
   const handleShare = async () => {
