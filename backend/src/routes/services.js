@@ -1,6 +1,21 @@
 const express = require("express");
 const router = express.Router();
 
+const APPLE_TACS = require("../data/apple-tacs.json");
+
+function luhnValid(digits) {
+  let sum = 0;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let d = Number(digits[i]);
+    if ((digits.length - i) % 2 === 0) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+
 const GHANA_HUBS = [
   {
     id: "lestrades-ucc-cape-coast",
@@ -415,6 +430,15 @@ router.post("/trade-in/check-serial", async (req, res) => {
   }
 
   const cleaned = serialOrImei.trim().toUpperCase();
+  const isImei = /^\d{15}$/.test(cleaned);
+
+  if (isImei && !luhnValid(cleaned)) {
+    return res.status(400).json({
+      success: false,
+      error:
+        "This IMEI failed the GSMA check-digit validation — it is not a valid 15-digit IMEI. Re-read it from Settings > General > About or dial *#06# and try again."
+    });
+  }
 
   // 1. Try imei.info API (registered provider, paid API key)
   let imeiInfoData = await queryImeiInfoApi(cleaned);
@@ -426,26 +450,31 @@ router.post("/trade-in/check-serial", async (req, res) => {
   // 2. Try IMEICheck official developer REST API
   const imeiCheckData = imeiInfoData ? null : await queryImeicheckApi(cleaned);
 
-  // 3. Try official Apple hardware resolver
+  // 3. Try official Apple hardware resolver (serial-based; last-4 guesses are unreliable on IMEIs)
   let appleModelName = null;
-  if (!imeiInfoData && !imeiCheckData) {
+  if (!imeiInfoData && !imeiCheckData && !isImei) {
     appleModelName = await queryAppleCoverageApi(cleaned);
   }
 
+  // 4. Free offline tier: GSMA TAC registry (first 8 IMEI digits -> exact model, no API key)
+  let tacHit = null;
+  if (!imeiInfoData && !imeiCheckData && !appleModelName && isImei) {
+    tacHit = APPLE_TACS[cleaned.slice(0, 8)] || null;
+  }
+
   // If no provider could verify the device, be explicit about why
-  if (!imeiInfoData && !imeiCheckData && !appleModelName) {
-    const providersConfigured = process.env.IMEICHECK_API_KEY || process.env.IMEIINFO_API_KEY;
-    if (!providersConfigured) {
+  if (!imeiInfoData && !imeiCheckData && !appleModelName && !tacHit) {
+    if (isImei) {
       return res.status(404).json({
         success: false,
         error:
-          "Device not recognized. To enable automated serial & IMEI lookups from https://imeicheck.com/apple-serial-number-check, set IMEICHECK_API_KEY in backend/.env, or verify your device serial in Settings > General > About."
+          "This IMEI's TAC prefix is not in the offline Apple registry — it is likely not an Apple device. Double-check the number or dial *#06#."
       });
     }
     return res.status(404).json({
       success: false,
       error:
-        "Device not found for the entered serial number / IMEI. Please check the serial number on your Apple device (Settings > General > About) and try again."
+        "Device not found for the entered serial number. Please check the serial on your Apple device (Settings > General > About) and try again."
     });
   }
 
@@ -508,6 +537,19 @@ router.post("/trade-in/check-serial", async (req, res) => {
       simLock = p.simLock === false || p.simLock === "Unlocked" ? "Factory Unlocked" : "Carrier Locked";
     }
     if (p.purchaseCountry) purchaseCountry = p.purchaseCountry;
+  }
+
+  if (tacHit) {
+    provider = "GSMA TAC registry · offline model lookup (free, no key)";
+    model = tacHit[0];
+    if (tacHit[1]) modelNumber = tacHit[1];
+    storage = "Verify on device (Settings > General > About)";
+    color = "Verify on device";
+    warrantyStatus = "Not verified offline";
+    coverageExpires = "Needs paid IMEI check";
+    icloudStatus = "Not verified — paid IMEI check required for Activation Lock";
+    simLock = "Not verified — paid IMEI check required for carrier lock";
+    purchaseCountry = tacHit[2] ? `Released ${tacHit[2]}` : "Global Hardware Variant";
   }
 
   // Determine category from authentic model name
