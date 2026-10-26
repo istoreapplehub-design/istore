@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, radius, theme } from "../../constants/theme";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 import {
   TodayEvent,
   WorkshopRegistration,
@@ -122,22 +123,21 @@ export default function AdminEventsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.accent} />}
-      >
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Today at LesTrades</Text>
-            <Text style={styles.subtitle}>Workshops · UCC Cape Coast</Text>
-          </View>
+      <AdminHeader
+        title="Today at LesTrades"
+        subtitle="Workshops · UCC Cape Coast"
+        right={
           <Pressable onPress={() => router.push("/admin/genius-bar")} style={styles.geniusBtn}>
-            <Ionicons name="hammer-outline" size={16} color={colors.text} />
+            <Ionicons name="hammer-outline" size={16} color={colors.brandAccent} />
             <Text style={styles.geniusBtnText}>Genius Bar</Text>
           </Pressable>
-        </View>
-
+        }
+      />
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 14, paddingBottom: insets.bottom + 40 }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.brandAccent} />}
+      >
         <View style={styles.switcher}>
           {(["workshops", "rsvps"] as const).map((t) => (
             <Pressable
@@ -404,9 +404,10 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: radius.full,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.brandRedBorder,
+    backgroundColor: colors.brandRedSoft
   },
-  geniusBtnText: { fontSize: 12.5, fontWeight: "600", color: colors.text },
+  geniusBtnText: { fontSize: 12.5, fontWeight: "700", color: colors.brandAccent },
   switcher: {
     flexDirection: "row",
     backgroundColor: colors.surface,
@@ -415,7 +416,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   switchPill: { flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: radius.full },
-  switchPillActive: { backgroundColor: colors.accent },
+  switchPillActive: { backgroundColor: colors.brandAccent },
   switchText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   switchTextActive: { color: "#FFFFFF" },
   centerBox: { alignItems: "center", paddingTop: 60 },
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     paddingVertical: 13,
     borderRadius: radius.md,
     marginBottom: 16

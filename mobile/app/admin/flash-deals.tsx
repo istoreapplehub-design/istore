@@ -20,6 +20,7 @@ import { Product } from "../../types";
 import { getAdminProducts } from "../../services/adminApi";
 import { setFlashDeal } from "../../services/adminServicesApi";
 import { discountPercent, selectFlashDeals } from "../../hooks/useFlashDeals";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 
 function heroImage(p: Product): string | undefined {
   return p.images?.[0] || p.colors?.[0]?.images?.[0];
@@ -114,12 +115,20 @@ export default function AdminFlashDealsScreen() {
 
   return (
     <View style={styles.container}>
+      <AdminHeader
+        title="Flash Deals"
+        subtitle="Daily offers · resets at midnight"
+        right={
+          <View style={styles.dealCountPill}>
+            <Text style={styles.dealCountText}>{deals.length} LIVE</Text>
+          </View>
+        }
+      />
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 14, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.accent} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.brandAccent} />}
       >
-        <Text style={styles.title}>Flash Deals</Text>
         <Text style={styles.subtitle}>
           A deal is any live product with a compare-at price above its selling price. Deals reset daily at midnight.
         </Text>
@@ -252,6 +261,15 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 16 },
   title: { fontSize: 26, fontWeight: "700", color: colors.text, letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2, marginBottom: 20, lineHeight: 19 },
+  dealCountPill: {
+    backgroundColor: colors.brandRedSoft,
+    borderColor: colors.brandRedBorder,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 4
+  },
+  dealCountText: { fontSize: 10, fontWeight: "800", color: colors.brandAccent, letterSpacing: 0.6 },
   centerBox: { alignItems: "center", paddingTop: 60 },
   card: {
     backgroundColor: "#FFFFFF",
@@ -357,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1.4,
     height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     alignItems: "center",
     justifyContent: "center"
   },

@@ -32,6 +32,7 @@ import {
 import { StatCard } from "../../components/admin/StatCard";
 import { SalesChart } from "../../components/admin/SalesChart";
 import { SkeletonLoader } from "../../components/SkeletonLoader";
+import { BrandLogo } from "../../components/BrandLogo";
 
 function OpsTile({
   icon,
@@ -176,18 +177,18 @@ export default function AdminDashboardScreen() {
         ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brandAccent} />
         }
       >
         {/* 1. HEADER */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.badgeRow}>
+              <BrandLogo size={36} showWordmark wordmarkSize={17} showTagline />
               <View style={styles.adminPill}>
                 <Ionicons name="shield-checkmark" size={11} color="#FFFFFF" style={{ marginRight: 4 }} />
                 <Text style={styles.adminPillText}>ADMIN CONSOLE</Text>
               </View>
-              <Text style={styles.storeName}>LesTrades</Text>
             </View>
             <Text style={styles.title}>Overview</Text>
             <Text style={styles.subtitle}>
@@ -269,7 +270,7 @@ export default function AdminDashboardScreen() {
                   label="Revenue (30d)"
                   value={totalRevenueFormatted}
                   icon="trending-up"
-                  color={colors.accent}
+                  color={colors.brandAccent}
                   onPress={() => {}}
                 />
               </View>
@@ -278,7 +279,7 @@ export default function AdminDashboardScreen() {
                   label="Orders (30d)"
                   value={String(totalOrders)}
                   icon="cart-outline"
-                  color={colors.accent}
+                  color={colors.text}
                   onPress={() => router.push("/admin/orders")}
                 />
               </View>
@@ -287,7 +288,7 @@ export default function AdminDashboardScreen() {
                   label="Products"
                   value={String(totalProducts)}
                   icon="cube-outline"
-                  color={colors.accent}
+                  color="#34C759"
                   onPress={() => router.push("/admin/products")}
                 />
               </View>
@@ -296,7 +297,7 @@ export default function AdminDashboardScreen() {
                   label="Pending Orders"
                   value={String(pendingOrders)}
                   icon="time-outline"
-                  color="#6E6E73"
+                  color="#FF9500"
                   onPress={() => router.push("/admin/orders")}
                 />
               </View>
@@ -460,7 +461,7 @@ const styles = StyleSheet.create({
   adminPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: radius.full
@@ -601,7 +602,7 @@ const styles = StyleSheet.create({
   exportLink: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.accent,
+    color: colors.brandAccent,
     textDecorationLine: "underline"
   },
   opsGrid: {
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
   opsCountPill: {
     minWidth: 24,
     alignItems: "center",
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2

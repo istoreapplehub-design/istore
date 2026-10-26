@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, radius, theme } from "../../constants/theme";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 import {
   GeniusBooking,
   GeniusBookingStatus,
@@ -118,22 +119,21 @@ export default function AdminGeniusBarScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.accent} />}
-      >
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Genius Bar</Text>
-            <Text style={styles.subtitle}>Repair bookings at LESTRADES_UCC CAPE COAST</Text>
-          </View>
+      <AdminHeader
+        title="Genius Bar"
+        subtitle="Repairs at LESTRADES_UCC CAPE COAST"
+        right={
           <Pressable onPress={() => router.push("/admin/events")} style={styles.eventsBtn}>
             <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
             <Text style={styles.eventsBtnText}>Events</Text>
           </Pressable>
-        </View>
-
+        }
+      />
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 14, paddingBottom: insets.bottom + 40 }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.brandAccent} />}
+      >
         {loading ? (
           <View style={styles.centerBox}>
             <ActivityIndicator size="large" color={colors.accent} />
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: radius.full
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
   modalLabel: { fontSize: 13, color: colors.textSecondary },
   modalValue: { fontSize: 13.5, fontWeight: "600", color: colors.text, flex: 1, textAlign: "right", marginLeft: 16 },
   doneBtn: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     height: 48,
     borderRadius: radius.md,
     alignItems: "center",

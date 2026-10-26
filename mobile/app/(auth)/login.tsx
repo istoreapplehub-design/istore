@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,10 +15,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Href, useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, radius, spacing, typography } from "../../constants/theme";
+import { colors, radius, shadow, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 import { useCartStore } from "../../store/useCartStore";
-import { BrandLogo } from "../../components/BrandLogo";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginScreen() {
@@ -104,8 +104,13 @@ export default function LoginScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <View style={{ marginBottom: 12 }}>
-              <BrandLogo size={38} showWordmark wordmarkSize={19} />
+            <View style={styles.logoCard}>
+              <Image
+                source={require("../../assets/images/lestrades-logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+                accessibilityLabel="LesTrades — Quality for Less"
+              />
             </View>
             <Text style={styles.title}>Sign In</Text>
             <Text style={styles.subtitle}>
@@ -285,6 +290,21 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.xl
+  },
+  logoCard: {
+    alignSelf: "flex-start",
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.xl,
+    borderWidth: 1.5,
+    borderColor: colors.brandRedBorder,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginBottom: spacing.md,
+    ...shadow.card
+  },
+  logoImage: {
+    width: 180,
+    height: 134
   },
   brandSubtitle: {
     ...typography.subheadline,

@@ -8,24 +8,22 @@ export default function AdminLayout() {
     <AdminGuard>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: theme.colors.background },
-          headerTitleStyle: { fontWeight: "700", fontSize: 17 },
-          headerTintColor: theme.colors.text,
-          headerShadowVisible: false,
+          // Every admin screen ships its own branded header — no native stack header.
+          headerShown: false,
           contentStyle: { backgroundColor: theme.colors.background },
           animation: "slide_from_right"
         }}
       >
-        <Stack.Screen name="index" options={{ title: "Admin", headerShown: false }} />
-        <Stack.Screen name="products/index" options={{ title: "Products" }} />
-        <Stack.Screen name="products/new" options={{ title: "New Product", presentation: "modal" }} />
-        <Stack.Screen name="products/[id]" options={{ title: "Edit Product" }} />
-        <Stack.Screen name="orders/index" options={{ title: "Orders" }} />
-        <Stack.Screen name="orders/[id]" options={{ title: "Order", headerShown: false }} />
-        <Stack.Screen name="flash-deals" options={{ title: "Flash Deals" }} />
-        <Stack.Screen name="events" options={{ title: "Events", headerShown: false }} />
-        <Stack.Screen name="genius-bar" options={{ title: "Genius Bar", headerShown: false }} />
-        <Stack.Screen name="trade-in" options={{ title: "Trade-In", headerShown: false }} />
+        <Stack.Screen name="index" />
+        <Stack.Screen name="products/index" />
+        <Stack.Screen name="products/new" options={{ presentation: "modal" }} />
+        <Stack.Screen name="products/[id]" />
+        <Stack.Screen name="orders/index" />
+        <Stack.Screen name="orders/[id]" />
+        <Stack.Screen name="flash-deals" />
+        <Stack.Screen name="events" />
+        <Stack.Screen name="genius-bar" />
+        <Stack.Screen name="trade-in" />
       </Stack>
     </AdminGuard>
   );

@@ -28,7 +28,6 @@ import { HeroCarousel } from "../../components/HeroCarousel";
 import { FlashDealCard } from "../../components/FlashDealCard";
 import { ProductCard } from "../../components/ProductCard";
 import { SectionHeader } from "../../components/SectionHeader";
-import { ValuePropRail } from "../../components/ValuePropRail";
 import { SkeletonProductCard } from "../../components/SkeletonLoader";
 import { ProductVisual, getProductImage } from "../../components/ProductVisual";
 import { useHomeData } from "../../hooks/useHomeData";
@@ -285,7 +284,7 @@ export default function HomeScreen() {
             <View style={styles.flashDealsLeft}>
               <View style={styles.flashDealsBadge}>
                 <Ionicons name="flash" size={11} color="#FFFFFF" />
-                <Text style={styles.flashDealsBadgeText}>TODAY'S FLASH DEALS</Text>
+                <Text style={styles.flashDealsBadgeText}>TODAY&apos;S FLASH DEALS</Text>
               </View>
               <Text style={styles.flashDealsTitle}>Limited-Time Apple Drops</Text>
               <Text style={styles.flashDealsSub}>Save up to ₵1,800 on iPhones, iPads & accessories</Text>
@@ -526,16 +525,6 @@ export default function HomeScreen() {
               </View>
             </Pressable>
           </ScrollView>
-        </Animated.View>
-
-        {/* The LesTrades Standard */}
-        <Animated.View entering={FadeInDown.delay(160).duration(420)} style={styles.standardSection}>
-          <SectionHeader
-            title="The LesTrades Standard"
-            subtitle="Engineered for peace of mind on every order"
-            style={styles.standardHeader}
-          />
-          <ValuePropRail />
         </Animated.View>
       </Animated.ScrollView>
     </View>
@@ -800,14 +789,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: colors.brandAccent
-  },
-  standardSection: {
-    marginTop: 4,
-    marginBottom: 8
-  },
-  standardHeader: {
-    paddingTop: 10,
-    paddingBottom: 6
   },
   skeletonRow: {
     flexDirection: "row",

@@ -25,6 +25,7 @@ import {
   restoreAdminProduct
 } from "../../../services/adminApi";
 import { SkeletonLoader } from "../../../components/SkeletonLoader";
+import { AdminHeader } from "../../../components/admin/AdminHeader";
 
 const FILTERS = [
   { id: "all", label: "All" },
@@ -253,29 +254,22 @@ export default function AdminProductsListScreen() {
   return (
     <View style={styles.container}>
       {/* 1. STICKY HEADER */}
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.headerLeft}>
+      <AdminHeader
+        title="Products"
+        subtitle="Catalogue & inventory"
+        right={
           <Pressable
-            hitSlop={8}
-            onPress={() => router.back()}
-            style={styles.backBtn}
+            style={({ pressed }) => [styles.newBtn, pressed && { opacity: 0.8 }]}
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/admin/products/new");
+            }}
           >
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
+            <Ionicons name="add" size={18} color="#FFFFFF" style={{ marginRight: 2 }} />
+            <Text style={styles.newBtnText}>New</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>Products</Text>
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [styles.newBtn, pressed && { opacity: 0.8 }]}
-          onPress={() => {
-            Haptics.selectionAsync();
-            router.push("/admin/products/new");
-          }}
-        >
-          <Ionicons name="add" size={18} color="#FFFFFF" style={{ marginRight: 2 }} />
-          <Text style={styles.newBtnText}>New</Text>
-        </Pressable>
-      </View>
+        }
+      />
 
       {/* 2. SEARCH BAR */}
       <View style={styles.searchContainer}>
@@ -423,7 +417,7 @@ const styles = StyleSheet.create({
   newBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20
@@ -467,7 +461,7 @@ const styles = StyleSheet.create({
     borderRadius: 16
   },
   filterPillSelected: {
-    backgroundColor: colors.accent
+    backgroundColor: colors.brandAccent
   },
   filterPillUnselected: {
     backgroundColor: colors.surface,
@@ -612,7 +606,7 @@ const styles = StyleSheet.create({
     lineHeight: 20
   },
   emptyBtn: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.brandAccent,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,

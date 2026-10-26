@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { colors, radius, theme } from "../../constants/theme";
+import { AdminHeader } from "../../components/admin/AdminHeader";
 import {
   TradeInStatus,
   TradeInSubmission,
@@ -138,14 +139,12 @@ export default function AdminTradeInScreen() {
 
   return (
     <View style={styles.container}>
+      <AdminHeader title="Trade-In Inspection" subtitle="Device verification queue" />
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 40 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 14, paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.accent} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={colors.brandAccent} />}
       >
-        <Text style={styles.title}>Trade-In Inspection</Text>
-        <Text style={styles.subtitle}>Customer devices awaiting verification at UCC Cape Coast</Text>
-
         <View style={styles.switcher}>
           <Pressable
             onPress={() => { Haptics.selectionAsync(); setFilter("pending_inspection"); }}
@@ -167,7 +166,7 @@ export default function AdminTradeInScreen() {
 
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={colors.accent} />
+            <ActivityIndicator size="large" color={colors.brandAccent} />
           </View>
         ) : error ? (
           <View style={styles.card}>
@@ -364,7 +363,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   switchPill: { flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: radius.full },
-  switchPillActive: { backgroundColor: colors.accent },
+  switchPillActive: { backgroundColor: colors.brandAccent },
   switchText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   switchTextActive: { color: "#FFFFFF" },
   centerBox: { alignItems: "center", paddingTop: 60 },
@@ -458,7 +457,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: "#FFFFFF"
   },
-  statusPillActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  statusPillActive: { backgroundColor: colors.brandAccent, borderColor: colors.brandAccent },
   statusText: { fontSize: 11, fontWeight: "700", color: colors.textSecondary, letterSpacing: 0.3 },
   statusTextActive: { color: "#FFFFFF" },
   input: {

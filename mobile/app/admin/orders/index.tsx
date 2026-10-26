@@ -26,6 +26,7 @@ import {
 } from "../../../services/adminApi";
 import { OrderStatusBadge } from "../../../components/admin/OrderStatusBadge";
 import { SkeletonLoader } from "../../../components/SkeletonLoader";
+import { AdminHeader } from "../../../components/admin/AdminHeader";
 
 const STATUS_FILTERS = [
   { id: "all", label: "All" },
@@ -238,25 +239,21 @@ export default function AdminOrdersListScreen() {
   return (
     <View style={styles.container}>
       {/* 1. STICKY HEADER */}
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.headerLeft}>
+      <AdminHeader
+        title="Orders"
+        subtitle="Fulfilment & IMEI assignment"
+        right={
           <Pressable
             hitSlop={8}
-            onPress={() => router.back()}
-            style={styles.backBtn}
+            style={({ pressed }) => [styles.exportBtn, pressed && { opacity: 0.7 }]}
+            onPress={handleExport}
+            accessibilityRole="button"
+            accessibilityLabel="Export orders"
           >
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
+            <Ionicons name="download-outline" size={20} color={colors.brandAccent} />
           </Pressable>
-          <Text style={styles.title}>Orders</Text>
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [styles.exportBtn, pressed && { opacity: 0.7 }]}
-          onPress={handleExport}
-        >
-          <Ionicons name="download-outline" size={22} color={colors.accent} />
-        </Pressable>
-      </View>
+        }
+      />
 
       {/* 2. SUMMARY ROW */}
       {summary && (
