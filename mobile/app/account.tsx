@@ -118,9 +118,9 @@ export default function AccountScreen() {
         <View style={styles.gate}>
           <Animated.View entering={FadeInDown.springify().damping(16)} style={styles.gateInner}>
             <BrandLogo size={56} variant="dark" />
-            <Text style={styles.gateTitle}>Sign in to I-Dynamic</Text>
+            <Text style={styles.gateTitle}>Sign in to LesTrades</Text>
             <Text style={styles.gateBody}>
-              Your bag stays with you either way. Signing in unlocks your orders, saved addresses, and personalized benefits on I-Dynamic.
+              Your bag stays with you either way. Signing in unlocks your orders, saved addresses, and personalized benefits on LesTrades.
             </Text>
 
             <View style={styles.gatePerks}>
@@ -204,7 +204,7 @@ export default function AccountScreen() {
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Shop genuine Apple devices on I-Dynamic with my referral code ${referralCode} to get GHS 250 off your first order!`
+        message: `Shop genuine Apple devices on LesTrades with my referral code ${referralCode} to get GHS 250 off your first order!`
       });
     } catch {
       // User dismissed share sheet
@@ -366,6 +366,38 @@ export default function AccountScreen() {
           />
         </Group>
 
+        <Group title="APPLE STORE SERVICES & HUBS">
+          <Row
+            icon="construct-outline"
+            label="Genius Bar Appointments"
+            onPress={() => router.push("/genius-bar" as never)}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="color-palette-outline"
+            label="Today at Apple Workshops"
+            onPress={() => router.push("/today-at-apple" as never)}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="repeat-outline"
+            label="Apple Trade In (Instant Valuation)"
+            onPress={() => router.push("/trade-in" as never)}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="cube-outline"
+            label="View in Space (3D & AR)"
+            onPress={() => router.push("/ar-viewer" as never)}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="qr-code-outline"
+            label="Store Pickup Passes"
+            onPress={() => router.push("/pickup-pass" as never)}
+          />
+        </Group>
+
         <Group title="SAVED & COMPARE">
           <Row
             icon="heart-outline"
@@ -404,7 +436,7 @@ export default function AccountScreen() {
           <View style={styles.divider} />
           <Row
             icon="sparkles-outline"
-            label="I-Dynamic Welcome Tour"
+            label="LesTrades Welcome Tour"
             onPress={() => router.push("/onboarding" as never)}
           />
         </Group>

@@ -528,6 +528,24 @@ export default function ProductDetailScreen() {
             </>
           )}
             </View>
+
+            {/* Apple AR Quick Look button */}
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push({
+                  pathname: "/ar-viewer",
+                  params: { model: product.slug, color: selectedColor }
+                } as any);
+              }}
+              style={({ pressed }) => [
+                styles.arQuickLookBtn,
+                pressed && { opacity: 0.8 }
+              ]}
+            >
+              <Ionicons name="cube-outline" size={17} color="#0066CC" />
+              <Text style={styles.arQuickLookBtnText}>View in your space (3D · AR)</Text>
+            </Pressable>
           </View>
 
           {/* Right: Product Details, Config & CTA */}
@@ -564,6 +582,29 @@ export default function ProductDetailScreen() {
               MTN MoMo, Telecel Cash, AT Money or card via Paystack
             </Text>
           </View>
+
+          {/* Apple Trade In Banner */}
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/trade-in" as any);
+            }}
+            style={({ pressed }) => [
+              styles.tradeInBanner,
+              pressed && { opacity: 0.85 }
+            ]}
+          >
+            <View style={styles.tradeInIconBox}>
+              <Ionicons name="repeat" size={16} color="#0066CC" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.tradeInTitle}>Apple Trade In</Text>
+              <Text style={styles.tradeInSub}>
+                Get up to ₵19,500 credit toward this {product.category}. Instant valuation with your serial number.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={14} color="#0066CC" />
+          </Pressable>
 
           {/* Stock Availability, Delivery Estimate & Warranty Summary */}
           <View style={styles.assuranceSummaryCard}>
@@ -1683,5 +1724,62 @@ const styles = StyleSheet.create({
     ...typography.headline,
     color: "#FFFFFF",
     fontWeight: "700"
+  },
+  arQuickLookBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.pill,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0, 102, 204, 0.25)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1
+  },
+  arQuickLookBtnText: {
+    fontSize: 13,
+    fontFamily: typography.fontFamily.semibold,
+    color: "#0066CC"
+  },
+  tradeInBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "rgba(0, 102, 204, 0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 102, 204, 0.18)",
+    borderRadius: radius.md,
+    padding: 12,
+    marginTop: 14,
+    marginBottom: 4
+  },
+  tradeInIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0, 102, 204, 0.2)"
+  },
+  tradeInTitle: {
+    fontSize: 13.5,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.text
+  },
+  tradeInSub: {
+    fontSize: 11.5,
+    color: colors.textSecondary,
+    lineHeight: 15,
+    marginTop: 1
   }
 });

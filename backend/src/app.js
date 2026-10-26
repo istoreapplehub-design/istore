@@ -17,6 +17,7 @@ const adminProductsRouter = require("./routes/adminProducts");
 const adminUploadsRouter = require("./routes/adminUploads");
 const adminOrdersRouter = require("./routes/adminOrders");
 const adminSettingsRouter = require("./routes/adminSettings");
+const servicesRouter = require("./routes/services");
 
 const app = express();
 
@@ -53,12 +54,13 @@ app.use("/api/user", userRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/paystack", paystackRouter);
 app.use("/api/installments", installmentsRouter);
+app.use("/api/services", servicesRouter);
 
 // ─── 4. HEALTH CHECK ────────────────────────────────────────────────────────
 app.get(["/", "/api/health"], (req, res) => {
   res.json({
     status: "ok",
-    service: "I-Store API",
+    service: "LesTrades API",
     version: "1.0.0",
     time: new Date().toISOString()
   });
@@ -79,7 +81,7 @@ if (require.main === module) {
     !process.env.PAYSTACK_SECRET_KEY.includes("mock");
 
   app.listen(PORT, () => {
-    console.log(`🚀 I-Store API running on http://localhost:${PORT}`);
+    console.log(`🚀 LesTrades API running on http://localhost:${PORT}`);
     console.log(`   Env: ${process.env.NODE_ENV || "development"}`);
     console.log(`   Paystack: ${isPaystackLive ? "LIVE" : "SIMULATION"}`);
   });

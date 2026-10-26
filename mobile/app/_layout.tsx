@@ -121,6 +121,43 @@ export default function RootLayout() {
                   animation: "slide_from_bottom"
                 }}
               />
+              <Stack.Screen
+                name="genius-bar"
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right"
+                }}
+              />
+              <Stack.Screen
+                name="today-at-apple"
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right"
+                }}
+              />
+              <Stack.Screen
+                name="trade-in"
+                options={{
+                  headerShown: false,
+                  animation: "slide_from_right"
+                }}
+              />
+              <Stack.Screen
+                name="ar-viewer"
+                options={{
+                  headerShown: false,
+                  presentation: "fullScreenModal",
+                  animation: "fade"
+                }}
+              />
+              <Stack.Screen
+                name="pickup-pass"
+                options={{
+                  headerShown: false,
+                  presentation: "modal",
+                  animation: "slide_from_bottom"
+                }}
+              />
             <Stack.Screen
               name="account"
               options={{

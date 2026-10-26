@@ -239,15 +239,41 @@ export default function OrderSuccessScreen() {
               <Text style={styles.trackBtnText}>Create an account</Text>
             </Pressable>
           ) : (
-            <Pressable
-              style={({ pressed }) => [
-                styles.trackBtn,
-                pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
-              ]}
-              onPress={handleTrackOrder}
-            >
-              <Text style={styles.trackBtnText}>Track Order</Text>
-            </Pressable>
+            <>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.pickupPassBtn,
+                  pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push({
+                    pathname: "/pickup-pass",
+                    params: {
+                      orderId: orderId || undefined,
+                      customerName: order?.shippingAddress
+                        ? typeof order.shippingAddress === "string"
+                          ? JSON.parse(order.shippingAddress).fullName
+                          : (order.shippingAddress as any).fullName
+                        : undefined
+                    }
+                  } as any);
+                }}
+              >
+                <Ionicons name="qr-code-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.pickupPassBtnText}>Digital Store Pickup Pass</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.trackBtn,
+                  pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }
+                ]}
+                onPress={handleTrackOrder}
+              >
+                <Text style={styles.trackBtnText}>Track Order</Text>
+              </Pressable>
+            </>
           )}
 
           <Pressable
@@ -391,12 +417,29 @@ const styles = StyleSheet.create({
     lineHeight: 19
   },
   buttonsContainer: {
-    marginTop: 28
+    marginTop: 28,
+    gap: 12
+  },
+  pickupPassBtn: {
+    height: 52,
+    borderRadius: 980,
+    backgroundColor: "#1D1D1F",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)"
+  },
+  pickupPassBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600"
   },
   trackBtn: {
     height: 52,
     borderRadius: 980,
-    backgroundColor: colors.accent,
+    backgroundColor: "#0066CC",
     alignItems: "center",
     justifyContent: "center"
   },

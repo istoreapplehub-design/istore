@@ -39,7 +39,7 @@ export default function BagScreen() {
   const [editMode, setEditMode] = useState(false);
 
   // Cart & Wishlist state
-  const { items, updateQty, removeItem, clearCart, getSubtotalGHS, addItem } = useCartStore();
+  const { items, updateQty, removeItem, clearCart, getSubtotalGHS, addItem, tradeInCredit, clearTradeInCredit } = useCartStore();
   const { toggle: toggleWishlist, isWishlisted } = useWishlistStore();
   const subtotalGHS = getSubtotalGHS();
   const totalItemCount = items.reduce((sum, i) => sum + i.qty, 0);
@@ -65,7 +65,8 @@ export default function BagScreen() {
   const discountAmount = appliedPromo
     ? Math.round((subtotalGHS * appliedPromo.percent) / 100)
     : 0;
-  const finalTotalGHS = Math.max(0, subtotalGHS - discountAmount);
+  const tradeInDiscount = tradeInCredit ? tradeInCredit.creditGHS : 0;
+  const finalTotalGHS = Math.max(0, subtotalGHS - discountAmount - tradeInDiscount);
 
   const handleStartShopping = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -103,13 +104,13 @@ export default function BagScreen() {
     const clean = promoCodeInput.trim().toUpperCase();
     if (!clean) return;
 
-    if (clean === "IDYNAMIC10" || clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
+    if (clean === "LESTRADES10" || clean === "IDYNAMIC10" || clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setAppliedPromo({ code: clean, percent: 10 });
       setPromoSuccessMsg("10% discount applied to your order!");
       setPromoError(null);
       setPromoCodeInput("");
-    } else if (clean === "IDYNAMIC5" || clean === "SAVE5") {
+    } else if (clean === "LESTRADES5" || clean === "IDYNAMIC5" || clean === "SAVE5") {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setAppliedPromo({ code: clean, percent: 5 });
       setPromoSuccessMsg("5% discount applied to your order!");
@@ -577,7 +578,7 @@ export default function BagScreen() {
                       <View style={styles.promoInputRow}>
                         <TextInput
                           style={styles.promoInput}
-                          placeholder="e.g. IDYNAMIC10, WELCOME10"
+                          placeholder="e.g. LESTRADES10, WELCOME10"
                           placeholderTextColor={colors.textTertiary}
                           value={promoCodeInput}
                           onChangeText={(val) => {
@@ -639,6 +640,47 @@ export default function BagScreen() {
                         -{formatGHS(discountAmount)}
                       </Text>
                     </View>
+                  )}
+
+                  {tradeInCredit ? (
+                    <View style={[styles.summaryRow, { marginTop: 12 }]}>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <Text style={[styles.summaryDiscountLabel, { color: "#34C759" }]}>
+                          Trade In ({tradeInCredit.deviceModel})
+                        </Text>
+                        <Pressable onPress={() => clearTradeInCredit()}>
+                          <Text style={{ fontSize: 11, color: "#D92D20", marginTop: 2 }}>
+                            Remove credit
+                          </Text>
+                        </Pressable>
+                      </View>
+                      <Text style={[styles.summaryDiscountValue, { color: "#34C759" }]}>
+                        -{formatGHS(tradeInCredit.creditGHS)}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Pressable
+                      onPress={() => {
+                        Haptics.selectionAsync();
+                        router.push("/trade-in" as any);
+                      }}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        backgroundColor: "rgba(0, 102, 204, 0.06)",
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        borderRadius: radius.md,
+                        marginTop: 12
+                      }}
+                    >
+                      <Ionicons name="repeat" size={16} color="#0066CC" />
+                      <Text style={{ flex: 1, fontSize: 12, color: "#0066CC", fontWeight: "600" }}>
+                        Have a device to trade in? Get instant credit
+                      </Text>
+                      <Ionicons name="chevron-forward" size={14} color="#0066CC" />
+                    </Pressable>
                   )}
 
                   <View style={styles.summaryDivider} />

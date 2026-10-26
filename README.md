@@ -1,4 +1,4 @@
-# I-Store (Ghana)
+# LesTrades (Ghana)
 
 An Apple Store-inspired physical e-commerce mobile application and backend tailored for Ghana, featuring localized Ghanaian Cedi (`₵X,XXX`) pricing and Paystack payment processing (Mobile Money: MTN MoMo, Telecel Cash, AT Money, and cards).
 

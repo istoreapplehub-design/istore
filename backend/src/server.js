@@ -7,7 +7,7 @@ const isPaystackLive =
   !process.env.PAYSTACK_SECRET_KEY.includes("mock");
 
 app.listen(PORT, () => {
-  console.log(`🚀 I-Store API running on http://localhost:${PORT}`);
+  console.log(`🚀 LesTrades API running on http://localhost:${PORT}`);
   console.log(`   Env: ${process.env.NODE_ENV || "development"}`);
   console.log(`   Paystack: ${isPaystackLive ? "LIVE" : "SIMULATION"}`);
 });

@@ -125,7 +125,7 @@ export default function CompareModelsScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.introBlock}>
-          <Text style={styles.eyebrow}>I-DYNAMIC COMPARE</Text>
+          <Text style={styles.eyebrow}>LESTRADES COMPARE</Text>
           <Text style={styles.title}>Compare Apple Models</Text>
           <Text style={styles.subtitle}>
             Tap either slot below to switch models and compare specifications side by side.

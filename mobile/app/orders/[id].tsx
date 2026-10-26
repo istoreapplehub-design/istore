@@ -583,13 +583,13 @@ export default function OrderDetailsScreen() {
             onPress={() => {
               Haptics.selectionAsync();
               Share.share({
-                message: `Get ₵250 off your genuine Apple device on I-Dynamic using my VIP referral code: IDYNAMIC-${order.id.slice(0, 6).toUpperCase()}! Download: https://idynamic.com.gh`
+                message: `Get ₵250 off your genuine Apple device on LesTrades using my VIP referral code: LESTRADES-${order.id.slice(0, 6).toUpperCase()}! Download: https://lestrades.com.gh`
               }).catch(() => {});
             }}
           >
             <Ionicons name="share-social-outline" size={17} color="#FFFFFF" />
             <Text style={styles.shareReferralBtnText}>
-              Share Referral Code (IDYNAMIC-{order.id.slice(0, 6).toUpperCase()})
+              Share Referral Code (LESTRADES-{order.id.slice(0, 6).toUpperCase()})
             </Text>
           </Pressable>
         </View>
@@ -611,8 +611,8 @@ export default function OrderDetailsScreen() {
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 Alert.alert(
-                  "Customer Support",
-                  "You can reach our Accra support team at support@idynamic.com.gh or +233 24 123 4567."
+                  "LesTrades Customer Support",
+                  "You can reach our LesTrades support team at support@lestrades.com.gh or 024 282 6590 (UCC Cape Coast Flagship)."
                 );
               }}
             >

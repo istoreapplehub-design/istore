@@ -405,6 +405,86 @@ export default function HomeScreen() {
               style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
               onPress={() => {
                 Haptics.selectionAsync();
+                router.push("/genius-bar" as never);
+              }}
+            >
+              <View style={[styles.assistIcon, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
+                <Ionicons name="construct-outline" size={20} color="#0066CC" />
+              </View>
+              <Text style={styles.assistCardTitle}>Genius Bar Support</Text>
+              <Text style={styles.assistCardSub}>
+                Certified hardware diagnostics, battery & screen repair at Accra & Kumasi Hubs.
+              </Text>
+              <View style={styles.assistLinkRow}>
+                <Text style={styles.assistLinkText}>Book Appointment</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/today-at-apple" as never);
+              }}
+            >
+              <View style={[styles.assistIcon, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
+                <Ionicons name="color-palette-outline" size={20} color="#0066CC" />
+              </View>
+              <Text style={styles.assistCardTitle}>Today at Apple</Text>
+              <Text style={styles.assistCardSub}>
+                Free creative photo walks, Swift coding labs & digital art sessions in Ghana.
+              </Text>
+              <View style={styles.assistLinkRow}>
+                <Text style={styles.assistLinkText}>Explore Sessions</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/trade-in" as never);
+              }}
+            >
+              <View style={[styles.assistIcon, { backgroundColor: "rgba(52, 199, 89, 0.1)" }]}>
+                <Ionicons name="repeat" size={20} color="#34C759" />
+              </View>
+              <Text style={styles.assistCardTitle}>Apple Trade In</Text>
+              <Text style={styles.assistCardSub}>
+                Serial-based instant valuation. Get up to ₵19,500 credit toward your upgrade.
+              </Text>
+              <View style={styles.assistLinkRow}>
+                <Text style={styles.assistLinkText}>Get Instant Quote</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/ar-viewer" as never);
+              }}
+            >
+              <View style={[styles.assistIcon, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
+                <Ionicons name="cube-outline" size={20} color="#0066CC" />
+              </View>
+              <Text style={styles.assistCardTitle}>View in Your Space</Text>
+              <Text style={styles.assistCardSub}>
+                Interactive 3D Apple Quick Look & true 1:1 scale augmented reality preview.
+              </Text>
+              <View style={styles.assistLinkRow}>
+                <Text style={styles.assistLinkText}>Launch AR Studio</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
+              onPress={() => {
+                Haptics.selectionAsync();
                 router.push("/compare" as never);
               }}
             >
@@ -425,30 +505,28 @@ export default function HomeScreen() {
               style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
               onPress={() => {
                 Haptics.selectionAsync();
-                Linking.openURL(SUPPORT_WHATSAPP_URL).catch(() => {
-                  router.push("/help");
-                });
+                router.push("/pickup-pass" as never);
               }}
             >
               <View style={styles.assistIcon}>
-                <Ionicons name="chatbubbles-outline" size={20} color={colors.text} />
+                <Ionicons name="qr-code-outline" size={20} color={colors.text} />
               </View>
-              <Text style={styles.assistCardTitle}>Ask a Specialist</Text>
+              <Text style={styles.assistCardTitle}>Digital Pickup Pass</Text>
               <Text style={styles.assistCardSub}>
-                Get one-on-one help choosing the right configuration.
+                Apple Wallet-style pass with barcode for fast check-in at Accra Mall & Kumasi.
               </Text>
               <View style={styles.assistLinkRow}>
-                <Text style={styles.assistLinkText}>Start Chat</Text>
+                <Text style={styles.assistLinkText}>View Store Pass</Text>
                 <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
               </View>
             </Pressable>
           </View>
         </Animated.View>
 
-        {/* The I-Dynamic Standard */}
+        {/* The LesTrades Standard */}
         <Animated.View entering={FadeInDown.delay(160).duration(420)} style={styles.standardSection}>
           <SectionHeader
-            title="The I-Dynamic Standard"
+            title="The LesTrades Standard"
             subtitle="Engineered for peace of mind on every order"
             style={styles.standardHeader}
           />

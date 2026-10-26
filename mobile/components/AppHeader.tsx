@@ -57,7 +57,7 @@ export function AppHeader({
         >
           <BrandLogo size={36} variant="dark" />
           <View style={styles.brandTextCol}>
-            <Text style={styles.wordmark}>I-Dynamic</Text>
+            <Text style={styles.wordmark}>LesTrades</Text>
             <Text style={styles.eyebrow}>PREMIUM TECH</Text>
           </View>
         </Pressable>

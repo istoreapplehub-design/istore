@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "I-Dynamic",
-    "slug": "i-dynamic",
+    "name": "LesTrades",
+    "slug": "lestrades",
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "idynamic",
+    "scheme": "lestrades",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,

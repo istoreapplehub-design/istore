@@ -12,15 +12,27 @@ export interface CartItem {
   qty: number;
 }
 
+export interface TradeInCredit {
+  deviceModel: string;
+  serialOrImei: string;
+  creditGHS: number;
+  condition: string;
+  quoteCode: string;
+}
+
 interface CartState {
   items: CartItem[];
   guestCheckout: boolean;
+  tradeInCredit: TradeInCredit | null;
   setGuestCheckout: (guest: boolean) => void;
+  setTradeInCredit: (credit: TradeInCredit | null) => void;
+  clearTradeInCredit: () => void;
   addItem: (item: Omit<CartItem, "qty"> & { qty?: number }) => void;
   removeItem: (productId: string, color?: string, storage?: string) => void;
   updateQty: (productId: string, qty: number, color?: string, storage?: string) => void;
   clearCart: () => void;
   getSubtotalGHS: () => number;
+  getNetTotalGHS: () => number;
   getItemCount: () => number;
 }
 
@@ -29,7 +41,10 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       guestCheckout: false,
+      tradeInCredit: null,
       setGuestCheckout: (guest: boolean) => set({ guestCheckout: guest }),
+      setTradeInCredit: (credit: TradeInCredit | null) => set({ tradeInCredit: credit }),
+      clearTradeInCredit: () => set({ tradeInCredit: null }),
 
       addItem: (item) => {
         const currentItems = get().items;
@@ -104,10 +119,16 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], tradeInCredit: null }),
 
       getSubtotalGHS: () => {
         return get().items.reduce((sum, item) => sum + item.priceGHS * item.qty, 0);
+      },
+
+      getNetTotalGHS: () => {
+        const subtotal = get().getSubtotalGHS();
+        const credit = get().tradeInCredit ? get().tradeInCredit!.creditGHS : 0;
+        return Math.max(0, subtotal - credit);
       },
 
       getItemCount: () => {
@@ -117,7 +138,7 @@ export const useCartStore = create<CartState>()(
     {
       name: "ghanaapps-cart",
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ items: state.items })
+      partialize: (state) => ({ items: state.items, tradeInCredit: state.tradeInCredit })
     }
   )
 );

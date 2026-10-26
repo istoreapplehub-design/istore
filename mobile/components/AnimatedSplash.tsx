@@ -97,17 +97,13 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   return (
     <Animated.View style={[styles.overlay, containerAnimatedStyle]}>
       <View style={styles.centerStage}>
-        {/* Original I-Dynamic Monogram (ready for custom logo swap) */}
+        {/* LesTrades Brand Logo */}
         <Animated.View style={[styles.emblemBox, logoAnimatedStyle]}>
-          <BrandLogo size={76} variant="light" />
+          <BrandLogo size={130} mode="full" />
         </Animated.View>
 
-        <Animated.Text entering={FadeIn.delay(180).duration(420)} style={styles.brandTitle}>
-          I-Dynamic
-        </Animated.Text>
-
-        <Animated.Text entering={FadeIn.delay(320).duration(420)} style={styles.brandSubtitle}>
-          Curated Apple Hardware & Accessories
+        <Animated.Text entering={FadeIn.delay(280).duration(420)} style={styles.brandSubtitle}>
+          UCC Cape Coast · Ghana's Apple Destination
         </Animated.Text>
 
         {/* Minimal Progress Bar */}
@@ -117,7 +113,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
       </View>
 
       <Animated.View entering={FadeIn.delay(480).duration(400)} style={styles.bottomFooter}>
-        <Text style={styles.tagline}>PRECISION · ELEGANCE · PERFORMANCE</Text>
+        <Text style={styles.tagline}>QUALITY FOR LESS · UCC CAPE COAST</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -137,23 +133,17 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   emblemBox: {
-    width: 92,
-    height: 92,
+    width: 280,
+    height: 140,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14
-  },
-  brandTitle: {
-    fontSize: 34,
-    fontWeight: "700",
-    color: "#1D1D1F",
-    letterSpacing: -0.9
+    marginBottom: 6
   },
   brandSubtitle: {
-    fontSize: 13.5,
-    fontWeight: "500",
-    color: "#6E6E73",
-    letterSpacing: 0.1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#0066CC",
+    letterSpacing: 0.2,
     marginTop: 4
   },
   progressTrack: {
@@ -161,13 +151,13 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: radius.full,
     backgroundColor: "#E5E5EA",
-    marginTop: 28,
+    marginTop: 26,
     overflow: "hidden"
   },
   progressFill: {
     height: "100%",
     borderRadius: radius.full,
-    backgroundColor: "#1D1D1F"
+    backgroundColor: "#0066CC"
   },
   bottomFooter: {
     position: "absolute",
@@ -176,8 +166,8 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 10,
-    fontWeight: "600",
-    letterSpacing: 2,
+    fontWeight: "700",
+    letterSpacing: 1.8,
     color: "#86868B"
   }
 });

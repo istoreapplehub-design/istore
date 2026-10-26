@@ -109,7 +109,7 @@ export default function LoginScreen() {
             </View>
             <Text style={styles.title}>Sign In</Text>
             <Text style={styles.subtitle}>
-              Sign in with your I-Dynamic account to manage orders, saved favorites, and check out securely.
+              Sign in with your LesTrades account to manage orders, saved favorites, and check out securely.
             </Text>
           </View>
 
@@ -146,12 +146,12 @@ export default function LoginScreen() {
                       await supabase.auth.resetPasswordForEmail(cleanEmail);
                       Alert.alert(
                         "Recovery Email Sent",
-                        `If an I-Dynamic account exists for ${cleanEmail}, a password reset link has been sent to your inbox.`
+                        `If a LesTrades account exists for ${cleanEmail}, a password reset link has been sent to your inbox.`
                       );
                     } catch {
                       Alert.alert(
                         "Password Recovery",
-                        `Please contact support@idynamic.com.gh if you need help recovering ${cleanEmail}.`
+                        `Please contact support@lestrades.com.gh if you need help recovering ${cleanEmail}.`
                       );
                     }
                   }}

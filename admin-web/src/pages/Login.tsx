@@ -21,7 +21,7 @@ import { BrandLogo } from "../components/BrandLogo";
 const SLIDES = [
   {
     headline: "Your catalog, orders and revenue in one clean console",
-    sub: "Sign in to work from live store data — every figure on these screens is read straight from the I-Dynamic database.",
+    sub: "Sign in to work from live store data — every figure on these screens is read straight from the LesTrades database.",
     cards: [
       {
         icon: LayoutDashboard,
@@ -161,7 +161,7 @@ export function Login() {
                 <span>Admin Operations Portal</span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Welcome to I-Dynamic
+                Welcome to LesTrades
               </h1>
               <p className="mt-2 text-sm text-gray-500 leading-relaxed">
                 Sign in to manage store catalog, orders, and fulfillment.
@@ -239,7 +239,7 @@ export function Login() {
 
           {/* Footer Copyright */}
           <div className="mt-12 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-400 gap-2">
-            <span>Copyright © I-Dynamic. All Rights Reserved.</span>
+            <span>Copyright © LesTrades. All Rights Reserved.</span>
 <span>Apple hardware retail, Accra</span>
           </div>
         </div>

@@ -23,7 +23,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { colors, typography } from "../../constants/theme";
+import { colors, radius, typography } from "../../constants/theme";
 import { AppHaptics } from "../../lib/haptics";
 import { Product } from "../../types";
 import { getProducts } from "../../services/api";
@@ -300,6 +300,103 @@ export default function ShopScreen() {
               </Pressable>
             );
           })}
+        </ScrollView>
+      </View>
+
+      {/* Apple Store Services Quick Rail */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <Pressable
+            onPress={() => {
+              AppHaptics.selection();
+              router.push("/genius-bar" as any);
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: "rgba(0, 102, 204, 0.06)",
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: radius.pill,
+              borderWidth: 1,
+              borderColor: "rgba(0, 102, 204, 0.15)"
+            }}
+          >
+            <Ionicons name="construct-outline" size={13} color="#0066CC" />
+            <Text style={{ fontSize: 12, color: "#0066CC", fontFamily: typography.fontFamily.semibold }}>
+              Genius Bar
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              AppHaptics.selection();
+              router.push("/today-at-apple" as any);
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: "rgba(0, 102, 204, 0.06)",
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: radius.pill,
+              borderWidth: 1,
+              borderColor: "rgba(0, 102, 204, 0.15)"
+            }}
+          >
+            <Ionicons name="color-palette-outline" size={13} color="#0066CC" />
+            <Text style={{ fontSize: 12, color: "#0066CC", fontFamily: typography.fontFamily.semibold }}>
+              Today at Apple
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              AppHaptics.selection();
+              router.push("/trade-in" as any);
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: "rgba(52, 199, 89, 0.08)",
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: radius.pill,
+              borderWidth: 1,
+              borderColor: "rgba(52, 199, 89, 0.2)"
+            }}
+          >
+            <Ionicons name="repeat" size={13} color="#34C759" />
+            <Text style={{ fontSize: 12, color: "#2E7D32", fontFamily: typography.fontFamily.semibold }}>
+              Apple Trade In
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              AppHaptics.selection();
+              router.push("/ar-viewer" as any);
+            }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: "rgba(0, 0, 0, 0.04)",
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: radius.pill,
+              borderWidth: 1,
+              borderColor: colors.border
+            }}
+          >
+            <Ionicons name="cube-outline" size={13} color={colors.text} />
+            <Text style={{ fontSize: 12, color: colors.text, fontFamily: typography.fontFamily.semibold }}>
+              AR View in Space
+            </Text>
+          </Pressable>
         </ScrollView>
       </View>
 

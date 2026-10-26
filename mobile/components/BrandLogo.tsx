@@ -1,31 +1,48 @@
 import React from "react";
-import { StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";
+import { StyleSheet, Text, View, Image, ViewStyle, StyleProp } from "react-native";
 import { colors } from "../constants/theme";
+
+const EMBLEM_ASSET = require("../assets/images/lestrades-emblem.png");
+const FULL_LOGO_ASSET = require("../assets/images/lestrades-logo.png");
 
 interface BrandLogoProps {
   size?: number;
   variant?: "dark" | "light" | "minimal";
+  mode?: "emblem" | "full";
   showWordmark?: boolean;
   wordmarkSize?: number;
+  showTagline?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
 /**
- * Original I-Dynamic Brand Emblem.
- * Designed as a clean, geometric architectural monogram ("I·D")
- * ready to be swapped when a custom PNG/SVG logo asset is uploaded.
+ * Official LesTrades Brand Emblem & Wordmark.
+ * Uses the authentic 3D ribbon emblem with "Quality for Less".
  */
 export function BrandLogo({
   size = 38,
   variant = "dark",
+  mode = "emblem",
   showWordmark = false,
   wordmarkSize = 18,
+  showTagline = false,
   style
 }: BrandLogoProps) {
+  if (mode === "full") {
+    const fullWidth = size * 2.2;
+    return (
+      <View style={[styles.container, style]}>
+        <Image
+          source={FULL_LOGO_ASSET}
+          style={{ width: fullWidth, height: size }}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
+
   const isDark = variant === "dark";
   const borderRadius = Math.round(size * 0.28);
-  const fontSize = Math.round(size * 0.42);
-  const dotSize = Math.max(4, Math.round(size * 0.11));
 
   const badge = (
     <View
@@ -37,46 +54,16 @@ export function BrandLogo({
           borderRadius,
           backgroundColor: isDark ? "#1D1D1F" : "#FFFFFF",
           borderWidth: isDark ? 1 : 1.5,
-          borderColor: isDark ? "rgba(255,255,255,0.14)" : "#1D1D1F"
+          borderColor: isDark ? "rgba(255,255,255,0.14)" : "rgba(0, 102, 204, 0.25)"
         },
         !showWordmark && style
       ]}
     >
-      <View style={styles.innerLockup}>
-        <Text
-          style={[
-            styles.monogramI,
-            {
-              fontSize,
-              color: isDark ? "#FFFFFF" : "#1D1D1F"
-            }
-          ]}
-        >
-          I
-        </Text>
-        <View
-          style={[
-            styles.dynamicNode,
-            {
-              width: dotSize,
-              height: dotSize,
-              borderRadius: dotSize / 2,
-              backgroundColor: "#0066CC"
-            }
-          ]}
-        />
-        <Text
-          style={[
-            styles.monogramD,
-            {
-              fontSize,
-              color: isDark ? "#FFFFFF" : "#1D1D1F"
-            }
-          ]}
-        >
-          D
-        </Text>
-      </View>
+      <Image
+        source={EMBLEM_ASSET}
+        style={{ width: size * 0.74, height: size * 0.74 }}
+        resizeMode="contain"
+      />
     </View>
   );
 
@@ -87,9 +74,14 @@ export function BrandLogo({
   return (
     <View style={[styles.wordmarkRow, style]}>
       {badge}
-      <Text style={[styles.wordmarkText, { fontSize: wordmarkSize }]}>
-        I-Dynamic
-      </Text>
+      <View>
+        <Text style={[styles.wordmarkText, { fontSize: wordmarkSize }]}>
+          LesTrades
+        </Text>
+        {showTagline && (
+          <Text style={styles.taglineText}>Quality for Less</Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -100,32 +92,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden"
   },
-  innerLockup: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 1.5
-  },
-  monogramI: {
-    fontWeight: "800",
-    letterSpacing: -0.5
-  },
-  dynamicNode: {
-    marginHorizontal: 0.5
-  },
-  monogramD: {
-    fontWeight: "800",
-    letterSpacing: -0.5
-  },
   wordmarkRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10
   },
   wordmarkText: {
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.text,
-    letterSpacing: -0.4
+    letterSpacing: -0.4,
+    fontStyle: "italic"
+  },
+  taglineText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#0066CC",
+    fontStyle: "italic",
+    letterSpacing: 0.2,
+    marginTop: -1
   }
 });
 

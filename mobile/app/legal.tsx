@@ -17,9 +17,9 @@ interface Section {
 
 const TERMS: Section[] = [
   {
-    heading: "1. About I-Dynamic",
+    heading: "1. About LesTrades",
     paras: [
-      "I-Dynamic is an online retailer of genuine Apple devices and accessories serving customers in Ghana. By placing an order through this app you agree to these Terms of Service.",
+      "LesTrades is an online retailer of genuine Apple devices and accessories serving customers in Ghana. By placing an order through this app you agree to these Terms of Service.",
       "Product images, specifications and prices shown in the app are for identification purposes. Colour, storage and bundle availability may change without notice."
     ]
   },
@@ -67,7 +67,7 @@ const PRIVACY: Section[] = [
     paras: [
       "Account information: your name, phone number and email address.",
       "Order information: delivery addresses, order contents, payment references and notes.",
-      "Usage information: basic app diagnostics needed to keep I-Dynamic running reliably."
+      "Usage information: basic app diagnostics needed to keep LesTrades running reliably."
     ]
   },
   {
@@ -80,7 +80,7 @@ const PRIVACY: Section[] = [
   {
     heading: "3. Payment data",
     paras: [
-      "Card and Mobile Money payments are handled entirely by Paystack. I-Dynamic never sees or stores your card details or Mobile Money credentials; we only keep the payment reference needed for receipts and refunds."
+      "Card and Mobile Money payments are handled entirely by Paystack. LesTrades never sees or stores your card details or Mobile Money credentials; we only keep the payment reference needed for receipts and refunds."
     ]
   },
   {

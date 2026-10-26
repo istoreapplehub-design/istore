@@ -58,7 +58,7 @@ const SLIDES: OnboardingSlide[] = [
   {
     id: "assurance",
     eyebrow: "SEAMLESS CHECKOUT & WARRANTY",
-    title: "Protected by the I-Dynamic Standard.",
+    title: "Protected by the LesTrades Standard.",
     description:
       "Check out effortlessly with Mobile Money or Card via Paystack, track your delivery in real time, and enjoy 1-Year Official Apple Warranty coverage.",
     icon: "shield-checkmark-outline",
@@ -104,7 +104,7 @@ export default function OnboardingScreen() {
       <View style={styles.topBar}>
         <View style={styles.brandRow}>
           <BrandLogo size={32} variant="dark" />
-          <Text style={styles.brandName}>I-Dynamic</Text>
+          <Text style={styles.brandName}>LesTrades</Text>
         </View>
         <Pressable
           hitSlop={10}

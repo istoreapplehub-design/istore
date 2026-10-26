@@ -46,8 +46,17 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const STORE_PICKUP_LOCATIONS = [
   {
+    id: "flagship-ucc-cape-coast",
+    name: "LesTrades Flagship — UCC Cape Coast",
+    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
+    region: "Central Region",
+    city: "Cape Coast",
+    hours: "Mon–Sat: 8:30 AM – 8:00 PM | Sun: 12:00 PM – 6:00 PM",
+    readyTime: "Ready for pickup in 1 hour"
+  },
+  {
     id: "flagship-east-legon",
-    name: "I-Dynamic Flagship — East Legon",
+    name: "LesTrades Hub — East Legon",
     address: "Boundary Road, Opp. A&C Mall, East Legon, Accra",
     region: "Greater Accra",
     city: "Accra",
@@ -56,7 +65,7 @@ const STORE_PICKUP_LOCATIONS = [
   },
   {
     id: "studio-accra-mall",
-    name: "I-Dynamic Studio — Accra Mall",
+    name: "LesTrades Studio — Accra Mall",
     address: "Tetteh Quarshie Interchange, Shop G12, Accra",
     region: "Greater Accra",
     city: "Accra",
@@ -65,7 +74,7 @@ const STORE_PICKUP_LOCATIONS = [
   },
   {
     id: "hub-kumasi",
-    name: "I-Dynamic Experience — Kumasi City Mall",
+    name: "LesTrades Experience — Kumasi City Mall",
     address: "Asokwa, Kumasi City Mall, Shop 24, Kumasi",
     region: "Ashanti",
     city: "Kumasi",
@@ -73,6 +82,7 @@ const STORE_PICKUP_LOCATIONS = [
     readyTime: "Ready for pickup in 2 hours"
   }
 ];
+
 
 const PAYMENT_METHODS = [
   {
@@ -227,12 +237,12 @@ export default function CheckoutScreen() {
   const handleApplyPromo = () => {
     const clean = promoCode.trim().toUpperCase();
     if (!clean) return;
-    if (clean === "IDYNAMIC10" || clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
+    if (clean === "LESTRADES10" || clean === "IDYNAMIC10" || clean === "APPLEGH" || clean === "WELCOME10" || clean === "VIP10") {
       AppHaptics.success();
       setAppliedDiscount({ code: clean, percent: 10 });
       setPromoSuccess("10% discount applied!");
       setPromoError(null);
-    } else if (clean === "IDYNAMIC5" || clean === "SAVE5") {
+    } else if (clean === "LESTRADES5" || clean === "IDYNAMIC5" || clean === "SAVE5") {
       AppHaptics.success();
       setAppliedDiscount({ code: clean, percent: 5 });
       setPromoSuccess("5% discount applied!");
