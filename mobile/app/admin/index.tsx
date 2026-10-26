@@ -24,9 +24,54 @@ import {
   getAdminPendingCount,
   getOrdersExportUrl
 } from "../../services/adminApi";
+import {
+  getFlashDealProducts,
+  getGeniusBookings,
+  getTradeInSubmissions
+} from "../../services/adminServicesApi";
 import { StatCard } from "../../components/admin/StatCard";
 import { SalesChart } from "../../components/admin/SalesChart";
 import { SkeletonLoader } from "../../components/SkeletonLoader";
+
+function OpsTile({
+  icon,
+  label,
+  hint,
+  count,
+  countLabel,
+  onPress
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  hint: string;
+  count?: number | null;
+  countLabel?: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${hint}`}
+      onPress={() => {
+        Haptics.selectionAsync();
+        onPress();
+      }}
+      style={({ pressed }) => [styles.opsTile, pressed && { opacity: 0.75 }]}
+    >
+      <View style={styles.opsTileTop}>
+        <Ionicons name={icon} size={20} color={colors.text} />
+        {count !== undefined && count !== null ? (
+          <View style={styles.opsCountPill}>
+            <Text style={styles.opsCountText}>{count}</Text>
+          </View>
+        ) : null}
+        <Ionicons name="chevron-forward" size={15} color={colors.textTertiary} style={{ marginLeft: "auto" }} />
+      </View>
+      <Text style={styles.opsLabel}>{label}</Text>
+      <Text style={styles.opsHint} numberOfLines={1}>{hint}</Text>
+    </Pressable>
+  );
+}
 
 export default function AdminDashboardScreen() {
   const insets = useSafeAreaInsets();
@@ -39,18 +84,27 @@ export default function AdminDashboardScreen() {
   const [revenueStats, setRevenueStats] = useState<RevenueStats | null>(null);
   const [productStats, setProductStats] = useState<AdminStats | null>(null);
   const [pendingCount, setPendingCount] = useState<AdminPendingCount | null>(null);
+  const [flashDealCount, setFlashDealCount] = useState<number | null>(null);
+  const [openBookings, setOpenBookings] = useState<number | null>(null);
+  const [pendingTradeIns, setPendingTradeIns] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [rev, prod, pend] = await Promise.all([
+      const [rev, prod, pend, deals, bookings, tradeIns] = await Promise.all([
         getRevenueStats("30d").catch(() => null),
         getAdminProductStats().catch(() => null),
-        getAdminPendingCount().catch(() => null)
+        getAdminPendingCount().catch(() => null),
+        getFlashDealProducts().catch(() => null),
+        getGeniusBookings().catch(() => null),
+        getTradeInSubmissions().catch(() => null)
       ]);
 
       if (rev) setRevenueStats(rev);
       if (prod) setProductStats(prod);
       if (pend) setPendingCount(pend);
+      if (deals) setFlashDealCount(deals.length);
+      if (bookings) setOpenBookings(bookings.filter((b) => b.status === "confirmed" || b.status === "in_repair").length);
+      if (tradeIns) setPendingTradeIns(tradeIns.filter((t) => t.status === "pending_inspection").length);
     } catch {
       // Handled silently
     } finally {
@@ -317,53 +371,60 @@ export default function AdminDashboardScreen() {
               </>
             )}
 
-            {/* 6. QUICK ACTIONS */}
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.quickActionsContainer}>
-              <View style={styles.actionsRow}>
-                <Pressable
-                  style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    router.push("/admin/products/new");
-                  }}
-                >
-                  <Ionicons name="add" size={18} color={colors.accent} style={{ marginRight: 6 }} />
-                  <Text style={styles.actionButtonText}>Add Product</Text>
-                </Pressable>
-
-                <Pressable
-                  style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    router.push("/admin/orders");
-                  }}
-                >
-                  <Ionicons name="receipt-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
-                  <Text style={styles.actionButtonText}>View Orders</Text>
-                </Pressable>
-              </View>
-
-              <View style={styles.actionsRow}>
-                <Pressable
-                  style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
-                  onPress={handleExportOrders}
-                >
-                  <Ionicons name="download-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
-                  <Text style={styles.actionButtonText}>Export Orders</Text>
-                </Pressable>
-
-                <Pressable
-                  style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    router.push("/admin/products");
-                  }}
-                >
-                  <Ionicons name="cube-outline" size={18} color={colors.accent} style={{ marginRight: 6 }} />
-                  <Text style={styles.actionButtonText}>Manage Products</Text>
-                </Pressable>
-              </View>
+            {/* 6. OPERATIONS */}
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { marginTop: 0 }]}>Operations</Text>
+              <Pressable onPress={handleExportOrders} hitSlop={8}>
+                <Text style={styles.exportLink}>Export orders</Text>
+              </Pressable>
+            </View>
+            <View style={styles.opsGrid}>
+              <OpsTile
+                icon="receipt-outline"
+                label="Orders"
+                hint="Track, update status, assign hardware IDs"
+                count={pendingCount?.pending ?? null}
+                countLabel="pending"
+                onPress={() => router.push("/admin/orders")}
+              />
+              <OpsTile
+                icon="cube-outline"
+                label="Products"
+                hint="Catalogue, stock, variants"
+                count={productStats?.totalProducts ?? null}
+                countLabel="live"
+                onPress={() => router.push("/admin/products")}
+              />
+              <OpsTile
+                icon="flash-outline"
+                label="Flash Deals"
+                hint="Compare-at price discounts"
+                count={flashDealCount}
+                countLabel="active"
+                onPress={() => router.push("/admin/flash-deals")}
+              />
+              <OpsTile
+                icon="calendar-outline"
+                label="Today at LesTrades"
+                hint="Workshops & RSVPs"
+                onPress={() => router.push("/admin/events")}
+              />
+              <OpsTile
+                icon="hammer-outline"
+                label="Genius Bar"
+                hint="Repair bookings"
+                count={openBookings}
+                countLabel="open"
+                onPress={() => router.push("/admin/genius-bar")}
+              />
+              <OpsTile
+                icon="swap-horizontal-outline"
+                label="Trade-In"
+                hint="Inspection & credit payouts"
+                count={pendingTradeIns}
+                countLabel="pending"
+                onPress={() => router.push("/admin/trade-in")}
+              />
             </View>
           </>
         )}
@@ -529,33 +590,58 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary
   },
-  quickActionsContainer: {
-    paddingHorizontal: 16,
-    gap: 12
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 12
-  },
-  actionButton: {
-    flex: 1,
+  sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border
+    justifyContent: "space-between",
+    paddingRight: 16,
+    marginTop: 24,
+    marginBottom: 12
   },
-  actionButtonPressed: {
-    opacity: 0.7,
-    backgroundColor: "rgba(23, 23, 23, 0.05)"
-  },
-  actionButtonText: {
-    fontSize: 14,
+  exportLink: {
+    fontSize: 13,
     fontWeight: "600",
-    color: colors.text
+    color: colors.accent,
+    textDecorationLine: "underline"
+  },
+  opsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    paddingHorizontal: 16
+  },
+  opsTile: {
+    width: "48%",
+    flexGrow: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14
+  },
+  opsTileTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  opsCountPill: {
+    minWidth: 24,
+    alignItems: "center",
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 2
+  },
+  opsCountText: { fontSize: 11, fontWeight: "700", color: "#FFFFFF" },
+  opsLabel: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text,
+    marginTop: 12
+  },
+  opsHint: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2
   }
 });

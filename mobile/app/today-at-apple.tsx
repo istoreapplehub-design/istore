@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Linking,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,111 +20,9 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import { SUPPORT_WHATSAPP_URL } from "../constants/support";
+import { WorkshopEvent, getWorkshopEvents, registerForWorkshop } from "../services/servicesApi";
 
-interface WorkshopSession {
-  id: string;
-  category: "Photography" | "Coding" | "Art & Design" | "Fitness" | "Youth";
-  title: string;
-  tagline: string;
-  duration: string;
-  level: "All Levels" | "Beginner" | "Intermediate" | "Pro";
-  hub: string;
-  address: string;
-  schedule: string;
-  availableSeats: number;
-  instructor: string;
-  instructorRole: string;
-  description: string;
-  deviceProvided: boolean;
-}
-
-const SESSIONS: WorkshopSession[] = [
-  {
-    id: "campus-creative-ucc",
-    category: "Photography",
-    title: "Campus Creative: Coastal Light & 4K Cinema on iPhone 16 Pro",
-    tagline: "Frame Cape Coast's coastal horizons and historic architecture with ProRAW.",
-    duration: "90 min",
-    level: "All Levels",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Saturday · 3:30 PM – 5:00 PM",
-    availableSeats: 12,
-    instructor: "Kofi Ansah & Campus Media Fellows",
-    instructorRole: "Apple Creative Lead & Documentarian",
-    description:
-      "Join us at LESTRADES_UCC CAPE COAST for an interactive masterclass exploring dynamic perspectives, cinematic audio mix, and portrait depth maps across the university campus and coastal vistas.",
-    deviceProvided: true
-  },
-  {
-    id: "swift-student-lab-ucc",
-    category: "Coding",
-    title: "Swift Lab: Building iOS Apps with SwiftUI & Apple Silicon",
-    tagline: "Hands-on app architecture on M4 Mac workstations at UCC campus.",
-    duration: "75 min",
-    level: "Intermediate",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Thursday · 5:00 PM – 6:15 PM",
-    availableSeats: 10,
-    instructor: "Esinam Dogbe",
-    instructorRole: "Senior iOS Engineer & Tech Mentor",
-    description:
-      "A hands-on engineering workshop at LESTRADES_UCC CAPE COAST. Dive into modern Swift async/await, Instruments profiling, and building responsive native mobile experiences.",
-    deviceProvided: true
-  },
-  {
-    id: "digital-art-ipad-ucc",
-    category: "Art & Design",
-    title: "Art Lab: Digital Lettering & Ghanaian Motifs on iPad Pro",
-    tagline: "Blend Adinkra geometry with typography using Apple Pencil Pro.",
-    duration: "60 min",
-    level: "All Levels",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Sunday · 2:00 PM – 3:00 PM",
-    availableSeats: 8,
-    instructor: "Nana Yaa",
-    instructorRole: "Visual Artist & Procreate Specialist",
-    description:
-      "Learn stroke dynamics, pressure curves, and vector shading with the new Apple Pencil Pro on Ultra Retina XDR displays at LESTRADES_UCC CAPE COAST.",
-    deviceProvided: true
-  },
-  {
-    id: "apple-watch-vitality",
-    category: "Fitness",
-    title: "Health & Fitness: Tracking Vitals in the Tropics",
-    tagline: "Master Heart Rate Zones, ECG, Workout Metrics & Sleep Stages.",
-    duration: "45 min",
-    level: "Beginner",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Saturday · 9:30 AM – 10:15 AM",
-    availableSeats: 12,
-    instructor: "Dr. Kwesi Appiah",
-    instructorRole: "Sports Physician & Health Advocate",
-    description:
-      "Optimize your daily wellness routine with Apple Watch Ultra and Series 10. Understand cardiovascular health metrics, recovery intervals, and staying hydrated in Ghana's climate.",
-    deviceProvided: false
-  },
-  {
-    id: "kids-playgrounds",
-    category: "Youth",
-    title: "Kids Hour: Make Your First Interactive Animation",
-    tagline: "Code Byte the character through puzzle worlds with Swift Playgrounds.",
-    duration: "60 min",
-    level: "Beginner",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Saturday · 11:00 AM – 12:00 PM",
-    availableSeats: 8,
-    instructor: "Abena Serwaa",
-    instructorRole: "Youth STEM Educator",
-    description:
-      "Designed for young creators aged 8–14. Kids will learn commands, loops, and conditional logic by animating colorful worlds on iPad at LESTRADES_UCC CAPE COAST.",
-    deviceProvided: true
-  }
-];
+type Session = WorkshopEvent;
 
 export default function TodayAtAppleScreen() {
   const router = useRouter();
@@ -133,7 +31,13 @@ export default function TodayAtAppleScreen() {
   const isLargeScreen = width >= 860;
 
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedSession, setSelectedSession] = useState<WorkshopSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+
+  // Live workshops from the store
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // RSVP Modal
   const [rsvpModalVisible, setRsvpModalVisible] = useState(false);
@@ -141,42 +45,79 @@ export default function TodayAtAppleScreen() {
   const [attendeePhone, setAttendeePhone] = useState("");
   const [attendeeEmail, setAttendeeEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmedPass, setConfirmedPass] = useState<{
     passId: string;
-    session: WorkshopSession;
+    session: Session;
   } | null>(null);
 
-  const categories = ["All", "Photography", "Coding", "Art & Design", "Fitness", "Youth"];
+  const fetchSessions = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const events = await getWorkshopEvents();
+      setSessions(events);
+    } catch (err: unknown) {
+      setLoadError(err instanceof Error ? err.message : "Could not reach the workshop schedule.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
-  const filteredSessions = SESSIONS.filter(
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
+  const categories = useMemo(
+    () => ["All", ...Array.from(new Set(sessions.map((s) => s.category)))],
+    [sessions]
+  );
+
+  const filteredSessions = sessions.filter(
     (s) => selectedCategory === "All" || s.category === selectedCategory
   );
 
-  const handleOpenRsvp = (session: WorkshopSession) => {
+  const handleOpenRsvp = (session: Session) => {
     setSelectedSession(session);
+    setSubmitError(null);
     setRsvpModalVisible(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const handleConfirmRsvp = () => {
+  const handleConfirmRsvp = async () => {
     if (!attendeeName.trim() || !attendeePhone.trim()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       Alert.alert("Information Required", "Please enter your name and phone number for attendance confirmation.");
       return;
     }
+    if (!selectedSession) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const randomCode = `TAA-GH-${Math.floor(1000 + Math.random() * 9000)}`;
-      setConfirmedPass({
-        passId: randomCode,
-        session: selectedSession!
+    try {
+      const registration = await registerForWorkshop({
+        attendeeName: attendeeName.trim(),
+        attendeePhone: attendeePhone.trim(),
+        attendeeEmail: attendeeEmail.trim() || undefined,
+        sessionId: selectedSession.id,
+        sessionTitle: selectedSession.title
       });
+      setConfirmedPass({ passId: registration.passId, session: selectedSession });
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === selectedSession.id
+            ? { ...s, availableSeats: Math.max(0, s.availableSeats - 1) }
+            : s
+        )
+      );
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }, 700);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "Could not reserve your spot. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -206,6 +147,16 @@ export default function TodayAtAppleScreen() {
           isLargeScreen && styles.scrollContentDesktop
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchSessions();
+            }}
+            tintColor={colors.text}
+          />
+        }
       >
         {/* Hero Section */}
         <View style={styles.heroBanner}>
@@ -235,6 +186,37 @@ export default function TodayAtAppleScreen() {
           </View>
         </View>
 
+        {loading ? (
+          <View style={styles.stateBox}>
+            <ActivityIndicator size="large" color={colors.text} />
+            <Text style={styles.stateText}>Loading the workshop schedule…</Text>
+          </View>
+        ) : loadError ? (
+          <View style={styles.stateBox}>
+            <Ionicons name="cloud-offline-outline" size={30} color={colors.textSecondary} />
+            <Text style={styles.stateTitle}>Couldn’t load workshops</Text>
+            <Text style={styles.stateText}>{loadError}</Text>
+            <Pressable
+              onPress={() => {
+                setLoading(true);
+                fetchSessions();
+              }}
+              style={styles.retryBtn}
+            >
+              <Text style={styles.retryBtnText}>Try Again</Text>
+            </Pressable>
+          </View>
+        ) : sessions.length === 0 ? (
+          <View style={styles.stateBox}>
+            <Ionicons name="calendar-outline" size={30} color={colors.textSecondary} />
+            <Text style={styles.stateTitle}>No workshops scheduled right now</Text>
+            <Text style={styles.stateText}>
+              New Today at LesTrades sessions appear here as soon as the store publishes them.
+              Pull down to refresh.
+            </Text>
+          </View>
+        ) : (
+          <>
         {/* Category Filter Pills */}
         <ScrollView
           horizontal
@@ -321,17 +303,25 @@ export default function TodayAtAppleScreen() {
               {/* Actions */}
               <View style={styles.cardFooter}>
                 <Text style={styles.freeBadge}>FREE ADMISSION</Text>
-                <Pressable
-                  onPress={() => handleOpenRsvp(session)}
-                  style={({ pressed }) => [styles.rsvpBtn, pressed && { opacity: 0.85 }]}
-                >
-                  <Text style={styles.rsvpBtnText}>Reserve Spot</Text>
-                  <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-                </Pressable>
+                {session.availableSeats > 0 ? (
+                  <Pressable
+                    onPress={() => handleOpenRsvp(session)}
+                    style={({ pressed }) => [styles.rsvpBtn, pressed && { opacity: 0.85 }]}
+                  >
+                    <Text style={styles.rsvpBtnText}>Reserve Spot</Text>
+                    <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+                  </Pressable>
+                ) : (
+                  <View style={styles.fullPill}>
+                    <Text style={styles.fullPillText}>FULL</Text>
+                  </View>
+                )}
               </View>
             </Animated.View>
           ))}
         </View>
+          </>
+        )}
       </ScrollView>
 
       {/* RSVP Modal */}
@@ -406,6 +396,10 @@ export default function TodayAtAppleScreen() {
                   <Text style={styles.confirmRsvpBtnText}>Confirm Free RSVP</Text>
                 )}
               </Pressable>
+
+              {submitError ? (
+                <Text style={styles.submitErrorText}>{submitError}</Text>
+              ) : null}
 
               <Pressable
                 onPress={() => setRsvpModalVisible(false)}
@@ -962,5 +956,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: typography.fontFamily.medium,
     color: colors.text
+  },
+  stateBox: {
+    alignItems: "center",
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+    gap: 8
+  },
+  stateTitle: {
+    fontSize: 17,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.text,
+    marginTop: 6,
+    textAlign: "center"
+  },
+  stateText: {
+    fontSize: 13.5,
+    fontFamily: typography.fontFamily.regular,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 20
+  },
+  retryBtn: {
+    marginTop: 10,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    backgroundColor: colors.text
+  },
+  retryBtnText: { fontSize: 13.5, fontFamily: typography.fontFamily.semibold, color: "#FFFFFF" },
+  fullPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface
+  },
+  fullPillText: {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.textSecondary,
+    letterSpacing: 0.5
+  },
+  submitErrorText: {
+    fontSize: 13,
+    fontFamily: typography.fontFamily.medium,
+    color: "#C40000",
+    marginTop: 10,
+    textAlign: "center"
   }
 });

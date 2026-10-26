@@ -21,7 +21,11 @@ export default function AdminLayout() {
         <Stack.Screen name="products/new" options={{ title: "New Product", presentation: "modal" }} />
         <Stack.Screen name="products/[id]" options={{ title: "Edit Product" }} />
         <Stack.Screen name="orders/index" options={{ title: "Orders" }} />
-        <Stack.Screen name="orders/[id]" options={{ title: "Order" }} />
+        <Stack.Screen name="orders/[id]" options={{ title: "Order", headerShown: false }} />
+        <Stack.Screen name="flash-deals" options={{ title: "Flash Deals" }} />
+        <Stack.Screen name="events" options={{ title: "Events", headerShown: false }} />
+        <Stack.Screen name="genius-bar" options={{ title: "Genius Bar", headerShown: false }} />
+        <Stack.Screen name="trade-in" options={{ title: "Trade-In", headerShown: false }} />
       </Stack>
     </AdminGuard>
   );

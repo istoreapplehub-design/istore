@@ -21,6 +21,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import { SUPPORT_WHATSAPP_URL } from "../constants/support";
+import { bookGeniusBar } from "../services/servicesApi";
 
 interface StoreHub {
   id: string;
@@ -93,7 +94,9 @@ export default function GeniusBarScreen() {
 
   const dates = ["Today", "Tomorrow", "Thursday", "Friday", "Saturday"];
 
-  const handleBookAppointment = () => {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleBookAppointment = async () => {
     if (!customerName.trim() || !phone.trim()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       Alert.alert("Contact Details Required", "Please enter your name and phone number for SMS/WhatsApp verification.");
@@ -101,21 +104,35 @@ export default function GeniusBarScreen() {
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const randomRef = `GB-GH-${Math.floor(1000 + Math.random() * 9000)}`;
-      setConfirmedBooking({
-        reference: randomRef,
-        hub: selectedHub,
+    try {
+      const booking = await bookGeniusBar({
+        customerName: customerName.trim(),
+        phone: phone.trim(),
+        device: DEVICE_CATEGORIES.find((d) => d.id === selectedDevice)?.name || "Apple Device",
+        issue: ISSUE_TYPES.find((i) => i.id === selectedIssue)?.label || "Hardware Diagnostic",
         date: selectedDate,
         slot: selectedSlot,
-        device: DEVICE_CATEGORIES.find((d) => d.id === selectedDevice)?.name || "Apple Device",
-        issue: ISSUE_TYPES.find((i) => i.id === selectedIssue)?.label || "Hardware Diagnostic"
+        serialNumber: deviceSerial.trim() || undefined,
+        notes: notes.trim() || undefined
+      });
+      setConfirmedBooking({
+        reference: booking.reference,
+        hub: selectedHub,
+        date: booking.date || selectedDate,
+        slot: booking.slot || selectedSlot,
+        device: booking.device,
+        issue: booking.issue
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }, 800);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "Could not book the appointment. Check your connection and try again.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -394,6 +411,10 @@ export default function GeniusBarScreen() {
                 <Text style={styles.submitBtnText}>Confirm Genius Bar Appointment</Text>
               )}
             </Pressable>
+
+            {submitError ? (
+              <Text style={styles.submitErrorText}>{submitError}</Text>
+            ) : null}
           </View>
         </ScrollView>
 
@@ -829,6 +850,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: typography.fontFamily.semibold,
     color: "#FFFFFF"
+  },
+  submitErrorText: {
+    fontSize: 13,
+    fontFamily: typography.fontFamily.medium,
+    color: "#C40000",
+    marginTop: 10,
+    textAlign: "center",
+    lineHeight: 19
   },
   modalContainer: {
     flex: 1,

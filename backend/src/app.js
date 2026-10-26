@@ -1,4 +1,5 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -41,7 +42,18 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true }));
 
-// ─── 3. MOUNT ROUTES ────────────────────────────────────────────────────────
+// ─── 3. 3D / AR MODEL ASSETS (Quick Look + Scene Viewer fetch these directly) ─
+app.use(
+  "/models",
+  (req, res, next) => {
+    if (req.path.endsWith(".usdz")) res.type("model/vnd.usdz+zip");
+    if (req.path.endsWith(".glb")) res.type("model/gltf-binary");
+    next();
+  },
+  express.static(path.join(__dirname, "..", "public", "models"), { maxAge: "7d" })
+);
+
+// ─── 4. MOUNT ROUTES ────────────────────────────────────────────────────────
 app.use("/api/auth", authRouter);
 app.use("/api/admin/products", adminProductsRouter);
 app.use("/api/admin/orders", adminOrdersRouter);
@@ -56,7 +68,7 @@ app.use("/api/paystack", paystackRouter);
 app.use("/api/installments", installmentsRouter);
 app.use("/api/services", servicesRouter);
 
-// ─── 4. HEALTH CHECK ────────────────────────────────────────────────────────
+// ─── 5. HEALTH CHECK ────────────────────────────────────────────────────────
 app.get(["/", "/api/health"], (req, res) => {
   res.json({
     status: "ok",
@@ -66,7 +78,7 @@ app.get(["/", "/api/health"], (req, res) => {
   });
 });
 
-// ─── 5. NOT FOUND & ERROR HANDLERS (LAST) ───────────────────────────────────
+// ─── 6. NOT FOUND & ERROR HANDLERS (LAST) ───────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
 

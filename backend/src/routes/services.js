@@ -16,66 +16,8 @@ const GHANA_HUBS = [
   }
 ];
 
-// Initial Today at LesTrades workshops at LESTRADES_UCC CAPE COAST
-let todayAtLesTradesEvents = [
-  {
-    id: "campus-creative-ucc",
-    category: "Photography",
-    title: "Campus Creative: Coastal Light & 4K Cinema on iPhone 16 Pro",
-    tagline: "Frame Cape Coast's coastal horizons and historic architecture with ProRAW.",
-    duration: "90 min",
-    level: "All Levels",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Saturday · 3:30 PM – 5:00 PM",
-    availableSeats: 12,
-    totalSeats: 15,
-    instructor: "Kofi Ansah & Campus Media Fellows",
-    instructorRole: "Apple Creative Lead & Documentarian",
-    description:
-      "Join us at LESTRADES_UCC CAPE COAST for an interactive masterclass exploring dynamic perspectives, cinematic audio mix, and portrait depth maps across the university campus and coastal vistas.",
-    deviceProvided: true,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "swift-student-lab-ucc",
-    category: "Coding",
-    title: "Swift Lab: Building iOS Apps with SwiftUI & Apple Silicon",
-    tagline: "Hands-on app architecture on M4 Mac workstations at UCC campus.",
-    duration: "75 min",
-    level: "Intermediate",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Thursday · 5:00 PM – 6:15 PM",
-    availableSeats: 10,
-    totalSeats: 10,
-    instructor: "Esinam Dogbe",
-    instructorRole: "Senior iOS Engineer & Tech Mentor",
-    description:
-      "A hands-on engineering workshop at LESTRADES_UCC CAPE COAST. Dive into modern Swift async/await, Instruments profiling, and building responsive native mobile experiences.",
-    deviceProvided: true,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: "digital-art-ipad-ucc",
-    category: "Art & Design",
-    title: "Art Lab: Digital Lettering & Ghanaian Motifs on iPad Pro",
-    tagline: "Blend Adinkra geometry with typography using Apple Pencil Pro.",
-    duration: "60 min",
-    level: "All Levels",
-    hub: "LESTRADES_UCC CAPE COAST",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    schedule: "Sunday · 2:00 PM – 3:00 PM",
-    availableSeats: 8,
-    totalSeats: 12,
-    instructor: "Nana Yaa",
-    instructorRole: "Visual Artist & Procreate Specialist",
-    description:
-      "Learn stroke dynamics, pressure curves, and vector shading with the new Apple Pencil Pro on Ultra Retina XDR displays at LESTRADES_UCC CAPE COAST.",
-    deviceProvided: true,
-    createdAt: new Date().toISOString()
-  }
-];
+// Today at LesTrades workshops, created by admins from the app's Admin Console
+let todayAtLesTradesEvents = [];
 
 // Live appointments, workshop registrations, and trade-in submissions
 const geniusBookings = [];
@@ -362,6 +304,68 @@ async function queryAppleCoverageApi(serialOrSuffix) {
 }
 
 /**
+ * Helper: Query imei.info REST API (dash.imei.info/api)
+ * GET /check/{service}/?API_KEY=…&imei=… (or sn=…)
+ * 200 → result inline; 202 → poll /search_history/{id}/
+ * Needs IMEIINFO_API_KEY (from dash.imei.info dashboard) and IMEIINFO_SERVICE_ID.
+ */
+async function queryImeiInfoApi(deviceId) {
+  const apiKey = process.env.IMEIINFO_API_KEY;
+  if (!apiKey) return null;
+
+  const headers = { Accept: "application/json" };
+  const timeoutFetch = (url, ms = 10000) => {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { headers, signal: controller.signal }).finally(() => clearTimeout(t));
+  };
+
+  try {
+    let serviceId = Number(process.env.IMEIINFO_SERVICE_ID) || null;
+    if (!serviceId) {
+      const svcResp = await timeoutFetch("https://dash.imei.info/api/service/services/?API_KEY=" + encodeURIComponent(apiKey));
+      if (svcResp.ok) {
+        const svcData = await svcResp.json();
+        const list = Array.isArray(svcData) ? svcData : svcData.results || [];
+        const wanted = String(process.env.IMEIINFO_SERVICE_NAME || "apple").toLowerCase();
+        const match =
+          list.find((s) => (s.name || "").toLowerCase().includes(wanted)) || list[0];
+        serviceId = match && (match.id || match.service_id);
+      }
+      if (!serviceId) return null;
+    }
+
+    const isImei = /^\d{14,16}$/.test(deviceId);
+    const idParam = isImei ? `imei=${deviceId}` : `sn=${deviceId}`;
+    const checkUrl =
+      `https://dash.imei.info/api/check/${serviceId}/?API_KEY=${encodeURIComponent(apiKey)}&${idParam}`;
+
+    let resp = await timeoutFetch(checkUrl);
+    if (resp.status === 202) {
+      const pending = await resp.json().catch(() => null);
+      const historyId = pending && (pending.ulid || pending.history_id);
+      if (!historyId) return null;
+      for (let i = 0; i < 12; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        resp = await timeoutFetch(
+          `https://dash.imei.info/api/search_history/${historyId}/?API_KEY=${encodeURIComponent(apiKey)}`
+        );
+        if (!resp.ok) continue;
+        const result = await resp.json().catch(() => null);
+        if (result && JSON.stringify(result) !== "{}") return result;
+      }
+      return null;
+    }
+
+    if (!resp.ok) return null;
+    return await resp.json().catch(() => null);
+  } catch (err) {
+    console.error("imei.info API fetch error:", err.message);
+    return null;
+  }
+}
+
+/**
  * Helper: Query IMEICheck official REST API (api.imeicheck.net)
  */
 async function queryImeicheckApi(deviceId) {
@@ -412,17 +416,32 @@ router.post("/trade-in/check-serial", async (req, res) => {
 
   const cleaned = serialOrImei.trim().toUpperCase();
 
-  // 1. Try IMEICheck official developer REST API
-  const imeiCheckData = await queryImeicheckApi(cleaned);
+  // 1. Try imei.info API (registered provider, paid API key)
+  let imeiInfoData = await queryImeiInfoApi(cleaned);
+  if (imeiInfoData && Array.isArray(imeiInfoData.devices) && imeiInfoData.devices[0]) {
+    imeiInfoData = imeiInfoData.devices[0];
+  }
+  if (imeiInfoData && imeiInfoData.status && imeiInfoData.status !== "done") imeiInfoData = null;
 
-  // 2. Try official Apple hardware resolver
+  // 2. Try IMEICheck official developer REST API
+  const imeiCheckData = imeiInfoData ? null : await queryImeicheckApi(cleaned);
+
+  // 3. Try official Apple hardware resolver
   let appleModelName = null;
-  if (!imeiCheckData) {
+  if (!imeiInfoData && !imeiCheckData) {
     appleModelName = await queryAppleCoverageApi(cleaned);
   }
 
-  // If neither API recognized the device, it's an invalid serial/IMEI
-  if (!imeiCheckData && !appleModelName) {
+  // If no provider could verify the device, be explicit about why
+  if (!imeiInfoData && !imeiCheckData && !appleModelName) {
+    const providersConfigured = process.env.IMEICHECK_API_KEY || process.env.IMEIINFO_API_KEY;
+    if (!providersConfigured) {
+      return res.status(404).json({
+        success: false,
+        error:
+          "Device not recognized. To enable automated serial & IMEI lookups from https://imeicheck.com/apple-serial-number-check, set IMEICHECK_API_KEY in backend/.env, or verify your device serial in Settings > General > About."
+      });
+    }
     return res.status(404).json({
       success: false,
       error:
@@ -441,6 +460,37 @@ router.post("/trade-in/check-serial", async (req, res) => {
   let simLock = "Factory Unlocked (Ghana MTN / Telecel / AT Compatible)";
   let purchaseCountry = "Global Hardware Variant";
   let provider = "Apple Official Coverage Gateway";
+
+  if (imeiInfoData) {
+    provider = "imei.info API (dash.imei.info)";
+    const r = imeiInfoData.result || imeiInfoData.properties || imeiInfoData;
+    model =
+      r.model || r.model_name || r.product_name || r.productModel ||
+      imeiInfoData.model || imeiInfoData.deviceName || model;
+    if (r.capacity || r.storage) storage = r.capacity || r.storage;
+    if (r.color || r.colour) color = r.color || r.colour;
+    if (r.model_number || r.modelNumber || r.part_number) {
+      modelNumber = r.model_number || r.modelNumber || r.part_number;
+    }
+    if (r.warranty_status || r.warrantyStatus || r.warranty) {
+      warrantyStatus = r.warranty_status || r.warrantyStatus || r.warranty;
+    }
+    if (r.coverage_end_date || r.ex_date || r.warranty_date || r.expDate) {
+      coverageExpires = r.coverage_end_date || r.ex_date || r.warranty_date || r.expDate;
+    }
+    if (r.lock_status || r.icloud || r.fmi) {
+      const lockState = String(r.lock_status || r.icloud || r.fmi).toUpperCase();
+      icloudStatus =
+        lockState.includes("OFF") || lockState.includes("CLEAN") || lockState.includes("UNLOCKED")
+          ? "Clean · Activation Lock Disabled"
+          : "LOCKED · iCloud Activation Lock Active";
+    }
+    if (r.sim_lock !== undefined || r.simlock !== undefined) {
+      const sim = String(r.sim_lock ?? r.simlock).toLowerCase();
+      simLock = sim === "false" || sim.includes("unlocked") ? "Factory Unlocked" : "Carrier Locked";
+    }
+    if (r.country || r.purchaseCountry) purchaseCountry = r.country || r.purchaseCountry;
+  }
 
   if (imeiCheckData) {
     provider = "IMEICheck Official API (api.imeicheck.net)";

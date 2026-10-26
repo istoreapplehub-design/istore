@@ -23,11 +23,13 @@ import {
   getAdminOrderTimeline,
   getOrdersExportUrl,
   OrderTimelineEvent,
-  updateAdminOrderStatus
+  updateAdminOrderStatus,
+  updateOrderItemSerial
 } from "../../../services/adminApi";
 import { OrderStatus, OrderStatusBadge } from "../../../components/admin/OrderStatusBadge";
 import { OrderTimeline } from "../../../components/admin/OrderTimeline";
 import { StatusUpdateSheet, UpdatableOrderStatus } from "../../../components/admin/StatusUpdateSheet";
+import { SerialImeiSheet } from "../../../components/admin/SerialImeiSheet";
 
 function formatTimestamp(isoString: string | null | undefined): string {
   if (!isoString) return "N/A";
@@ -57,6 +59,8 @@ export default function AdminOrderDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [submittingStatus, setSubmittingStatus] = useState(false);
+  const [serialItem, setSerialItem] = useState<OrderItem | null>(null);
+  const [savingSerial, setSavingSerial] = useState(false);
 
   const fetchOrderData = useCallback(async () => {
     if (!id) return;
@@ -160,6 +164,22 @@ export default function AdminOrderDetailScreen() {
       Alert.alert("Update Failed", msg);
     } finally {
       setSubmittingStatus(false);
+    }
+  };
+
+  const handleSerialSubmit = async (payload: { serialNumber: string | null; imei: string | null }) => {
+    if (!id || !serialItem) return;
+    setSavingSerial(true);
+    try {
+      await updateOrderItemSerial(id, serialItem.id, payload);
+      setSerialItem(null);
+      await fetchOrderData();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to save hardware ID.";
+      Alert.alert("Save Failed", msg);
+    } finally {
+      setSavingSerial(false);
     }
   };
 
@@ -348,7 +368,7 @@ export default function AdminOrderDetailScreen() {
         </View>
 
         {/* 5. ITEMS */}
-        <Text style={styles.sectionTitle}>Items ({items.length})</Text>
+        <Text style={styles.sectionTitle}>Items &amp; Hardware IDs ({items.length})</Text>
         <View style={styles.card}>
           {items.map((it, idx) => (
             <View key={it.id || idx}>
@@ -379,6 +399,40 @@ export default function AdminOrderDetailScreen() {
                   </Text>
                   <Text style={styles.itemQty}>Qty: {it.qty}</Text>
                 </View>
+              </View>
+
+              {/* Serial / IMEI assignment for sold devices */}
+              <View style={styles.serialBlock}>
+                <View style={styles.serialInfo}>
+                  <Text style={styles.serialLabel}>SERIAL</Text>
+                  <Text style={it.serialNumber ? styles.serialValue : styles.serialEmpty}>
+                    {it.serialNumber || "Not assigned"}
+                  </Text>
+                  <Text style={styles.serialLabel}>IMEI</Text>
+                  <Text style={it.imei ? styles.serialValue : styles.serialEmpty}>
+                    {it.imei || "Not assigned"}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setSerialItem(it);
+                  }}
+                  style={({ pressed }) => [
+                    styles.assignBtn,
+                    (it.serialNumber || it.imei) && styles.assignBtnSecondary,
+                    pressed && { opacity: 0.75 }
+                  ]}
+                >
+                  <Ionicons
+                    name={it.serialNumber || it.imei ? "create-outline" : "pricetag-outline"}
+                    size={14}
+                    color={it.serialNumber || it.imei ? colors.text : "#FFFFFF"}
+                  />
+                  <Text style={[styles.assignBtnText, (it.serialNumber || it.imei) && { color: colors.text }]}>
+                    {it.serialNumber || it.imei ? "Edit" : "Assign"}
+                  </Text>
+                </Pressable>
               </View>
             </View>
           ))}
@@ -522,6 +576,16 @@ export default function AdminOrderDetailScreen() {
         onSubmit={handleStatusSubmit}
         submitting={submittingStatus}
       />
+
+      {serialItem ? (
+        <SerialImeiSheet
+          key={serialItem.id}
+          item={serialItem}
+          onClose={() => setSerialItem(null)}
+          onSubmit={handleSerialSubmit}
+          saving={savingSerial}
+        />
+      ) : null}
     </View>
   );
 }
@@ -719,6 +783,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     marginTop: 2
+  },
+  serialBlock: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 10,
+    marginBottom: 4,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 10
+  },
+  serialInfo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 6
+  },
+  serialLabel: {
+    fontSize: 9.5,
+    fontWeight: "700",
+    color: colors.textTertiary,
+    letterSpacing: 0.5
+  },
+  serialValue: {
+    fontFamily: "monospace",
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.text,
+    marginRight: 8
+  },
+  serialEmpty: {
+    fontSize: 12,
+    color: colors.textTertiary,
+    fontStyle: "italic",
+    marginRight: 8
+  },
+  assignBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 15,
+    backgroundColor: colors.accent
+  },
+  assignBtnText: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    color: "#FFFFFF"
+  },
+  assignBtnSecondary: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: colors.border
   },
   summaryRow: {
     flexDirection: "row",

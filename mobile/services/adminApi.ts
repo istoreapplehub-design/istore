@@ -206,8 +206,8 @@ export async function getAdminOrders(
 }
 
 export async function getAdminOrderById(id: string): Promise<Order> {
-  const res = await request<{ order: Order }>(`/api/admin/orders/${id}`);
-  return res.order;
+  const res = await request<{ data: Order }>(`/api/admin/orders/${id}`);
+  return res.data;
 }
 
 export async function getAdminOrderTimeline(id: string): Promise<OrderTimelineEvent[]> {
@@ -224,15 +224,26 @@ export async function updateAdminOrderStatus(
     adminNote?: string;
   }
 ): Promise<Order> {
-  const res = await request<{ order: Order }>(`/api/admin/orders/${id}/status`, {
+  const res = await request<{ data: Order }>(`/api/admin/orders/${id}/status`, {
     method: "PATCH",
     body: JSON.stringify(body)
   });
-  return res.order;
+  return res.data;
 }
 
 export async function getAdminPendingCount(): Promise<AdminPendingCount> {
   return request<AdminPendingCount>("/api/admin/orders/pending-count");
+}
+
+export async function updateOrderItemSerial(
+  orderId: string,
+  itemId: string,
+  body: { serialNumber?: string | null; imei?: string | null }
+): Promise<void> {
+  await request<{ success: boolean }>(
+    `/api/admin/orders/${orderId}/items/${encodeURIComponent(itemId)}/serial`,
+    { method: "PATCH", body: JSON.stringify(body) }
+  );
 }
 
 export async function getRevenueStats(period: "today" | "7d" | "30d" | "all" = "30d"): Promise<RevenueStats> {
