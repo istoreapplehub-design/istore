@@ -474,7 +474,7 @@ router.post("/trade-in/check-serial", async (req, res) => {
     return res.status(404).json({
       success: false,
       error:
-        "Device not found for the entered serial number. Please check the serial on your Apple device (Settings > General > About) and try again."
+        `Serial "${cleaned}" wasn't recognised by Apple's public registry. Tip: dial *#06# and enter your 15-digit IMEI instead — it verifies instantly, even offline.`
     });
   }
 

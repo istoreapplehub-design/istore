@@ -529,7 +529,7 @@ export default function ProductDetailScreen() {
           )}
             </View>
 
-            {/* Apple AR Quick Look button */}
+            {/* 3D Studio button */}
             <Pressable
               onPress={() => {
                 Haptics.selectionAsync();
@@ -544,7 +544,7 @@ export default function ProductDetailScreen() {
               ]}
             >
               <Ionicons name="cube-outline" size={17} color="#0066CC" />
-              <Text style={styles.arQuickLookBtnText}>View in your space (3D · AR)</Text>
+              <Text style={styles.arQuickLookBtnText}>View in 3D</Text>
             </Pressable>
           </View>
 

@@ -157,7 +157,7 @@ export default function TradeInScreen() {
         setCheckedDevice(null);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         Alert.alert(
-          "Hardware Not Recognized",
+          "Device Not Recognized",
           json.error || "Device not found for the entered serial number / IMEI. Please verify and try again."
         );
       }
@@ -336,9 +336,11 @@ export default function TradeInScreen() {
               <Text style={styles.stepTitle}>Enter Serial Number or IMEI</Text>
             </View>
             <Text style={styles.stepDesc}>
-              Locate your serial number on iPhone or iPad in:{"\n"}
+              Fastest: dial <Text style={{ fontWeight: "600", color: colors.text }}>*#06#</Text> to show your
+              15-digit IMEI — it verifies instantly, even offline.{"\n"}
+              You can also use the serial number from{"\n"}
               <Text style={{ fontWeight: "600", color: colors.text }}>
-                Settings → General → About → Serial Number
+                Settings → General → About
               </Text>
             </Text>
 
@@ -350,7 +352,7 @@ export default function TradeInScreen() {
                   setValidationSuccess(false);
                   setQuoteGenerated(false);
                 }}
-                placeholder="e.g. F2LL80R0Q2 or 15-digit IMEI"
+                placeholder="15-digit IMEI or Serial Number"
                 placeholderTextColor={colors.textTertiary}
                 autoCapitalize="characters"
                 autoCorrect={false}
@@ -612,7 +614,7 @@ export default function TradeInScreen() {
               <View style={styles.questionBlock}>
                 <Text style={styles.questionTitle}>Device Inspection Photographs</Text>
                 <Text style={styles.questionDesc}>
-                  Upload photos of your device's front screen, back enclosure, and Battery Health screen to lock in maximum guaranteed trade value.
+                  Upload photos of your device&apos;s front screen, back enclosure, and Battery Health screen to lock in maximum guaranteed trade value.
                 </Text>
 
                 <View style={styles.photoSlotsRow}>
@@ -787,7 +789,7 @@ export default function TradeInScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.faqTitle}>1. Get your instant quote</Text>
                 <Text style={styles.faqBody}>
-                  Enter your serial number and assess your device's condition online to receive a verified value in Ghanaian Cedis.
+                  Enter your IMEI or serial number and assess your device&apos;s condition online to receive a verified value in Ghanaian Cedis.
                 </Text>
               </View>
             </View>

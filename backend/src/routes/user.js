@@ -3,6 +3,8 @@ const { z } = require("zod");
 const prisma = require("../utils/prisma");
 const { requireAuth } = require("../middleware/auth");
 const { safeJsonParse } = require("../utils/json");
+const { uploadImage } = require("../utils/storage");
+const { uploadSingle } = require("../middleware/upload");
 
 const router = express.Router();
 
@@ -40,6 +42,7 @@ router.get("/me", requireAuth, async (req, res, next) => {
         name: user.name,
         phone: user.phone,
         email: user.email,
+        avatarUrl: user.avatarUrl || null,
         role: user.role,
         addresses: safeJsonParse(user.addresses, []),
         wishlistProductIds: user.wishlist.map((w) => w.productId)
@@ -119,6 +122,68 @@ router.put("/wishlist", requireAuth, async (req, res, next) => {
     if (err instanceof z.ZodError) {
       return res.status(400).json({ error: true, message: "Invalid wishlist payload" });
     }
+    next(err);
+  }
+});
+
+// PUT /api/user/profile - update name & phone
+router.put("/profile", requireAuth, async (req, res, next) => {
+  try {
+    const body = z
+      .object({
+        name: z.string().trim().min(2).max(80).optional(),
+        phone: z
+          .string()
+          .trim()
+          .regex(/^(\+233|0)[0-9]{9}$/, "Invalid Ghanaian phone number")
+          .optional()
+      })
+      .parse(req.body);
+
+    if (body.phone) {
+      const clash = await prisma.user.findFirst({
+        where: { phone: body.phone, id: { not: req.user.id } }
+      });
+      if (clash) {
+        return res.status(409).json({ error: true, message: "That phone number is already in use" });
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ...(body.name ? { name: body.name } : {}),
+        ...(body.phone ? { phone: body.phone } : {})
+      }
+    });
+
+    res.json({
+      user: { ...updated, addresses: safeJsonParse(updated.addresses, []) }
+    });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ error: true, message: err.errors?.[0]?.message || "Invalid profile payload" });
+    }
+    next(err);
+  }
+});
+
+// POST /api/user/avatar - upload profile picture (multipart field: file)
+router.post("/avatar", requireAuth, uploadSingle, async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: true, message: "No file provided" });
+    }
+
+    const image = await uploadImage(req.file, "avatars");
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatarUrl: image.publicUrl }
+    });
+
+    res.json({ success: true, avatarUrl: image.publicUrl, path: image.path });
+  } catch (err) {
     next(err);
   }
 });

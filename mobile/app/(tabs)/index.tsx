@@ -475,12 +475,12 @@ export default function HomeScreen() {
               <View style={[styles.assistIcon, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
                 <Ionicons name="cube-outline" size={20} color="#0066CC" />
               </View>
-              <Text style={styles.assistCardTitle}>View in Your Space</Text>
+              <Text style={styles.assistCardTitle}>3D Studio</Text>
               <Text style={styles.assistCardSub}>
-                Interactive 3D Apple Quick Look & true 1:1 scale augmented reality preview.
+                Explore iPhones, iPads & Macs in interactive 3D at true-to-life scale.
               </Text>
               <View style={styles.assistLinkRow}>
-                <Text style={styles.assistLinkText}>Launch AR Studio</Text>
+                <Text style={styles.assistLinkText}>Open 3D Studio</Text>
                 <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
               </View>
             </Pressable>

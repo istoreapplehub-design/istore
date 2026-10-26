@@ -203,7 +203,7 @@ async function createProduct(req, res, next) {
         warranty,
         condition,
         brand,
-        tags,
+        tags: Array.isArray(tags) ? tags.join(",") : tags,
         featured,
         isActive,
         displayOrder,
@@ -302,7 +302,7 @@ async function updateProduct(req, res, next) {
     if (warranty !== undefined) updateData.warranty = warranty;
     if (condition !== undefined) updateData.condition = condition;
     if (brand !== undefined) updateData.brand = brand;
-    if (tags !== undefined) updateData.tags = tags;
+    if (tags !== undefined) updateData.tags = Array.isArray(tags) ? tags.join(",") : tags;
     if (featured !== undefined) updateData.featured = featured;
     if (isActive !== undefined) updateData.isActive = isActive;
     if (displayOrder !== undefined) updateData.displayOrder = displayOrder;

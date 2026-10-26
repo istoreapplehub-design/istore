@@ -4,7 +4,7 @@
  * - Haptics.notificationAsync("warning") on sign out confirmation
  */
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, RefreshControl, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, RefreshControl, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -243,10 +243,22 @@ export default function AccountScreen() {
         }
       >
         {/* Profile */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initial}</Text>
-          </View>
+        <Pressable
+          style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.85 }]}
+          onPress={() => {
+            Haptics.selectionAsync();
+            router.push("/profile" as never);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="My Profile"
+        >
+          {user?.avatarUrl ? (
+            <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initial}</Text>
+            </View>
+          )}
           <View style={styles.profileInfo}>
             <View style={styles.nameRow}>
               <Text style={styles.profileName} numberOfLines={1}>
@@ -262,7 +274,8 @@ export default function AccountScreen() {
               {email || phone}
             </Text>
           </View>
-        </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+        </Pressable>
 
         {/* Real counters */}
         <View style={styles.statRow}>
@@ -387,7 +400,7 @@ export default function AccountScreen() {
           <View style={styles.divider} />
           <Row
             icon="cube-outline"
-            label="View in Space (3D & AR)"
+            label="3D Studio"
             onPress={() => router.push("/ar-viewer" as never)}
           />
           <View style={styles.divider} />
@@ -519,6 +532,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#FFFFFF"
+  },
+  avatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.full
   },
   profileInfo: {
     flex: 1,

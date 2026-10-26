@@ -12,6 +12,7 @@ export interface PrismaUser {
   name: string;
   phone: string;
   email: string | null;
+  avatarUrl?: string | null;
   role: "admin" | "customer" | string;
   isActive: boolean;
   addresses: ShippingAddress[];
@@ -75,6 +76,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         name: (session.user.user_metadata?.name as string) || emailNorm.split("@")[0] || "User",
         phone: (session.user.user_metadata?.phone as string) || "",
         email: emailNorm,
+        avatarUrl: (session.user.user_metadata?.avatar_url as string) || null,
         role: emailNorm.toLowerCase().includes("admin") ? "admin" : "customer",
         isActive: true,
         addresses: []
@@ -264,6 +266,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         name: (session.user.user_metadata?.name as string) || emailNorm.split("@")[0] || "User",
         phone: (session.user.user_metadata?.phone as string) || "",
         email: emailNorm,
+        avatarUrl: (session.user.user_metadata?.avatar_url as string) || null,
         role: emailNorm.includes("admin") ? "admin" : "customer",
         isActive: true,
         addresses: []

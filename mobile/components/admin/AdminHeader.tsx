@@ -1,11 +1,10 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
-import { BrandLogo } from "../BrandLogo";
 
 interface AdminHeaderProps {
   title: string;
@@ -34,7 +33,12 @@ export function AdminHeader({ title, subtitle, showBack = true, right }: AdminHe
             <Ionicons name="chevron-back" size={20} color={colors.brandAccent} />
           </Pressable>
         ) : null}
-        <BrandLogo size={30} />
+        <Image
+          source={require("../../assets/images/lestrades-logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityLabel="LesTrades — Quality for Less"
+        />
         <View style={styles.titles}>
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
           {subtitle ? (
@@ -59,6 +63,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10
+  },
+  logo: {
+    width: 40,
+    height: 30,
+    resizeMode: "contain"
   },
   backBtn: {
     width: 34,

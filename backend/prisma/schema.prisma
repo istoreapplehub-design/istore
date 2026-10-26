@@ -133,6 +133,7 @@ model User {
   phone            String            @unique
   email            String?           @unique
   name             String
+  avatarUrl        String?
   role             String            @default("customer") // "customer" | "admin"
   isActive         Boolean           @default(true)
   creditScore      Int               @default(650) // 300 - 850

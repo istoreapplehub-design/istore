@@ -18,7 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, radius, shadow, spacing, typography } from "../../constants/theme";
 import { useUserStore } from "../../store/useUserStore";
 import { useCartStore } from "../../store/useCartStore";
-import { supabase } from "../../lib/supabase";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -138,27 +137,13 @@ export default function LoginScreen() {
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <Text style={styles.label}>Password</Text>
                 <Pressable
-                  onPress={async () => {
+                  onPress={() => {
                     const cleanEmail = email.trim().toLowerCase();
-                    if (!cleanEmail) {
-                      Alert.alert(
-                        "Reset Password",
-                        "Enter your email address above first, then tap Forgot Password to receive a password recovery link."
-                      );
-                      return;
-                    }
-                    try {
-                      await supabase.auth.resetPasswordForEmail(cleanEmail);
-                      Alert.alert(
-                        "Recovery Email Sent",
-                        `If a LesTrades account exists for ${cleanEmail}, a password reset link has been sent to your inbox.`
-                      );
-                    } catch {
-                      Alert.alert(
-                        "Password Recovery",
-                        `Please contact support@lestrades.com.gh if you need help recovering ${cleanEmail}.`
-                      );
-                    }
+                    router.push(
+                      cleanEmail
+                        ? (`/(auth)/forgot-password?email=${encodeURIComponent(cleanEmail)}` as Href)
+                        : ("/(auth)/forgot-password" as Href)
+                    );
                   }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: "600", color: colors.brandRed }}>
@@ -294,17 +279,17 @@ const styles = StyleSheet.create({
   logoCard: {
     alignSelf: "flex-start",
     backgroundColor: "#FFFFFF",
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     borderWidth: 1.5,
     borderColor: colors.brandRedBorder,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     marginBottom: spacing.md,
     ...shadow.card
   },
   logoImage: {
-    width: 180,
-    height: 134
+    width: 116,
+    height: 86
   },
   brandSubtitle: {
     ...typography.subheadline,

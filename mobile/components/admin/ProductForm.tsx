@@ -36,7 +36,7 @@ export interface ProductFormData {
   warranty: string;
   condition: "New" | "Refurbished";
   brand: string;
-  tags: string[];
+  tags: string;
   featured: boolean;
   isActive: boolean;
   displayOrder: number;
@@ -125,7 +125,11 @@ export function ProductForm({
 
   const [warranty, setWarranty] = useState(initialData?.warranty || "1 Year Apple Official Warranty");
   const [brand] = useState(initialData?.brand || "Apple");
-  const [tagsInput, setTagsInput] = useState((initialData?.tags || ["Apple", "Premium"]).join(", "));
+  const [tagsInput, setTagsInput] = useState<string>(() => {
+    const t: unknown = initialData?.tags;
+    if (Array.isArray(t)) return t.join(", ");
+    return typeof t === "string" && t ? t : "Apple, Premium";
+  });
   const [featured, setFeatured] = useState(initialData?.featured ?? false);
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
   const [displayOrder] = useState(initialData?.displayOrder ?? 0);
@@ -228,18 +232,24 @@ export function ProductForm({
       }
     });
 
-    // Prepare tags array
-    const tagsArray = tagsInput
+    // Prepare tags as the comma-separated string the backend stores
+    const tagsValue = tagsInput
       .split(",")
       .map((t) => t.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .join(",");
 
-    // Sync first color images with main images if empty
-    const preparedColors = colorsState.map((c, i) => {
-      if (i === 0 && (!c.images || c.images.length === 0)) {
-        return { ...c, images };
-      }
-      return c;
+    // Every color variant needs a 6-digit hex and at least one image URL
+    const preparedColors = colorsState.map((c) => {
+      const hex = (c.hex || "").trim();
+      const normalizedHex = /^#[0-9A-Fa-f]{3}$/.test(hex)
+        ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`
+        : hex;
+      return {
+        ...c,
+        hex: normalizedHex,
+        images: c.images && c.images.length > 0 ? c.images : images.slice(0, 1)
+      };
     });
 
     const payload: ProductFormData = {
@@ -259,7 +269,7 @@ export function ProductForm({
       warranty: warranty.trim(),
       condition,
       brand,
-      tags: tagsArray,
+      tags: tagsValue,
       featured,
       isActive,
       displayOrder

@@ -216,7 +216,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2500);
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -493,9 +493,21 @@ export async function getMyOrders(
     );
   } catch (err) {
     if (!(err instanceof ApiError && err.kind === "network")) throw err;
+    // Offline fallback must stay owner-scoped — never return the whole Order table.
+    const owner =
+      userId ||
+      (await supabase.auth.getSession()).data.session?.user?.id ||
+      "";
+    if (!owner) {
+      return {
+        data: [],
+        meta: { page: 1, limit: 20, total: 0, totalPages: 1, hasNext: false }
+      };
+    }
     const { data: rows } = await supabase
       .from("Order")
       .select("*, items:OrderItem(*)")
+      .eq("userId", owner)
       .order("createdAt", { ascending: false })
       .limit(20);
     const orders = (rows || []).map(formatSupabaseOrder);
@@ -569,6 +581,44 @@ export async function saveAddresses(
   } catch {
     return { addresses };
   }
+}
+
+export async function updateProfile(payload: {
+  name?: string;
+  phone?: string;
+}): Promise<{ user: unknown }> {
+  return request("/api/user/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function uploadAvatar(file: {
+  uri: string;
+  name: string;
+  type: string;
+}): Promise<{ avatarUrl: string }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+
+  const formData = new FormData();
+  formData.append("file", {
+    uri: file.uri,
+    name: file.name,
+    type: file.type
+  } as any);
+
+  const res = await fetch(`${API_URL}/api/user/avatar`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(data?.message || `Avatar upload failed (${res.status})`);
+  }
+  return data;
 }
 
 export async function initializePayment(

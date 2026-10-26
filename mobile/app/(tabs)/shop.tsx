@@ -394,7 +394,7 @@ export default function ShopScreen() {
           >
             <Ionicons name="cube-outline" size={13} color={colors.text} />
             <Text style={{ fontSize: 12, color: colors.text, fontFamily: typography.fontFamily.semibold }}>
-              AR View in Space
+              3D View
             </Text>
           </Pressable>
         </ScrollView>

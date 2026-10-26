@@ -2,7 +2,7 @@ const { z } = require("zod");
 
 const colorSchema = z.object({
   name: z.string().min(1).max(50),
-  hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Hex color must be a valid 6-character hex code, e.g. #171717"),
+  hex: z.string().regex(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/, "Hex color must be a valid hex code, e.g. #171717"),
   images: z.array(z.string().url()).min(1).max(8)
 });
 
@@ -33,7 +33,7 @@ const createProductSchema = z.object({
   warranty: z.string().min(3).max(200),
   condition: z.enum(["New", "Refurbished"]),
   brand: z.string().default("Apple"),
-  tags: z.string().max(200).optional(),
+  tags: z.union([z.string().max(200), z.array(z.string().max(100)).max(8)]).optional(),
   featured: z.boolean().default(false),
   isActive: z.boolean().default(true),
   displayOrder: z.number().int().default(0)

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   Linking,
   Pressable,
   RefreshControl,
@@ -27,12 +28,12 @@ import {
 import {
   getFlashDealProducts,
   getGeniusBookings,
-  getTradeInSubmissions
+  getTradeInSubmissions,
+  getTodayEvents
 } from "../../services/adminServicesApi";
 import { StatCard } from "../../components/admin/StatCard";
 import { SalesChart } from "../../components/admin/SalesChart";
 import { SkeletonLoader } from "../../components/SkeletonLoader";
-import { BrandLogo } from "../../components/BrandLogo";
 
 function OpsTile({
   icon,
@@ -88,16 +89,18 @@ export default function AdminDashboardScreen() {
   const [flashDealCount, setFlashDealCount] = useState<number | null>(null);
   const [openBookings, setOpenBookings] = useState<number | null>(null);
   const [pendingTradeIns, setPendingTradeIns] = useState<number | null>(null);
+  const [todayEventsCount, setTodayEventsCount] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [rev, prod, pend, deals, bookings, tradeIns] = await Promise.all([
+      const [rev, prod, pend, deals, bookings, tradeIns, events] = await Promise.all([
         getRevenueStats("30d").catch(() => null),
         getAdminProductStats().catch(() => null),
         getAdminPendingCount().catch(() => null),
         getFlashDealProducts().catch(() => null),
         getGeniusBookings().catch(() => null),
-        getTradeInSubmissions().catch(() => null)
+        getTradeInSubmissions().catch(() => null),
+        getTodayEvents().catch(() => null)
       ]);
 
       if (rev) setRevenueStats(rev);
@@ -106,6 +109,7 @@ export default function AdminDashboardScreen() {
       if (deals) setFlashDealCount(deals.length);
       if (bookings) setOpenBookings(bookings.filter((b) => b.status === "confirmed" || b.status === "in_repair").length);
       if (tradeIns) setPendingTradeIns(tradeIns.filter((t) => t.status === "pending_inspection").length);
+      if (events) setTodayEventsCount(events.length);
     } catch {
       // Handled silently
     } finally {
@@ -184,7 +188,12 @@ export default function AdminDashboardScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <View style={styles.badgeRow}>
-              <BrandLogo size={36} showWordmark wordmarkSize={17} showTagline />
+              <Image
+                source={require("../../assets/images/lestrades-logo.png")}
+                style={styles.brandLogo}
+                resizeMode="contain"
+                accessibilityLabel="LesTrades — Quality for Less"
+              />
               <View style={styles.adminPill}>
                 <Ionicons name="shield-checkmark" size={11} color="#FFFFFF" style={{ marginRight: 4 }} />
                 <Text style={styles.adminPillText}>ADMIN CONSOLE</Text>
@@ -408,6 +417,8 @@ export default function AdminDashboardScreen() {
                 icon="calendar-outline"
                 label="Today at LesTrades"
                 hint="Workshops & RSVPs"
+                count={todayEventsCount}
+                countLabel="sessions"
                 onPress={() => router.push("/admin/events")}
               />
               <OpsTile
@@ -457,6 +468,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginBottom: 6
+  },
+  brandLogo: {
+    width: 44,
+    height: 33,
+    resizeMode: "contain"
   },
   adminPill: {
     flexDirection: "row",
