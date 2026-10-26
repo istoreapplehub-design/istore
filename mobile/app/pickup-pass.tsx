@@ -1,8 +1,6 @@
 import React, { useMemo } from "react";
 import {
-  Alert,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -11,18 +9,19 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { colors, radius, spacing, typography } from "../constants/theme";
+import { colors, radius, typography } from "../constants/theme";
 import { SUPPORT_WHATSAPP_URL } from "../constants/support";
 import { useUserStore } from "../store/useUserStore";
+import QRCode from "react-native-qrcode-svg";
+import Code128Svg from "../components/Code128Svg";
 
 export default function PickupPassScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isLarge = width >= 860;
   const session = useUserStore((s) => s.session);
@@ -38,6 +37,7 @@ export default function PickupPassScreen() {
   const hasExplicitOrder = Boolean(params.orderId);
   const orderId = params.orderId || "";
   const customerName = params.customerName || currentUser?.name || "Valued Customer";
+  const passCode = useMemo(() => orderId.replace(/[^\x20-\x7E]/g, ""), [orderId]);
 
   const hubInfo = useMemo(() => {
     const hubs = {
@@ -208,32 +208,23 @@ export default function PickupPassScreen() {
 
             {/* Barcode & QR Code Section */}
             <View style={styles.codeContainer}>
-              {/* Simulated Code128 Barcode Bars */}
-              <View style={styles.barcodeLines}>
-                {[...Array(38)].map((_, idx) => {
-                  const width = idx % 3 === 0 ? 3 : idx % 5 === 0 ? 4 : 1.5;
-                  const opacity = idx % 7 === 0 ? 0.35 : 1;
-                  return (
-                    <View
-                      key={idx}
-                      style={[
-                        styles.barcodeBar,
-                        { width, opacity, backgroundColor: "#FFFFFF" }
-                      ]}
-                    />
-                  );
-                })}
+              <View style={styles.codeTile}>
+                <Code128Svg value={passCode} height={58} />
+                <Text style={styles.barcodeCaption}>{passCode}</Text>
               </View>
 
-              <Text style={styles.barcodeCaption}>{orderId}</Text>
-
-              {/* QR Code Graphic */}
               <View style={styles.qrBox}>
-                <Ionicons name="qr-code" size={110} color="#FFFFFF" />
+                <QRCode
+                  value={passCode}
+                  size={132}
+                  backgroundColor="#FFFFFF"
+                  color="#000000"
+                  ecl="M"
+                />
               </View>
 
               <Text style={styles.scanInstruction}>
-                Present this barcode or QR to an Apple Store Specialist upon arrival at the Hub.
+                Present this barcode or QR to a LesTrades Specialist upon arrival at the Hub.
               </Text>
             </View>
           </View>
@@ -293,7 +284,7 @@ export default function PickupPassScreen() {
           <View style={styles.guidelineItem}>
             <Ionicons name="checkmark-circle" size={16} color="#0066CC" />
             <Text style={styles.guidelineText}>
-              A valid government ID (Ghana Card, Passport, or Driver's License)
+              A valid government ID (Ghana Card, Passport, or Driver&apos;s License)
             </Text>
           </View>
           <View style={styles.guidelineItem}>
@@ -494,30 +485,29 @@ const styles = StyleSheet.create({
   },
   codeContainer: {
     alignItems: "center",
-    paddingTop: 10
+    paddingTop: 10,
+    gap: 14
   },
-  barcodeLines: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 48,
-    gap: 2.5
-  },
-  barcodeBar: {
-    height: "100%",
-    borderRadius: 1
+  codeTile: {
+    alignSelf: "stretch",
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 6,
+    alignItems: "center"
   },
   barcodeCaption: {
     fontSize: 12,
     fontFamily: typography.fontFamily.bold,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "#1D1D1F",
     letterSpacing: 2,
     marginTop: 6,
-    marginBottom: 14
+    marginBottom: 6
   },
   qrBox: {
     padding: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: "#FFFFFF",
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center"
