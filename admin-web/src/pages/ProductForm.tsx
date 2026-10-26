@@ -332,7 +332,7 @@ export function ProductForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-fade-in pb-16">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             to="/products"
@@ -341,7 +341,7 @@ export function ProductForm() {
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900">
               {isEdit ? "Edit Product" : "New Product"}
             </h1>
             <p className="text-xs text-gray-500">
@@ -638,7 +638,7 @@ export function ProductForm() {
         </div>
 
         {/* Right Column (1/3, sticky): Media & Settings */}
-        <div className="space-y-6 sticky top-6">
+        <div className="space-y-6 lg:sticky lg:top-20">
           {/* Card: Images */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
             <h2 className="text-base font-semibold text-gray-900">Product Images</h2>

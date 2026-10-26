@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -82,22 +83,19 @@ export function Orders() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Orders</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Fulfill incoming orders, update tracking numbers, and view customer purchase history.
-          </p>
-        </div>
-
-        <button
-          onClick={handleExport}
-          className="inline-flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-full px-5 py-2.5 shadow-sm transition self-start sm:self-auto"
-        >
-          <Download className="w-4 h-4 text-white" />
-          <span>Export CSV</span>
-        </button>
-      </div>
+      <PageHeader
+        title="Orders"
+        subtitle="Fulfill incoming orders, update tracking numbers, and view customer purchase history."
+        actions={
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-full px-5 py-2.5 shadow-sm transition"
+          >
+            <Download className="w-4 h-4 text-white" />
+            <span>Export CSV</span>
+          </button>
+        }
+      />
 
       {/* Summary Row Cards */}
       {summary && (
@@ -232,7 +230,7 @@ export function Orders() {
       {/* Orders Container: Mobile Vertical Cards + Desktop Horizontal Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {/* ─── MOBILE VIEW: VERTICAL STACKED CARDS (md:hidden) ─── */}
-        <div className="md:hidden divide-y divide-gray-100">
+        <div className="lg:hidden divide-y divide-gray-100">
           {isLoading ? (
             <div className="px-6 py-12 text-center text-gray-400 text-xs">
               Loading orders registry...
@@ -315,7 +313,7 @@ export function Orders() {
         </div>
 
         {/* ─── DESKTOP VIEW: HORIZONTAL TABLE (hidden md:block) ─── */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100">
               <tr>

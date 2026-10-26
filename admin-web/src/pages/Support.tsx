@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -320,18 +321,16 @@ export function Support() {
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
       {/* Top Header & Main Navigation View Switcher */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
-            Customer Services & Store Hub
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 font-medium">
+      <PageHeader
+        title="Customer Services & Store Hub"
+        subtitle={
+          <>
             Flagship Hub: <span className="text-[#0066CC] font-bold">LESTRADES_UCC CAPE COAST</span> · Tel: 024 282 6590
-          </p>
-        </div>
-
-        {/* View Switcher Tabs */}
-        <div className="inline-flex p-1 bg-neutral-200/70 rounded-2xl border border-neutral-300/50 self-start">
+          </>
+        }
+        actions={
+        /* View Switcher Tabs */
+        <div className="inline-flex p-1 bg-neutral-200/70 rounded-2xl border border-neutral-300/50 max-w-full overflow-x-auto">
           <button
             type="button"
             onClick={() => setMainView("orders")}
@@ -394,7 +393,8 @@ export function Support() {
             )}
           </button>
         </div>
-      </div>
+        }
+      />
 
       {/* ══════════════════════════════════════════════════════════════════════
           VIEW 1: GENIUS BAR REQUESTS (Hardwares & Diagnostics)

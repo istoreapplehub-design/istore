@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
@@ -97,30 +98,27 @@ export function Admins() {
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Users</h1>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-900 rounded-full border border-neutral-200">
-              {admins.length} {admins.length === 1 ? "Admin" : "Admins"}
-            </span>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage admin users with access to store operations and inventory.
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
-            setSearchQuery("");
-            setPromoteModalOpen(true);
-          }}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-black hover:bg-neutral-800 text-white font-semibold text-sm rounded-full shadow-xs transition"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Promote User</span>
-        </button>
-      </div>
+      <PageHeader
+        title="Admin Users"
+        subtitle="Manage admin users with access to store operations and inventory."
+        badge={
+          <span className="px-2.5 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-900 rounded-full border border-neutral-200">
+            {admins.length} {admins.length === 1 ? "Admin" : "Admins"}
+          </span>
+        }
+        actions={
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setPromoteModalOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-black hover:bg-neutral-800 text-white font-semibold text-sm rounded-full shadow-xs transition"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Promote User</span>
+          </button>
+        }
+      />
 
       {/* Helper Banner when only 1 admin */}
       {isOnlyOneAdmin && !loadingAdmins && (
@@ -164,7 +162,7 @@ export function Admins() {
         ) : (
           <div>
             {/* ─── MOBILE VIEW: VERTICAL STACKED CARDS (md:hidden) ─── */}
-            <div className="md:hidden divide-y divide-gray-100">
+            <div className="lg:hidden divide-y divide-gray-100">
               {admins.map((adm) => {
                 const isSelf = adm.id === currentUser?.id;
                 const addedDate = adm.createdAt
@@ -232,7 +230,7 @@ export function Admins() {
             </div>
 
             {/* ─── DESKTOP VIEW: HORIZONTAL TABLE (hidden md:block) ─── */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left text-sm text-gray-600">
                 <thead className="bg-gray-50/80 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold">
                   <tr>

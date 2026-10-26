@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -156,12 +157,10 @@ export function Settings() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       {/* Page Title */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Store configurations, data exports, and administrative maintenance tools.
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        subtitle="Store configurations, data exports, and administrative maintenance tools."
+      />
 
       {/* 1. Section: Admin Users Quick Link */}
       <section className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

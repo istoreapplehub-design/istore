@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  ChevronLeft,
+  Bell,
+  ChevronDown,
+  CreditCard,
   Headphones,
   Home,
   LogOut,
@@ -13,9 +15,7 @@ import {
   TrendingUp,
   User,
   Users,
-  Bell,
-  X,
-  CreditCard
+  X
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
@@ -41,17 +41,37 @@ type NotificationItem = {
   emphasise: boolean;
 };
 
+const NAV_ITEMS = [
+  { label: "Home", path: "/dashboard", icon: Home },
+  { label: "Orders", path: "/orders", icon: ShoppingBag },
+  { label: "Installments", path: "/installments", icon: CreditCard },
+  { label: "Products", path: "/products", icon: Package },
+  { label: "Customers", path: "/admins", icon: Users },
+  { label: "Analytics", path: "/analytics", icon: TrendingUp },
+  { label: "Support", path: "/support", icon: Headphones }
+];
+
+const initials = (name?: string | null) => {
+  if (!name) return "AD";
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1
+    ? (parts[0][0] + parts[1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+};
+
 export function Layout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -70,6 +90,35 @@ export function Layout() {
     const id = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
     return () => clearTimeout(id);
   }, [searchQuery]);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        if (window.matchMedia("(min-width: 1024px)").matches) {
+          setSearchOpen(true);
+          desktopInputRef.current?.focus();
+        } else {
+          setSearchOpen(true);
+          mobileInputRef.current?.focus();
+        }
+      }
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+        setNotificationsOpen(false);
+        setMenuOpen(false);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const { data: pendingData } = useQuery({
     queryKey: ["pending-count"],
@@ -154,192 +203,123 @@ export function Layout() {
     }
   };
 
-  const getPageTitle = () => {
-    const path = location.pathname;
-    if (path.startsWith("/dashboard")) return "Home";
-    if (path.startsWith("/analytics")) return "Analytics";
-    if (path.startsWith("/orders")) return "Orders";
-    if (path.startsWith("/products")) return "Products";
-    if (path.startsWith("/admins")) return "Customers & Admins";
-    if (path.startsWith("/support")) return "Customer Support";
-    if (path.startsWith("/settings")) return "Settings";
-    if (path.startsWith("/profile")) return "Profile";
-    return "Home";
-  };
-
   const submitSearch = () => {
     if (!searchEnabled) return;
     setSearchOpen(false);
+    setSearchQuery("");
     navigate(`/products?q=${encodeURIComponent(debouncedQuery)}`);
   };
 
-  const navMenuItems = [
-    { label: "Home", path: "/dashboard", icon: Home },
-    { label: "Orders", path: "/orders", icon: ShoppingBag, badge: pendingOrders > 0 ? pendingOrders : null },
-    { label: "Installments", path: "/installments", icon: CreditCard },
-    { label: "Products", path: "/products", icon: Package },
-    { label: "Customers", path: "/admins", icon: Users },
-    { label: "Analytics", path: "/analytics", icon: TrendingUp },
-    { label: "Support", path: "/support", icon: Headphones }
-  ];
-
-  const initials = (name?: string | null) => {
-    if (!name) return "AD";
-    const parts = name.trim().split(/\s+/);
-    return parts.length > 1
-      ? (parts[0][0] + parts[1][0]).toUpperCase()
-      : name.slice(0, 2).toUpperCase();
+  const closeSearchPanel = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
   };
-
-  const activeClass = (path: string) =>
-    location.pathname.startsWith(path)
-      ? "bg-neutral-900 text-white shadow-xs"
-      : "text-neutral-600 hover:bg-neutral-100 hover:text-black";
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#171717] flex antialiased">
-      {mobileMenuOpen && (
+      {/* ─── SIDEBAR (fixed ≥lg, drawer <lg) ─────────────────────────────── */}
+      {menuOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={() => setMenuOpen(false)}
         />
       )}
 
-      {/* ─── SIDEBAR ───────────────────────────────────────────────────────── */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white/95 backdrop-blur-xl border-r border-neutral-200/80 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-[2px_0_16px_rgba(0,0,0,0.02)] ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 bottom-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-neutral-200 flex flex-col transition-transform duration-300 ease-in-out lg:w-64 lg:translate-x-0 ${
+          menuOpen ? "translate-x-0 visible" : "-translate-x-full invisible lg:visible"
         }`}
       >
-        <div className="flex-1 flex flex-col overflow-y-auto px-5 py-6">
-          <div className="flex items-center justify-between pb-6 border-b border-gray-100">
-            <Link to="/dashboard" className="flex items-center gap-2.5">
-              <BrandLogo size={32} showWordmark wordmarkClassName="font-extrabold text-gray-900 tracking-tight text-lg" />
-            </Link>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1.5 text-gray-400 hover:text-gray-700 rounded-lg"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="mt-6">
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">
-              Menu
-            </div>
-            <nav className="space-y-1">
-              {navMenuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  item.label === "Home"
-                    ? location.pathname === "/dashboard"
-                    : location.pathname.startsWith(item.path);
-
-                return (
-                  <NavLink
-                    key={item.label}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
-                      isActive ? "bg-neutral-900 text-white shadow-xs" : activeClass(item.path)
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400"}`} />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.badge ? (
-                      <span
-                        className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                          isActive ? "bg-white text-neutral-900" : "bg-neutral-200 text-neutral-800"
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    ) : null}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="mt-8">
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">
-              Others
-            </div>
-            <nav className="space-y-1">
-              <NavLink
-                to="/profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${activeClass("/profile")}`}
-              >
-                <User className="w-4 h-4 text-gray-400" />
-                <span>Profile</span>
-              </NavLink>
-              <NavLink
-                to="/settings"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${activeClass("/settings")}`}
-              >
-                <Settings className="w-4 h-4 text-gray-400" />
-                <span>Settings</span>
-              </NavLink>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:text-black hover:bg-neutral-100 transition"
-              >
-                <LogOut className="w-4 h-4 text-gray-400" />
-                <span>Log out</span>
-              </button>
-            </nav>
-          </div>
+        <div className="h-14 px-5 flex items-center justify-between border-b border-neutral-100 shrink-0">
+          <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="min-w-0">
+            <BrandLogo size={28} showWordmark wordmarkClassName="font-extrabold text-gray-900 tracking-tight text-base" />
+          </Link>
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="lg:hidden p-2 -mr-2 text-gray-400 hover:text-gray-700 rounded-lg"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <Link
-          to="/profile"
-          onClick={() => setMobileMenuOpen(false)}
-          className="p-4 border-t border-gray-100 bg-gray-50/60 flex items-center gap-3 min-w-0 hover:bg-gray-100/70 transition"
-        >
-          <div className="w-8 h-8 rounded-full bg-black text-white font-bold text-xs flex items-center justify-center shrink-0">
-            {initials(user?.name)}
+        <nav className="flex-1 overflow-y-auto px-3 py-4">
+          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">
+            Store
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold text-gray-900 truncate">{user?.name || "Admin"}</div>
-            <div className="text-[10px] text-gray-400 truncate">{user?.email || "No email on file"}</div>
+          <div className="space-y-0.5">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.label === "Home"
+                  ? location.pathname === "/dashboard"
+                  : location.pathname.startsWith(item.path);
+              const badge = item.label === "Orders" && pendingOrders > 0 ? pendingOrders : null;
+
+              return (
+                <NavLink
+                  key={item.label}
+                  to={item.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-neutral-900 text-white"
+                      : "text-neutral-600 hover:bg-neutral-100 hover:text-black"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? "text-white" : "text-gray-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {badge ? (
+                    <span
+                      className={`px-2 py-0.5 text-[11px] font-bold rounded-full shrink-0 ${
+                        isActive ? "bg-white text-neutral-900" : "bg-neutral-200 text-neutral-800"
+                      }`}
+                    >
+                      {badge}
+                    </span>
+                  ) : null}
+                </NavLink>
+              );
+            })}
           </div>
-        </Link>
+        </nav>
+
+        <div className="p-3 border-t border-neutral-100 shrink-0">
+          <UserMenu
+            user={user}
+            align="left"
+            onSignOut={handleSignOut}
+            triggerClassName="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-neutral-100 transition min-w-0 text-left"
+          />
+        </div>
       </aside>
 
-      {/* ─── MAIN ──────────────────────────────────────────────────────────── */}
+      {/* ─── MAIN ─────────────────────────────────────────────────────────── */}
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 bg-[#f5f5f7]/85 backdrop-blur-xl px-6 py-3.5 flex items-center justify-between gap-4 border-b border-neutral-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 rounded-xl"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-2 text-gray-800 hover:text-gray-950 font-bold text-base transition"
-              title="Back to home"
-            >
-              <BrandLogo size={24} className="lg:hidden" />
-              <ChevronLeft className="w-4 h-4 text-gray-500 hidden lg:inline" />
-              <span>{getPageTitle()}</span>
-            </Link>
-          </div>
+        <header className="sticky top-0 z-30 h-14 bg-white/90 backdrop-blur-xl border-b border-neutral-200 flex items-center gap-3 px-4 sm:px-6">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900 rounded-lg"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
-          {/* Global search */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-2" ref={searchRef}>
-            <div className="relative w-full">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Link to="/dashboard" className="lg:hidden flex items-center gap-2 min-w-0">
+            <BrandLogo size={26} />
+            <span className="text-sm font-extrabold text-gray-900 tracking-tight">Admin</span>
+          </Link>
+
+          {/* Desktop global search */}
+          <div className="hidden lg:block flex-1 max-w-md ml-4" ref={searchRef}>
+            <div className="relative">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
+                ref={desktopInputRef}
                 type="text"
-                placeholder="Search devices and orders..."
+                placeholder="Search devices and orders…"
                 value={searchQuery}
                 onFocus={() => setSearchOpen(true)}
                 onChange={(event) => {
@@ -349,86 +329,66 @@ export function Layout() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") submitSearch();
                 }}
-                className="w-full bg-white/90 border border-neutral-200 rounded-full pl-10 pr-12 py-2 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black shadow-xs transition"
+                className="w-full bg-neutral-100 border border-transparent rounded-full pl-10 pr-12 py-2 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-black/10 focus:border-neutral-300 transition"
               />
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-neutral-400 bg-neutral-100 border border-neutral-200 rounded-md absolute right-3 top-1/2 -translate-y-1/2">
+              <kbd className="hidden xl:inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold text-neutral-400 bg-white border border-neutral-200 rounded-md absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                 ⌘K
               </kbd>
 
               {searchOpen && searchEnabled ? (
-                <div className="absolute right-0 left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200/90 overflow-hidden z-50 max-h-96 overflow-y-auto">
-                  <SearchGroup title="Products">
-                    {(searchProducts?.data ?? []).map((product) => (
-                      <SearchRow
-                        key={product.id}
-                        to={`/products/${product.id}/edit`}
-                        onClick={() => setSearchOpen(false)}
-                        primary={product.name}
-                        secondary={`${product.category} · ${product.stock} in stock`}
-                      />
-                    ))}
-                    {searchProducts && searchProducts.data.length === 0 ? (
-                      <SearchEmpty />
-                    ) : null}
-                  </SearchGroup>
-
-                  <SearchGroup title="Orders">
-                    {(searchOrders?.data ?? []).map((order) => (
-                      <SearchRow
-                        key={order.id}
-                        to={`/orders/${order.id}`}
-                        onClick={() => setSearchOpen(false)}
-                        primary={`#${order.id.slice(0, 8).replace("-", "")} · ${formatGHS(order.totalGHS)}`}
-                        secondary={`${order.user?.name || "Guest"} · ${order.status}`}
-                      />
-                    ))}
-                    {searchOrders && searchOrders.data.length === 0 ? <SearchEmpty /> : null}
-                  </SearchGroup>
-
-                  <button
-                    type="button"
-                    onClick={submitSearch}
-                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-neutral-900 hover:bg-neutral-50 border-t border-gray-100"
-                  >
-                    Show all product results for “{debouncedQuery}” →
-                  </button>
+                <div className="absolute right-0 left-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50 max-h-[60vh] overflow-y-auto">
+                  <SearchResults
+                    products={searchProducts?.data ?? []}
+                    orders={searchOrders?.data ?? []}
+                    productsLoaded={!!searchProducts}
+                    ordersLoaded={!!searchOrders}
+                    query={debouncedQuery}
+                    onNavigate={() => setSearchOpen(false)}
+                    onSeeAll={submitSearch}
+                  />
                 </div>
               ) : null}
             </div>
           </div>
 
+          <div className="flex-1 lg:hidden" />
+
           {/* Right cluster */}
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/85 backdrop-blur-md border border-neutral-200/80 text-xs font-semibold text-neutral-700 shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Store · Worldwide</span>
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto lg:ml-0">
+            <button
+              type="button"
+              onClick={() => setSearchOpen((open) => !open)}
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-neutral-100 hover:text-black transition"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
 
             <div className="relative" ref={notificationRef}>
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((open) => !open)}
-                title="Notifications"
-                className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-50 shadow-xs transition cursor-pointer"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:bg-neutral-100 hover:text-black transition"
+                aria-label="Notifications"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-5 h-5" />
               </button>
               {notifications.length > 0 ? (
-                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-black text-white rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-[#f5f5f7]">
+                <span className="absolute top-1 right-1 min-w-4 h-4 px-1 bg-neutral-900 text-white rounded-full text-[10px] font-bold flex items-center justify-center border-2 border-white">
                   {notifications.length > 9 ? "9+" : notifications.length}
                 </span>
               ) : null}
 
               {notificationsOpen ? (
-                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-200/90 overflow-hidden z-50">
-                  <div className="px-4 py-3 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                <div className="fixed left-3 right-3 top-16 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50 flex flex-col max-h-[70vh] lg:absolute lg:left-auto lg:right-0 lg:top-12 lg:w-96 lg:max-h-[28rem]">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between shrink-0">
                     <span className="font-bold text-xs text-gray-900 uppercase tracking-wider">
                       Store activity
                     </span>
                     <button
                       type="button"
                       onClick={() => setNotificationsOpen(false)}
-                      className="text-[11px] font-semibold text-gray-500 hover:text-black"
+                      className="text-[11px] font-semibold text-gray-500 hover:text-black p-1 -m-1"
                     >
                       Close
                     </button>
@@ -442,7 +402,7 @@ export function Layout() {
                       </div>
                     </div>
                   ) : (
-                    <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                    <div className="divide-y divide-gray-100 overflow-y-auto">
                       {notifications.map((item) => (
                         <Link
                           key={item.key}
@@ -456,9 +416,7 @@ export function Layout() {
                             }`}
                           />
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-gray-900 truncate">
-                              {item.title}
-                            </div>
+                            <div className="text-xs font-bold text-gray-900 truncate">{item.title}</div>
                             <div className="text-[11px] text-gray-500 mt-0.5">{item.detail}</div>
                             <div className="text-[10px] text-gray-400 mt-1">{item.meta}</div>
                           </div>
@@ -467,7 +425,7 @@ export function Layout() {
                     </div>
                   )}
 
-                  <div className="p-2.5 bg-gray-50 border-t border-gray-100 text-center">
+                  <div className="p-2.5 bg-gray-50 border-t border-gray-100 text-center shrink-0">
                     <Link
                       to="/orders"
                       onClick={() => setNotificationsOpen(false)}
@@ -480,41 +438,222 @@ export function Layout() {
               ) : null}
             </div>
 
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 pl-2 sm:border-l border-gray-200 hover:opacity-80 transition"
-              title="Your profile"
-            >
-              <div className="w-9 h-9 rounded-full bg-neutral-900 text-white font-bold text-xs flex items-center justify-center ring-2 ring-white shadow-xs">
-                {initials(user?.name)}
-              </div>
-              <div className="hidden sm:block text-left">
-                <div className="text-xs font-bold text-gray-900 leading-tight">
-                  {user?.name || "Administrator"}
-                </div>
-                <div className="text-[11px] text-gray-400 font-medium leading-tight capitalize">
-                  {user?.role || "staff"}
-                </div>
-              </div>
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleSignOut}
-              title="Log out of Admin Portal"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:text-black hover:bg-neutral-100 rounded-full transition cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Log out</span>
-            </button>
+            <div className="hidden sm:block">
+              <UserMenu
+                user={user}
+                align="right"
+                onSignOut={handleSignOut}
+                triggerClassName="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-neutral-100 transition"
+              />
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 p-5 sm:p-7 max-w-7xl w-full mx-auto">
+        {/* Mobile / tablet search panel */}
+        {searchOpen ? (
+          <div className="lg:hidden sticky top-14 z-30 bg-white border-b border-neutral-200 px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={mobileInputRef}
+                  type="text"
+                  autoFocus
+                  placeholder="Search devices and orders…"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") submitSearch();
+                  }}
+                  className="w-full bg-neutral-100 border border-transparent rounded-full pl-10 pr-4 py-2.5 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-black/10 focus:border-neutral-300 transition"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={closeSearchPanel}
+                className="p-2.5 text-gray-500 hover:text-black rounded-lg"
+                aria-label="Close search"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {searchEnabled ? (
+              <div className="mt-2 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden max-h-[50vh] overflow-y-auto">
+                <SearchResults
+                  products={searchProducts?.data ?? []}
+                  orders={searchOrders?.data ?? []}
+                  productsLoaded={!!searchProducts}
+                  ordersLoaded={!!searchOrders}
+                  query={debouncedQuery}
+                  onNavigate={closeSearchPanel}
+                  onSeeAll={submitSearch}
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
       </div>
     </div>
+  );
+}
+
+/* ─── USER MENU (avatar → profile / settings / sign out) ─────────────────── */
+
+function UserMenu({
+  user,
+  align,
+  onSignOut,
+  triggerClassName
+}: {
+  user: { name?: string | null; email?: string | null; role?: string | null } | null | undefined;
+  align: "left" | "right";
+  onSignOut: () => void;
+  triggerClassName: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const menuItems = [
+    { label: "Profile", to: "/profile", icon: User },
+    { label: "Settings", to: "/settings", icon: Settings }
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)} className={triggerClassName}>
+        <span className="w-8 h-8 rounded-full bg-neutral-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+          {initials(user?.name)}
+        </span>
+        <span className="flex-1 min-w-0 text-left hidden sm:block">
+          <span className="block text-xs font-bold text-gray-900 truncate">
+            {user?.name || "Admin"}
+          </span>
+          <span className="block text-[10px] text-gray-400 truncate capitalize">
+            {user?.role || "staff"}
+          </span>
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-gray-400 shrink-0 hidden sm:block transition-transform ${
+            open ? "rotate-180" : ""
+          } ${align === "right" ? "" : "ml-auto"}`}
+        />
+      </button>
+
+      {open ? (
+        <div
+          className={`absolute mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50 ${
+            align === "right" ? "right-0" : "left-0 bottom-full mb-2 mt-0"
+          }`}
+        >
+          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="text-xs font-bold text-gray-900 truncate">{user?.name || "Administrator"}</div>
+            <div className="text-[11px] text-gray-500 truncate">{user?.email || "No email on file"}</div>
+          </div>
+          <div className="py-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname.startsWith(item.to);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-2.5 text-sm font-semibold transition ${
+                    isActive ? "bg-neutral-100 text-black" : "text-neutral-700 hover:bg-neutral-50"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 text-gray-400" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onSignOut();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:bg-red-50 hover:text-red-600 transition border-t border-gray-100"
+          >
+            <LogOut className="w-4 h-4 text-gray-400" />
+            Log out
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ─── SEARCH RESULTS (shared desktop dropdown / mobile panel) ────────────── */
+
+function SearchResults({
+  products,
+  orders,
+  productsLoaded,
+  ordersLoaded,
+  query,
+  onNavigate,
+  onSeeAll
+}: {
+  products: Array<{ id: string; name: string; category: string; stock: number }>;
+  orders: Array<{ id: string; totalGHS: number; status: string; user?: { name?: string | null } | null }>;
+  productsLoaded: boolean;
+  ordersLoaded: boolean;
+  query: string;
+  onNavigate: () => void;
+  onSeeAll: () => void;
+}) {
+  return (
+    <>
+      <SearchGroup title="Products">
+        {products.map((product) => (
+          <SearchRow
+            key={product.id}
+            to={`/products/${product.id}/edit`}
+            onClick={onNavigate}
+            primary={product.name}
+            secondary={`${product.category} · ${product.stock} in stock`}
+          />
+        ))}
+        {productsLoaded && products.length === 0 ? <SearchEmpty /> : null}
+      </SearchGroup>
+
+      <SearchGroup title="Orders">
+        {orders.map((order) => (
+          <SearchRow
+            key={order.id}
+            to={`/orders/${order.id}`}
+            onClick={onNavigate}
+            primary={`#${order.id.slice(0, 8).replace("-", "")}`}
+            secondary={`${order.user?.name || "Guest"} · ${order.status}`}
+          />
+        ))}
+        {ordersLoaded && orders.length === 0 ? <SearchEmpty /> : null}
+      </SearchGroup>
+
+      <button
+        type="button"
+        onClick={onSeeAll}
+        className="w-full text-left px-4 py-2.5 text-xs font-bold text-neutral-900 hover:bg-neutral-50 border-t border-gray-100"
+      >
+        Show all product results for “{query}” →
+      </button>
+    </>
   );
 }
 
@@ -543,11 +682,7 @@ function SearchRow({
   onClick: () => void;
 }) {
   return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className="block px-4 py-2 hover:bg-neutral-50 transition"
-    >
+    <Link to={to} onClick={onClick} className="block px-4 py-2 hover:bg-neutral-50 transition">
       <div className="text-xs font-bold text-gray-900 truncate">{primary}</div>
       <div className="text-[11px] text-gray-500 truncate">{secondary}</div>
     </Link>

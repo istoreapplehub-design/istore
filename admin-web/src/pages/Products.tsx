@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -89,22 +90,19 @@ export function Products() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Products</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your hardware inventory, pricing, stock levels, and store visibility.
-          </p>
-        </div>
-
-        <Link
-          to="/products/new"
-          className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white font-semibold rounded-full px-5 py-2.5 shadow-xs transition self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Product</span>
-        </Link>
-      </div>
+      <PageHeader
+        title="Products"
+        subtitle="Manage your hardware inventory, pricing, stock levels, and store visibility."
+        actions={
+          <Link
+            to="/products/new"
+            className="inline-flex items-center gap-2 bg-black hover:bg-neutral-800 text-white font-semibold rounded-full px-5 py-2.5 shadow-xs transition"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Product</span>
+          </Link>
+        }
+      />
 
       {/* Filters Bar */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-center gap-4">
@@ -162,7 +160,7 @@ export function Products() {
       {/* Products Container: Mobile Vertical Cards + Desktop Horizontal Table */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {/* ─── MOBILE VIEW: VERTICAL STACKED CARDS (md:hidden) ─── */}
-        <div className="md:hidden divide-y divide-gray-100">
+        <div className="lg:hidden divide-y divide-gray-100">
           {isLoading ? (
             <div className="px-6 py-12 text-center text-gray-400 text-xs">
               Loading products catalog...
@@ -286,7 +284,7 @@ export function Products() {
         </div>
 
         {/* ─── DESKTOP VIEW: HORIZONTAL TABLE (hidden md:block) ─── */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wider text-gray-500 border-b border-gray-100">
               <tr>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { useQuery } from "@tanstack/react-query";
 import {
   DollarSign,
@@ -154,35 +155,30 @@ export function Analytics() {
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
       {/* ─── HEADER & PERIOD SELECTOR ─────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
-            Store Analytics
-          </h1>
-          <p className="mt-1 text-sm text-gray-500 font-medium">
-            Computed from settled orders (paid, shipped, delivered) in the database.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1.5 p-1 bg-white border border-[#ebebe9] rounded-full shadow-xs self-start sm:self-auto">
-          {PERIODS.map((p) => {
-            const isSelected = period === p.value;
-            return (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition ${
-                  isSelected
-                    ? "bg-neutral-900 text-white shadow-xs"
-                    : "text-gray-600 hover:text-black hover:bg-gray-100"
-                }`}
-              >
-                {p.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <PageHeader
+        title="Store Analytics"
+        subtitle="Computed from settled orders (paid, shipped, delivered) in the database."
+        actions={
+          <div className="flex items-center gap-1.5 p-1 bg-white border border-[#ebebe9] rounded-full shadow-xs overflow-x-auto max-w-full">
+            {PERIODS.map((p) => {
+              const isSelected = period === p.value;
+              return (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriod(p.value)}
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-full transition whitespace-nowrap ${
+                    isSelected
+                      ? "bg-neutral-900 text-white shadow-xs"
+                      : "text-gray-600 hover:text-black hover:bg-gray-100"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        }
+      />
 
       {loadingRev ? (
         <div className="bg-white rounded-2xl border border-[#ebebe9] shadow-xs py-20 text-center text-xs font-semibold text-gray-400 animate-pulse">

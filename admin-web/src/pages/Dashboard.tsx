@@ -56,15 +56,17 @@ function Panel({
   title,
   subtitle,
   action,
+  className = "",
   children
 }: {
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white/85 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-neutral-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] transition-all duration-300 flex flex-col">
+    <div className={`bg-white/85 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-neutral-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] transition-all duration-300 flex flex-col ${className}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-extrabold text-neutral-900 text-sm tracking-tight">{title}</h3>
@@ -188,7 +190,7 @@ export function Dashboard() {
       {/* ─── GREETING + PERIOD ─────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#171717] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#171717] tracking-tight">
             Welcome back, {user?.name?.split(" ")[0] || "Admin"}
           </h1>
           <p className="mt-1 text-sm text-gray-500 font-medium">{todayLabel}</p>
@@ -213,15 +215,15 @@ export function Dashboard() {
       </div>
 
       {revError ? (
-        <div className="bg-white rounded-2xl border border-[#ebebe9] shadow-xs px-5 py-4 flex items-center justify-between gap-4">
-          <div className="text-sm text-gray-700">
+        <div className="bg-white rounded-2xl border border-[#ebebe9] shadow-xs px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm text-gray-700 min-w-0">
             <span className="font-semibold text-gray-900">Store API unreachable. </span>
             {revErr instanceof Error ? revErr.message : "Numbers below are unavailable."}
           </div>
           <button
             type="button"
             onClick={retryAll}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-900 border border-neutral-200 rounded-full hover:bg-neutral-100 transition shrink-0"
+            className="inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1.5 text-xs font-semibold text-neutral-900 border border-neutral-200 rounded-full hover:bg-neutral-100 transition shrink-0"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Retry
           </button>
@@ -264,7 +266,7 @@ export function Dashboard() {
 
       {/* ─── SALES TREND + TOP PRODUCTS ────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs">
+        <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-[#ebebe9] shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -317,6 +319,7 @@ export function Dashboard() {
         </div>
 
         <Panel
+          className="lg:col-span-5"
           title="Top sellers"
           subtitle={rev ? `${topProducts.length} products with settled revenue` : "Loading…"}
           action={

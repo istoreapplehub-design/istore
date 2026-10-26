@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { KeyRound, LogOut, ShieldCheck, User as UserIcon } from "lucide-react";
@@ -85,12 +86,10 @@ export function Profile() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Profile</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Your account details and admin portal security.
-        </p>
-      </div>
+      <PageHeader
+        title="Profile"
+        subtitle="Your account details and admin portal security."
+      />
 
       {/* Identity */}
       <section className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">

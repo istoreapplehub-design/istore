@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
@@ -83,22 +84,20 @@ export function Installments() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        title="Installment Plans"
+        subtitle="Monitor 60% down payments, verify NIA Ghana Card identities, and track weekly/monthly repayments."
+        badge={
+          <>
             <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
               NIA GHANA CARD VERIFIED
             </span>
             <span className="bg-blue-100 text-blue-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
               60% DOWN PAYMENT
             </span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 mt-1">Installment Plans</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Monitor 60% down payments, verify NIA Ghana Card identities, and track weekly/monthly repayments.
-          </p>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Metrics Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -196,7 +195,7 @@ export function Installments() {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-[#fafafc] border-b border-gray-100 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                   <tr>
@@ -294,7 +293,7 @@ export function Installments() {
             </div>
 
             {/* Mobile Cards View */}
-            <div className="md:hidden divide-y divide-gray-100">
+            <div className="lg:hidden divide-y divide-gray-100">
               {plans.map((plan: any) => (
                 <div key={plan.id} className="p-4 space-y-3">
                   <div className="flex items-start justify-between">
