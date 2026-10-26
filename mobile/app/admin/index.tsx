@@ -133,7 +133,7 @@ export default function AdminDashboardScreen() {
                 <Ionicons name="shield-checkmark" size={11} color="#FFFFFF" style={{ marginRight: 4 }} />
                 <Text style={styles.adminPillText}>ADMIN CONSOLE</Text>
               </View>
-              <Text style={styles.storeName}>I-Dynamic</Text>
+              <Text style={styles.storeName}>LesTrades</Text>
             </View>
             <Text style={styles.title}>Overview</Text>
             <Text style={styles.subtitle}>

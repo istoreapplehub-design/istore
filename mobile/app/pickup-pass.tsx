@@ -18,12 +18,16 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import { SUPPORT_WHATSAPP_URL } from "../constants/support";
+import { useUserStore } from "../store/useUserStore";
 
 export default function PickupPassScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isLarge = width >= 860;
+  const session = useUserStore((s) => s.session);
+  const currentUser = useUserStore((s) => s.user);
+
   const params = useLocalSearchParams<{
     orderId?: string;
     customerName?: string;
@@ -31,57 +35,23 @@ export default function PickupPassScreen() {
     items?: string;
   }>();
 
-  const orderId = params.orderId || `ORD-GH-${Math.floor(100000 + Math.random() * 900000)}`;
-  const customerName = params.customerName || "Valued Customer";
+  const hasExplicitOrder = Boolean(params.orderId);
+  const orderId = params.orderId || "";
+  const customerName = params.customerName || currentUser?.name || "Valued Customer";
 
   const hubInfo = useMemo(() => {
     const hubs = {
-      "ucc-cape-coast": {
-        name: "LesTrades Flagship — UCC Cape Coast",
+      "lestrades-ucc-cape-coast": {
+        name: "LESTRADES_UCC CAPE COAST",
         address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
         landmark: "Directly opposite UCC Central Library / Main Gate",
         gpsCode: "CC-041-9201",
         phone: "024 282 6590",
         hours: "Mon–Sat: 8:30 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM"
-      },
-      "flagship-ucc-cape-coast": {
-        name: "LesTrades Flagship — UCC Cape Coast",
-        address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-        landmark: "Directly opposite UCC Central Library / Main Gate",
-        gpsCode: "CC-041-9201",
-        phone: "024 282 6590",
-        hours: "Mon–Sat: 8:30 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM"
-      },
-      "accra-mall": {
-        name: "LesTrades Studio — Accra Mall",
-        address: "Tetteh Quarshie Interchange, Shop G12, Accra",
-        landmark: "Ground Floor near Food Court Entrance",
-        gpsCode: "GA-183-4921",
-        phone: "024 282 6590",
-        hours: "Mon–Sat: 9:00 AM – 9:00 PM · Sun: 11:00 AM – 7:00 PM"
-      },
-      "east-legon": {
-        name: "LesTrades Tech Flagship — East Legon",
-        address: "Boundary Road, Opp. A&C Mall, East Legon, Accra",
-        landmark: "Opposite A&C Corner",
-        gpsCode: "GA-492-1082",
-        phone: "024 282 6590",
-        hours: "Mon–Sat: 8:30 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM"
-      },
-      "kumasi": {
-        name: "LesTrades Experience — Kumasi City Mall",
-        address: "Asokwa, Kumasi City Mall, Shop 24, Kumasi",
-        landmark: "Level 1, Entrance 2",
-        gpsCode: "AK-039-8120",
-        phone: "024 282 6590",
-        hours: "Mon–Sat: 9:00 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM"
       }
     };
-    return (
-      hubs[(params.hubId as keyof typeof hubs) || "ucc-cape-coast"] ||
-      hubs["ucc-cape-coast"]
-    );
-  }, [params.hubId]);
+    return hubs["lestrades-ucc-cape-coast"];
+  }, []);
 
   const handleShare = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -131,14 +101,69 @@ export default function PickupPassScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Status Pill */}
-        <View style={styles.statusBadge}>
-          <Ionicons name="bag-check" size={16} color="#34C759" />
-          <Text style={styles.statusBadgeText}>READY FOR CONTACTLESS STORE PICKUP</Text>
-        </View>
+        {/* Gate 1: User Not Logged In */}
+        {!session && (
+          <Animated.View entering={FadeInDown.duration(350)} style={styles.gateCard}>
+            <View style={styles.gateIconWrap}>
+              <Ionicons name="lock-closed" size={36} color="#0066CC" />
+            </View>
+            <Text style={styles.gateTitle}>Sign In to Access Your Pickup Pass</Text>
+            <Text style={styles.gateSubtitle}>
+              Your digital Apple Wallet-style pickup pass is automatically linked to your verified LesTrades account and active store orders.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [styles.gatePrimaryBtn, pressed && { opacity: 0.85 }]}
+              onPress={() => router.push("/(auth)/login?returnTo=pickup-pass" as any)}
+            >
+              <Ionicons name="log-in-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.gatePrimaryBtnText}>Sign In to LesTrades</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.gateSecondaryBtn, pressed && { opacity: 0.85 }]}
+              onPress={() => router.push("/(auth)/register?returnTo=pickup-pass" as any)}
+            >
+              <Text style={styles.gateSecondaryBtnText}>Create Account</Text>
+            </Pressable>
+          </Animated.View>
+        )}
 
-        {/* Apple Wallet Style Ticket Pass */}
-        <Animated.View entering={FadeInDown.duration(350)} style={styles.walletTicket}>
+        {/* Gate 2: User Logged In But No Order Ready */}
+        {session && !hasExplicitOrder && (
+          <Animated.View entering={FadeInDown.duration(350)} style={styles.gateCard}>
+            <View style={[styles.gateIconWrap, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
+              <Ionicons name="bag-check-outline" size={38} color="#0066CC" />
+            </View>
+            <Text style={styles.gateTitle}>No Orders Ready for Pickup</Text>
+            <Text style={styles.gateSubtitle}>
+              You do not have any orders awaiting pickup at LESTRADES_UCC CAPE COAST right now. When you choose Store Pickup at checkout, your barcode pass will appear here automatically.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [styles.gatePrimaryBtn, pressed && { opacity: 0.85 }]}
+              onPress={() => router.push("/(tabs)/shop" as any)}
+            >
+              <Ionicons name="cart-outline" size={18} color="#FFFFFF" />
+              <Text style={styles.gatePrimaryBtnText}>Shop Apple Catalog</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.gateSecondaryBtn, pressed && { opacity: 0.85 }]}
+              onPress={() => router.push("/account" as any)}
+            >
+              <Text style={styles.gateSecondaryBtnText}>View My Account & Orders</Text>
+            </Pressable>
+          </Animated.View>
+        )}
+
+        {/* Active Ticket Pass: Only when logged in with order */}
+        {session && hasExplicitOrder && (
+          <>
+            {/* Status Pill */}
+            <View style={styles.statusBadge}>
+              <Ionicons name="bag-check" size={16} color="#34C759" />
+              <Text style={styles.statusBadgeText}>READY FOR CONTACTLESS STORE PICKUP</Text>
+            </View>
+
+            {/* Apple Wallet Style Ticket Pass */}
+            <Animated.View entering={FadeInDown.duration(350)} style={styles.walletTicket}>
           {/* Top Notch Brand Header */}
           <View style={styles.ticketTopBar}>
             <View style={styles.logoRow}>
@@ -284,7 +309,9 @@ export default function PickupPassScreen() {
             </Text>
           </View>
         </View>
-      </ScrollView>
+      </>
+    )}
+  </ScrollView>
     </SafeAreaView>
   );
 }
@@ -598,5 +625,68 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     flex: 1,
     lineHeight: 17
+  },
+  gateCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: 28,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    textAlign: "center"
+  },
+  gateIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(0, 102, 204, 0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16
+  },
+  gateTitle: {
+    fontSize: 18,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.text,
+    textAlign: "center",
+    marginBottom: 8
+  },
+  gateSubtitle: {
+    fontSize: 13.5,
+    color: colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+    paddingHorizontal: 8
+  },
+  gatePrimaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    width: "100%",
+    height: 48,
+    backgroundColor: "#0066CC",
+    borderRadius: radius.md,
+    marginBottom: 10
+  },
+  gatePrimaryBtnText: {
+    fontSize: 15,
+    fontFamily: typography.fontFamily.semibold,
+    color: "#FFFFFF"
+  },
+  gateSecondaryBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: 44,
+    backgroundColor: "transparent",
+    borderRadius: radius.md
+  },
+  gateSecondaryBtnText: {
+    fontSize: 14,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textSecondary
   }
 });

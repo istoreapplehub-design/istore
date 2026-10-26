@@ -29,6 +29,7 @@ import { colors, formatGHS, radius, spacing, typography } from "../../constants/
 import PriceTag from "../../components/PriceTag";
 import { ProductVisual, getStoredImage } from "../../components/ProductVisual";
 import { CATALOG_2026 } from "../../constants/catalog2026";
+import { SUPPORT_PHONE_TEL, SUPPORT_WHATSAPP_URL } from "../../constants/support";
 import { Product } from "../../types";
 
 export default function BagScreen() {
@@ -158,20 +159,20 @@ export default function BagScreen() {
   const handleHelpPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert(
-      "I-Dynamic Specialist Support",
+      "LesTrades Specialist Support",
       "Need advice choosing finishes, configurations, or checking delivery times?",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "WhatsApp Specialist",
           onPress: () => {
-            Linking.openURL("https://wa.me/233240000000?text=Hello%20I-Dynamic,%20I%20need%20help%20with%20my%20order");
+            Linking.openURL(SUPPORT_WHATSAPP_URL);
           }
         },
         {
-          text: "Call Store",
+          text: "Call Store (024 282 6590)",
           onPress: () => {
-            Linking.openURL("tel:+233240000000");
+            Linking.openURL(SUPPORT_PHONE_TEL);
           }
         }
       ]
@@ -189,7 +190,7 @@ export default function BagScreen() {
       <View style={styles.header}>
         <View style={styles.headerInner}>
           <View style={styles.headerTitleCol}>
-            <Text style={styles.headerEyebrow}>I-DYNAMIC STORE</Text>
+            <Text style={styles.headerEyebrow}>LESTRADES_UCC CAPE COAST</Text>
             <Text style={styles.headerTitle}>Review your Bag.</Text>
             <Text style={styles.headerSubtitle}>
               {totalItemCount === 0

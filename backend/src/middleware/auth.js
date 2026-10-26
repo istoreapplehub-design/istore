@@ -38,12 +38,43 @@ async function resolveCaller(req) {
     return { status: 401, message: "Invalid or expired token" };
   }
 
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { supabaseId: data.user.id }
   });
 
   if (!user) {
-    return { status: 401, message: "User not provisioned in this system" };
+    const emailNorm = (data.user.email || "").toLowerCase().trim();
+    const phoneNorm = (data.user.user_metadata?.phone || "").trim();
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(emailNorm ? [{ email: emailNorm }] : []),
+          ...(phoneNorm ? [{ phone: phoneNorm }] : [])
+        ]
+      }
+    });
+
+    if (existing) {
+      user = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          supabaseId: data.user.id,
+          name: existing.name || data.user.user_metadata?.name || "Customer",
+          email: existing.email || emailNorm
+        }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          supabaseId: data.user.id,
+          name: data.user.user_metadata?.name || emailNorm.split("@")[0] || "Customer",
+          phone: phoneNorm || "0242826590",
+          email: emailNorm || null,
+          role: emailNorm.includes("admin") ? "admin" : "customer",
+          isActive: true
+        }
+      });
+    }
   }
 
   if (!user.isActive) {

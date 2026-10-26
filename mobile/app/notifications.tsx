@@ -216,7 +216,7 @@ export default function NotificationsScreen() {
         ListHeaderComponent={
           <View style={styles.pageHeader}>
             <Text style={typography.bodySmall}>
-              Updates from your I-Dynamic orders.
+              Updates from your LesTrades orders.
             </Text>
           </View>
         }

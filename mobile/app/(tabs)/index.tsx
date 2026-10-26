@@ -5,6 +5,7 @@ import {
   Linking,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -400,7 +401,11 @@ export default function HomeScreen() {
             subtitle="Personal guidance, model comparison & official protection"
           />
 
-          <View style={styles.assistanceGrid}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.assistanceScroll}
+          >
             <Pressable
               style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
               onPress={() => {
@@ -413,7 +418,7 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.assistCardTitle}>Genius Bar Support</Text>
               <Text style={styles.assistCardSub}>
-                Certified hardware diagnostics, battery & screen repair at Accra & Kumasi Hubs.
+                Certified hardware diagnostics, battery & screen repair at LESTRADES_UCC CAPE COAST.
               </Text>
               <View style={styles.assistLinkRow}>
                 <Text style={styles.assistLinkText}>Book Appointment</Text>
@@ -431,7 +436,7 @@ export default function HomeScreen() {
               <View style={[styles.assistIcon, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
                 <Ionicons name="color-palette-outline" size={20} color="#0066CC" />
               </View>
-              <Text style={styles.assistCardTitle}>Today at Apple</Text>
+              <Text style={styles.assistCardTitle}>Today at LesTrades</Text>
               <Text style={styles.assistCardSub}>
                 Free creative photo walks, Swift coding labs & digital art sessions in Ghana.
               </Text>
@@ -513,14 +518,14 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.assistCardTitle}>Digital Pickup Pass</Text>
               <Text style={styles.assistCardSub}>
-                Apple Wallet-style pass with barcode for fast check-in at Accra Mall & Kumasi.
+                Apple Wallet-style pass with barcode for fast check-in at LESTRADES_UCC CAPE COAST.
               </Text>
               <View style={styles.assistLinkRow}>
                 <Text style={styles.assistLinkText}>View Store Pass</Text>
                 <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
               </View>
             </Pressable>
-          </View>
+          </ScrollView>
         </Animated.View>
 
         {/* The LesTrades Standard */}
@@ -742,19 +747,25 @@ const styles = StyleSheet.create({
   assistanceWrap: {
     marginTop: 4
   },
-  assistanceGrid: {
-    flexDirection: "row",
+  assistanceScroll: {
     paddingHorizontal: 16,
-    gap: 12
+    gap: 14,
+    paddingBottom: 6
   },
   assistCard: {
-    flex: 1,
+    width: 250,
+    minHeight: 180,
     backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: 22,
+    padding: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2
   },
   assistIcon: {
     width: 38,

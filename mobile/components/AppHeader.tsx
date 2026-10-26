@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,6 +7,8 @@ import { colors } from "../constants/theme";
 import { Badge } from "./Badge";
 import { BrandLogo } from "./BrandLogo";
 import { useCartStore } from "../store/useCartStore";
+
+const LOGO_ASSET = require("../assets/images/lestrades-logo.png");
 import { useWishlistStore } from "../store/useWishlistStore";
 import { AppHaptics } from "../lib/haptics";
 
@@ -55,10 +57,16 @@ export function AppHeader({
           onPress={() => press(() => router.push("/(tabs)"))}
           style={styles.brand}
         >
-          <BrandLogo size={36} variant="dark" />
+          <View style={styles.logoBadge}>
+            <Image
+              source={LOGO_ASSET}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
           <View style={styles.brandTextCol}>
             <Text style={styles.wordmark}>LesTrades</Text>
-            <Text style={styles.eyebrow}>PREMIUM TECH</Text>
+            <Text style={styles.eyebrow}>QUALITY FOR LESS</Text>
           </View>
         </Pressable>
 
@@ -157,18 +165,35 @@ const styles = StyleSheet.create({
   brandTextCol: {
     justifyContent: "center"
   },
+  logoBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 102, 204, 0.25)",
+    overflow: "hidden"
+  },
+  logoImage: {
+    width: 30,
+    height: 30
+  },
   wordmark: {
     fontSize: 19,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: -0.5,
-    color: colors.text
+    color: "#0066CC",
+    fontStyle: "italic"
   },
   eyebrow: {
-    fontSize: 8.5,
-    fontWeight: "600",
+    fontSize: 8,
+    fontWeight: "800",
     letterSpacing: 1.2,
-    color: colors.textSecondary,
-    marginTop: 1
+    color: "#0066CC",
+    marginTop: 1,
+    fontStyle: "italic"
   },
   actions: {
     flexDirection: "row",

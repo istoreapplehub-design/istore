@@ -348,7 +348,7 @@ export default function ShopScreen() {
           >
             <Ionicons name="color-palette-outline" size={13} color="#0066CC" />
             <Text style={{ fontSize: 12, color: "#0066CC", fontFamily: typography.fontFamily.semibold }}>
-              Today at Apple
+              Today at LesTrades
             </Text>
           </Pressable>
 

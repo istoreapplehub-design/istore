@@ -36,7 +36,6 @@ export function FlashDealCard({ product, variant = "card", style }: FlashDealCar
   const saved = amountSaved(product);
   const image = getProductImage(product);
   const lowStock = product.stock <= 5;
-  const stockRatio = Math.min(1, Math.max(0.08, product.stock / 20));
 
   return (
     <AnimatedPressable
@@ -68,7 +67,7 @@ export function FlashDealCard({ product, variant = "card", style }: FlashDealCar
         {lowStock && (
           <View style={styles.scarcePill}>
             <Text style={styles.scarcePillText}>
-              Only {product.stock} left
+              Limited Stock
             </Text>
           </View>
         )}
@@ -87,10 +86,9 @@ export function FlashDealCard({ product, variant = "card", style }: FlashDealCar
 
         <Text style={styles.saved}>You save {formatGHS(saved)}</Text>
 
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${stockRatio * 100}%` }]} />
-        </View>
-        <Text style={styles.stockCaption}>{product.stock} in stock</Text>
+        <Text style={styles.stockCaption}>
+          {product.stock > 0 ? "In Stock · Ready for Delivery" : "Out of Stock"}
+        </Text>
       </View>
     </AnimatedPressable>
   );

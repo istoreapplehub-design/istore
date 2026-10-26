@@ -276,14 +276,14 @@ export default function CompareModelsScreen() {
               <Text style={styles.specValText}>
                 {leftProduct
                   ? leftProduct.stock > 0
-                    ? `In Stock (${leftProduct.stock})`
+                    ? "In Stock"
                     : "Out of Stock"
                   : "—"}
               </Text>
               <Text style={styles.specValText}>
                 {rightProduct
                   ? rightProduct.stock > 0
-                    ? `In Stock (${rightProduct.stock})`
+                    ? "In Stock"
                     : "Out of Stock"
                   : "—"}
               </Text>

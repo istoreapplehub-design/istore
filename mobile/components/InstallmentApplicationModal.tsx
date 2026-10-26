@@ -218,7 +218,7 @@ export function InstallmentApplicationModal({
               <View style={styles.badge60}>
                 <Text style={styles.badge60Text}>60% DOWN</Text>
               </View>
-              <Text style={styles.headerTitle}>I-Dynamic Installments</Text>
+              <Text style={styles.headerTitle}>LesTrades Installments</Text>
             </View>
             <Pressable hitSlop={10} onPress={onClose} style={styles.closeBtn}>
               <Ionicons name="close" size={20} color={colors.text} />
@@ -575,7 +575,7 @@ export function InstallmentApplicationModal({
                 <View style={styles.consentBox}>
                   <Ionicons name="lock-closed" size={14} color="#059669" />
                   <Text style={styles.consentText}>
-                    By proceeding, you authorize I-Dynamic to debit the remaining 40% balance ({frequency}) using your verified payment method.
+                    By proceeding, you authorize LesTrades to debit the remaining 40% balance ({frequency}) using your verified payment method.
                   </Text>
                 </View>
 

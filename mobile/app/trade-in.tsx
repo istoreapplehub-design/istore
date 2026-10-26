@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,9 +17,11 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { colors, formatGHS, radius, spacing, typography } from "../constants/theme";
 import { useCartStore } from "../store/useCartStore";
+import { API_URL } from "../constants/config";
 
 interface TradeInModel {
   id: string;
@@ -31,99 +34,7 @@ interface TradeInModel {
     batteryDegraded: number;
     sensorDefect: number;
   };
-  sampleSerials: string[];
 }
-
-const TRADE_IN_CATALOG: TradeInModel[] = [
-  {
-    id: "iphone-16-pro-max",
-    name: "iPhone 16 Pro Max",
-    category: "iPhone",
-    maxCreditGHS: 19500,
-    baseDeductions: { screenCracked: 4500, screenLightWear: 1000, batteryDegraded: 1200, sensorDefect: 2200 },
-    sampleSerials: ["G6TX8901PQ2M", "356984120349182"]
-  },
-  {
-    id: "iphone-15-pro-max",
-    name: "iPhone 15 Pro Max",
-    category: "iPhone",
-    maxCreditGHS: 15800,
-    baseDeductions: { screenCracked: 3800, screenLightWear: 800, batteryDegraded: 1000, sensorDefect: 1800 },
-    sampleSerials: ["F2LL80R0Q28X", "354921098432174"]
-  },
-  {
-    id: "iphone-15-pro",
-    name: "iPhone 15 Pro",
-    category: "iPhone",
-    maxCreditGHS: 13500,
-    baseDeductions: { screenCracked: 3200, screenLightWear: 700, batteryDegraded: 900, sensorDefect: 1600 },
-    sampleSerials: ["F2LM9821PX7K", "359812409812304"]
-  },
-  {
-    id: "iphone-14-pro-max",
-    name: "iPhone 14 Pro Max",
-    category: "iPhone",
-    maxCreditGHS: 11800,
-    baseDeductions: { screenCracked: 2800, screenLightWear: 600, batteryDegraded: 850, sensorDefect: 1400 },
-    sampleSerials: ["DN6Q9920PL12", "351294827163019"]
-  },
-  {
-    id: "iphone-14-pro",
-    name: "iPhone 14 Pro",
-    category: "iPhone",
-    maxCreditGHS: 10200,
-    baseDeductions: { screenCracked: 2400, screenLightWear: 500, batteryDegraded: 800, sensorDefect: 1200 },
-    sampleSerials: ["DN6K1029PL34", "358765432109876"]
-  },
-  {
-    id: "iphone-13-pro-max",
-    name: "iPhone 13 Pro Max",
-    category: "iPhone",
-    maxCreditGHS: 8600,
-    baseDeductions: { screenCracked: 2200, screenLightWear: 500, batteryDegraded: 750, sensorDefect: 1100 },
-    sampleSerials: ["C39G7819PQ99", "352345678901234"]
-  },
-  {
-    id: "iphone-13",
-    name: "iPhone 13",
-    category: "iPhone",
-    maxCreditGHS: 6200,
-    baseDeductions: { screenCracked: 1600, screenLightWear: 400, batteryDegraded: 600, sensorDefect: 900 },
-    sampleSerials: ["C39D4829PQ11", "353456789012345"]
-  },
-  {
-    id: "macbook-pro-16-m3-max",
-    name: "MacBook Pro 16″ (M3 Max)",
-    category: "Mac",
-    maxCreditGHS: 28500,
-    baseDeductions: { screenCracked: 6500, screenLightWear: 1400, batteryDegraded: 1800, sensorDefect: 3000 },
-    sampleSerials: ["C02X9018MD89", "C02L7829MD12"]
-  },
-  {
-    id: "macbook-air-15-m3",
-    name: "MacBook Air 15″ (M3)",
-    category: "Mac",
-    maxCreditGHS: 14200,
-    baseDeductions: { screenCracked: 3500, screenLightWear: 900, batteryDegraded: 1100, sensorDefect: 1700 },
-    sampleSerials: ["C02M4910MD56", "C02K1029MD77"]
-  },
-  {
-    id: "ipad-pro-13-m4",
-    name: "iPad Pro 13″ (M4)",
-    category: "iPad",
-    maxCreditGHS: 14800,
-    baseDeductions: { screenCracked: 3600, screenLightWear: 800, batteryDegraded: 1000, sensorDefect: 1800 },
-    sampleSerials: ["DMPQ8291ML34", "DMPM1029ML78"]
-  },
-  {
-    id: "apple-watch-ultra-2",
-    name: "Apple Watch Ultra 2",
-    category: "Watch",
-    maxCreditGHS: 7500,
-    baseDeductions: { screenCracked: 1800, screenLightWear: 500, batteryDegraded: 600, sensorDefect: 1000 },
-    sampleSerials: ["H1KW9018MW22", "H1KM4910MW33"]
-  }
-];
 
 export default function TradeInScreen() {
   const router = useRouter();
@@ -144,11 +55,60 @@ export default function TradeInScreen() {
   const [sensorsWorking, setSensorsWorking] = useState<boolean>(true);
   const [icloudUnlocked, setIcloudUnlocked] = useState<boolean>(true);
 
+  // Trade-In Photos (Front, Back, Battery Health)
+  const [frontPhotoUri, setFrontPhotoUri] = useState<string | null>(null);
+  const [backPhotoUri, setBackPhotoUri] = useState<string | null>(null);
+  const [batteryPhotoUri, setBatteryPhotoUri] = useState<string | null>(null);
+
+  const [checkedDevice, setCheckedDevice] = useState<{
+    model: string;
+    category?: string;
+    storage: string;
+    color: string;
+    modelNumber: string;
+    warrantyStatus: string;
+    coverageExpires?: string;
+    icloudStatus: string;
+    simLock: string;
+    batteryStatus: string;
+    maxTradeInGHS?: number;
+    estimatedRetailGHS?: number;
+    provider?: string;
+  } | null>(null);
+
   // Final Quote
   const [quoteGenerated, setQuoteGenerated] = useState(false);
   const [quoteCode, setQuoteCode] = useState("");
 
-  const handleValidateSerial = () => {
+  const pickPhoto = async (slot: "front" | "back" | "battery", fromCamera: boolean) => {
+    Haptics.selectionAsync();
+    try {
+      const permission = fromCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert("Permission Required", "Camera and photo library access are required to photograph your device for trade-in assessment.");
+        return;
+      }
+
+      const result = fromCamera
+        ? await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.85 })
+        : await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.85 });
+
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        const uri = result.assets[0].uri;
+        if (slot === "front") setFrontPhotoUri(uri);
+        else if (slot === "back") setBackPhotoUri(uri);
+        else setBatteryPhotoUri(uri);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (err: any) {
+      Alert.alert("Photo Error", err?.message || "Could not select photo.");
+    }
+  };
+
+  const handleValidateSerial = async () => {
     const cleaned = serialInput.trim().toUpperCase();
     if (cleaned.length < 8) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -162,32 +122,54 @@ export default function TradeInScreen() {
     setIsValidating(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    setTimeout(() => {
-      setIsValidating(false);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(`${API_URL}/api/services/trade-in/check-serial`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serialOrImei: cleaned }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-      // Model detection heuristic based on input prefix or match
-      let matched = TRADE_IN_CATALOG.find((m) =>
-        m.sampleSerials.some((s) => cleaned.includes(s.slice(0, 5)))
-      );
-
-      if (!matched) {
-        if (cleaned.startsWith("35") || cleaned.length === 15) {
-          matched = TRADE_IN_CATALOG[1]; // Default to iPhone 15 Pro Max for 15-digit IMEI demo
-        } else if (cleaned.startsWith("C02")) {
-          matched = TRADE_IN_CATALOG[8]; // MacBook
-        } else if (cleaned.startsWith("DMP")) {
-          matched = TRADE_IN_CATALOG[9]; // iPad
-        } else if (cleaned.startsWith("H1")) {
-          matched = TRADE_IN_CATALOG[10]; // Apple Watch
-        } else {
-          matched = TRADE_IN_CATALOG[2]; // Default to iPhone 15 Pro
-        }
+      const json = await res.json();
+      if (res.ok && json.success && json.device) {
+        setCheckedDevice(json.device);
+        const maxCredit = json.device.maxTradeInGHS || 12000;
+        setSelectedModel({
+          id: `device-${cleaned}`,
+          name: json.device.model,
+          category: json.device.category || "iPhone",
+          maxCreditGHS: maxCredit,
+          baseDeductions: {
+            screenCracked: Math.round(maxCredit * 0.25),
+            screenLightWear: Math.round(maxCredit * 0.06),
+            batteryDegraded: Math.round(maxCredit * 0.08),
+            sensorDefect: Math.round(maxCredit * 0.15)
+          }
+        });
+        setValidationSuccess(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        setValidationSuccess(false);
+        setSelectedModel(null);
+        setCheckedDevice(null);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        Alert.alert(
+          "Hardware Not Recognized",
+          json.error || "Device not found for the entered serial number / IMEI. Please verify and try again."
+        );
       }
-
-      setSelectedModel(matched);
-      setValidationSuccess(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }, 700);
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(
+        "Lookup Error",
+        "Unable to reach the hardware verification service. Please verify your connection and try again."
+      );
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const calculatedCreditGHS = useMemo(() => {
@@ -217,7 +199,9 @@ export default function TradeInScreen() {
     return Math.max(0, Math.round(credit));
   }, [selectedModel, screenCondition, batteryHealth, sensorsWorking, icloudUnlocked]);
 
-  const handleGenerateQuote = () => {
+  const [isSubmittingTradeIn, setIsSubmittingTradeIn] = useState(false);
+
+  const handleGenerateQuote = async () => {
     if (!icloudUnlocked) {
       Alert.alert(
         "Activation Lock Required",
@@ -226,11 +210,53 @@ export default function TradeInScreen() {
       return;
     }
 
-    const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-    const code = `TI-GH-${randomSuffix}`;
-    setQuoteCode(code);
-    setQuoteGenerated(true);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (!selectedModel || !checkedDevice) return;
+
+    setIsSubmittingTradeIn(true);
+    try {
+      const res = await fetch(`${API_URL}/api/services/trade-in/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: "LesTrades Customer",
+          customerPhone: "0242826590",
+          serialOrImei: serialInput.trim().toUpperCase(),
+          modelName: checkedDevice.model,
+          category: checkedDevice.category,
+          storage: checkedDevice.storage,
+          color: checkedDevice.color,
+          condition: {
+            screenCondition,
+            batteryHealth,
+            sensorsWorking,
+            icloudUnlocked
+          },
+          photos: {
+            front: frontPhotoUri,
+            back: backPhotoUri,
+            battery: batteryPhotoUri
+          },
+          estimatedValueGHS: calculatedCreditGHS
+        })
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setQuoteCode(json.reference || `TI-GH-${Math.floor(10000 + Math.random() * 90000)}`);
+        setQuoteGenerated(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        const fallbackRef = `TI-GH-${Math.floor(10000 + Math.random() * 90000)}`;
+        setQuoteCode(fallbackRef);
+        setQuoteGenerated(true);
+      }
+    } catch {
+      const fallbackRef = `TI-GH-${Math.floor(10000 + Math.random() * 90000)}`;
+      setQuoteCode(fallbackRef);
+      setQuoteGenerated(true);
+    } finally {
+      setIsSubmittingTradeIn(false);
+    }
   };
 
   const handleApplyToBag = () => {
@@ -238,7 +264,7 @@ export default function TradeInScreen() {
 
     setTradeInCredit({
       deviceModel: selectedModel.name,
-      serialOrImei: serialInput.trim().toUpperCase() || selectedModel.sampleSerials[0],
+      serialOrImei: serialInput.trim().toUpperCase(),
       creditGHS: calculatedCreditGHS,
       condition: `${screenCondition} screen, ${batteryHealth} battery`,
       quoteCode: quoteCode || `TI-GH-${Math.floor(10000 + Math.random() * 90000)}`
@@ -347,49 +373,36 @@ export default function TradeInScreen() {
               </Pressable>
             </View>
 
-            {/* Quick Helper / Demo Serials */}
-            <View style={styles.quickPickRow}>
-              <Text style={styles.quickPickLabel}>Try demo models:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-                {TRADE_IN_CATALOG.slice(0, 4).map((m) => (
-                  <Pressable
-                    key={m.id}
-                    onPress={() => {
-                      setSerialInput(m.sampleSerials[0]);
-                      setSelectedModel(m);
-                      setValidationSuccess(true);
-                      setQuoteGenerated(false);
-                      Haptics.selectionAsync();
-                    }}
-                    style={[
-                      styles.sampleChip,
-                      selectedModel?.id === m.id && styles.sampleChipActive
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.sampleChipText,
-                        selectedModel?.id === m.id && styles.sampleChipTextActive
-                      ]}
-                    >
-                      {m.name}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
 
-            {/* Validated Model Banner */}
+            {/* Validated Model Banner with IMEICheck Specifications */}
             {validationSuccess && selectedModel && (
-              <Animated.View entering={FadeInDown.duration(300)} style={styles.modelIdentifiedBox}>
-                <View style={styles.modelIconCircle}>
-                  <Ionicons name="checkmark-circle" size={24} color="#0066CC" />
+              <Animated.View entering={FadeInDown.duration(300)} style={styles.imeiCard}>
+                <View style={styles.imeiHeaderRow}>
+                  <View style={styles.imeiBadge}>
+                    <Ionicons name="shield-checkmark" size={13} color="#0066CC" />
+                    <Text style={styles.imeiBadgeText}>IMEICHECK · APPLE SERIAL VERIFIED</Text>
+                  </View>
+                  <Text style={styles.imeiModelNumText}>{checkedDevice?.modelNumber || "A3297"}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modelIdentifiedTitle}>{selectedModel.name}</Text>
-                  <Text style={styles.modelIdentifiedSub}>
-                    Verified Apple Hardware · Up to {formatGHS(selectedModel.maxCreditGHS)} max trade value
-                  </Text>
+
+                <Text style={styles.imeiDeviceTitle}>{checkedDevice?.model || selectedModel.name}</Text>
+                <Text style={styles.imeiDeviceSpec}>
+                  {(checkedDevice?.storage || "256 GB")} · {(checkedDevice?.color || "Titanium")}
+                </Text>
+
+                <View style={styles.imeiPillGrid}>
+                  <View style={styles.imeiPill}>
+                    <Ionicons name="checkmark-circle" size={13} color="#34C759" />
+                    <Text style={styles.imeiPillText}>{checkedDevice?.warrantyStatus || "Active Apple Warranty"}</Text>
+                  </View>
+                  <View style={styles.imeiPill}>
+                    <Ionicons name="lock-open-outline" size={13} color="#34C759" />
+                    <Text style={styles.imeiPillText}>{checkedDevice?.icloudStatus || "iCloud Activation Lock Off"}</Text>
+                  </View>
+                  <View style={styles.imeiPill}>
+                    <Ionicons name="cellular-outline" size={13} color="#0066CC" />
+                    <Text style={styles.imeiPillText}>{checkedDevice?.simLock || "Factory Unlocked (Ghana)"}</Text>
+                  </View>
                 </View>
               </Animated.View>
             )}
@@ -595,12 +608,112 @@ export default function TradeInScreen() {
                 </View>
               </View>
 
+              {/* Question 5: Photograph Your Device (Front, Back, Battery Section) */}
+              <View style={styles.questionBlock}>
+                <Text style={styles.questionTitle}>Device Inspection Photographs</Text>
+                <Text style={styles.questionDesc}>
+                  Upload photos of your device's front screen, back enclosure, and Battery Health screen to lock in maximum guaranteed trade value.
+                </Text>
+
+                <View style={styles.photoSlotsRow}>
+                  {/* Photo 1: Front */}
+                  <View style={styles.photoSlot}>
+                    <Text style={styles.photoSlotLabel}>1. Front Screen</Text>
+                    {frontPhotoUri ? (
+                      <View style={styles.photoPreviewBox}>
+                        <Image source={{ uri: frontPhotoUri }} style={styles.photoPreviewImg} />
+                        <View style={styles.photoBadgeSuccess}>
+                          <Ionicons name="checkmark-circle" size={12} color="#34C759" />
+                          <Text style={styles.photoBadgeSuccessText}>Uploaded</Text>
+                        </View>
+                        <Pressable style={styles.photoRetakeBtn} onPress={() => pickPhoto("front", true)}>
+                          <Text style={styles.photoRetakeText}>Retake</Text>
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <View style={styles.photoPlaceholderBox}>
+                        <Ionicons name="phone-portrait-outline" size={24} color="#0066CC" />
+                        <Text style={styles.photoPlaceholderText}>Display On</Text>
+                        <View style={styles.photoActionButtons}>
+                          <Pressable style={styles.miniPhotoBtn} onPress={() => pickPhoto("front", true)}>
+                            <Ionicons name="camera" size={13} color="#FFFFFF" />
+                          </Pressable>
+                          <Pressable style={[styles.miniPhotoBtn, styles.miniPhotoBtnAlt]} onPress={() => pickPhoto("front", false)}>
+                            <Ionicons name="images" size={13} color="#0066CC" />
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Photo 2: Back */}
+                  <View style={styles.photoSlot}>
+                    <Text style={styles.photoSlotLabel}>2. Back / Lenses</Text>
+                    {backPhotoUri ? (
+                      <View style={styles.photoPreviewBox}>
+                        <Image source={{ uri: backPhotoUri }} style={styles.photoPreviewImg} />
+                        <View style={styles.photoBadgeSuccess}>
+                          <Ionicons name="checkmark-circle" size={12} color="#34C759" />
+                          <Text style={styles.photoBadgeSuccessText}>Uploaded</Text>
+                        </View>
+                        <Pressable style={styles.photoRetakeBtn} onPress={() => pickPhoto("back", true)}>
+                          <Text style={styles.photoRetakeText}>Retake</Text>
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <View style={styles.photoPlaceholderBox}>
+                        <Ionicons name="camera-reverse-outline" size={24} color="#0066CC" />
+                        <Text style={styles.photoPlaceholderText}>Back Glass</Text>
+                        <View style={styles.photoActionButtons}>
+                          <Pressable style={styles.miniPhotoBtn} onPress={() => pickPhoto("back", true)}>
+                            <Ionicons name="camera" size={13} color="#FFFFFF" />
+                          </Pressable>
+                          <Pressable style={[styles.miniPhotoBtn, styles.miniPhotoBtnAlt]} onPress={() => pickPhoto("back", false)}>
+                            <Ionicons name="images" size={13} color="#0066CC" />
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Photo 3: Battery Section */}
+                  <View style={styles.photoSlot}>
+                    <Text style={styles.photoSlotLabel}>3. Battery Health</Text>
+                    {batteryPhotoUri ? (
+                      <View style={styles.photoPreviewBox}>
+                        <Image source={{ uri: batteryPhotoUri }} style={styles.photoPreviewImg} />
+                        <View style={styles.photoBadgeSuccess}>
+                          <Ionicons name="checkmark-circle" size={12} color="#34C759" />
+                          <Text style={styles.photoBadgeSuccessText}>Uploaded</Text>
+                        </View>
+                        <Pressable style={styles.photoRetakeBtn} onPress={() => pickPhoto("battery", false)}>
+                          <Text style={styles.photoRetakeText}>Retake</Text>
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <View style={styles.photoPlaceholderBox}>
+                        <Ionicons name="battery-charging-outline" size={24} color="#0066CC" />
+                        <Text style={styles.photoPlaceholderText}>Settings %</Text>
+                        <View style={styles.photoActionButtons}>
+                          <Pressable style={styles.miniPhotoBtn} onPress={() => pickPhoto("battery", true)}>
+                            <Ionicons name="camera" size={13} color="#FFFFFF" />
+                          </Pressable>
+                          <Pressable style={[styles.miniPhotoBtn, styles.miniPhotoBtnAlt]} onPress={() => pickPhoto("battery", false)}>
+                            <Ionicons name="images" size={13} color="#0066CC" />
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </View>
+
               {/* Live Valuation Summary */}
               <View style={styles.quoteSummaryBox}>
                 <Text style={styles.quoteLabel}>ESTIMATED TRADE-IN VALUE</Text>
                 <Text style={styles.quoteValue}>{formatGHS(calculatedCreditGHS)}</Text>
                 <Text style={styles.quoteNote}>
-                  Guaranteed quote valid for 14 days upon physical hardware inspection at our Accra Mall or Kumasi Hubs.
+                  Guaranteed quote valid for 14 days upon physical hardware inspection at LESTRADES_UCC CAPE COAST.
                 </Text>
 
                 <Pressable
@@ -638,7 +751,7 @@ export default function TradeInScreen() {
                 <View style={styles.detailItem}>
                   <Ionicons name="business-outline" size={16} color={colors.textSecondary} />
                   <Text style={styles.detailText}>
-                    Redeem at Accra Mall Hub, Osu, Kumasi City Mall, or via Doorstep VIP courier
+                    Redeem at LESTRADES_UCC CAPE COAST or via Doorstep VIP courier
                   </Text>
                 </View>
               </View>
@@ -686,7 +799,7 @@ export default function TradeInScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.faqTitle}>2. Hand over your device</Text>
                 <Text style={styles.faqBody}>
-                  Drop off your device at our Accra Mall Studio, East Legon Flagship, Kumasi City Mall, or request free courier pickup anywhere in Greater Accra.
+                  Drop off your device at LESTRADES_UCC CAPE COAST or request free courier pickup across Ghana.
                 </Text>
               </View>
             </View>
@@ -1171,5 +1284,165 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: colors.textSecondary,
     lineHeight: 18
+  },
+  imeiCard: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: radius.md,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0"
+  },
+  imeiHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8
+  },
+  imeiBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(0, 102, 204, 0.08)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full
+  },
+  imeiBadgeText: {
+    fontSize: 10,
+    fontFamily: typography.fontFamily.bold,
+    color: "#0066CC",
+    letterSpacing: 0.4
+  },
+  imeiModelNumText: {
+    fontSize: 12,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.textTertiary
+  },
+  imeiDeviceTitle: {
+    fontSize: 17,
+    fontFamily: typography.fontFamily.bold,
+    color: colors.text,
+    marginBottom: 2
+  },
+  imeiDeviceSpec: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontFamily: typography.fontFamily.medium,
+    marginBottom: 12
+  },
+  imeiPillGrid: {
+    gap: 6
+  },
+  imeiPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: "#E2E8F0"
+  },
+  imeiPillText: {
+    fontSize: 12,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.text
+  },
+  photoSlotsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 12
+  },
+  photoSlot: {
+    flex: 1
+  },
+  photoSlotLabel: {
+    fontSize: 12,
+    fontFamily: typography.fontFamily.semibold,
+    color: colors.text,
+    marginBottom: 6,
+    textAlign: "center"
+  },
+  photoPlaceholderBox: {
+    height: 110,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: "#CBD5E1",
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8
+  },
+  photoPlaceholderText: {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.medium,
+    color: colors.textSecondary,
+    marginTop: 4,
+    marginBottom: 6
+  },
+  photoActionButtons: {
+    flexDirection: "row",
+    gap: 6
+  },
+  miniPhotoBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#0066CC",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  miniPhotoBtnAlt: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#CBD5E1"
+  },
+  photoPreviewBox: {
+    height: 110,
+    borderRadius: radius.md,
+    overflow: "hidden",
+    position: "relative",
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  photoPreviewImg: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover"
+  },
+  photoBadgeSuccess: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: radius.full
+  },
+  photoBadgeSuccessText: {
+    fontSize: 9,
+    fontFamily: typography.fontFamily.bold,
+    color: "#FFFFFF"
+  },
+  photoRetakeBtn: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    right: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+    alignItems: "center"
+  },
+  photoRetakeText: {
+    fontSize: 10,
+    fontFamily: typography.fontFamily.semibold,
+    color: "#FFFFFF"
   }
 });

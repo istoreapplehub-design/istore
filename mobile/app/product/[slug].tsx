@@ -338,7 +338,7 @@ export default function ProductDetailScreen() {
     Haptics.selectionAsync();
     try {
       await Share.share({
-        message: `Check out the ${product.name} at I-Dynamic: ₵${effectivePriceGHS.toLocaleString("en-GH")}`
+        message: `Check out the ${product.name} at LesTrades: ₵${effectivePriceGHS.toLocaleString("en-GH")}`
       });
     } catch {
       // Ignored
@@ -616,11 +616,7 @@ export default function ProductDetailScreen() {
               />
               <View style={{ flex: 1 }}>
                 <Text style={styles.assuranceItemTitle}>
-                  {isOutOfStock
-                    ? "Out of Stock"
-                    : product.stock <= 5
-                    ? `Low Stock · Only ${product.stock} left`
-                    : `In Stock · ${product.stock} units ready to ship`}
+                  {isOutOfStock ? "Out of Stock" : "In Stock · Ready for Delivery"}
                 </Text>
                 <Text style={styles.assuranceItemSub}>
                   {product.condition || "New"} · Factory-sealed original box

@@ -336,7 +336,7 @@ export function OrderDetail() {
                   </a>
                 )}
 
-                {/* I-Dynamic Credit Score / Trust Rating Badge */}
+                {/* LesTrades Credit Score / Trust Rating Badge */}
                 <div className="mt-3 p-3 bg-neutral-50 rounded-xl border border-neutral-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />

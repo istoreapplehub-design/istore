@@ -272,6 +272,123 @@ async function listAllUsers(req, res, next) {
   }
 }
 
+/**
+ * POST /api/auth/register
+ * Direct registration endpoint: creates user in Supabase with email_confirm: true and provisions in Prisma.
+ */
+async function registerUser(req, res, next) {
+  try {
+    const { name, phone, email, password } = req.body;
+    if (!name || !phone || !email || !password) {
+      return res.status(400).json({
+        error: true,
+        message: "Name, phone, email, and password are all required."
+      });
+    }
+
+    const emailNorm = email.toLowerCase().trim();
+    const phoneNorm = phone.trim();
+
+    let supabaseUserId = null;
+    const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: emailNorm,
+      password,
+      email_confirm: true,
+      user_metadata: { name: name.trim(), phone: phoneNorm }
+    });
+
+    if (createError) {
+      if (createError.message?.toLowerCase().includes("already registered") || createError.message?.toLowerCase().includes("already exists")) {
+        const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+        const existingAuth = listData?.users?.find((u) => u.email?.toLowerCase() === emailNorm);
+        if (existingAuth) {
+          supabaseUserId = existingAuth.id;
+          await supabaseAdmin.auth.admin.updateUserById(supabaseUserId, {
+            password,
+            email_confirm: true,
+            user_metadata: { name: name.trim(), phone: phoneNorm }
+          });
+        } else {
+          return res.status(400).json({ error: true, message: createError.message });
+        }
+      } else {
+        return res.status(400).json({ error: true, message: createError.message });
+      }
+    } else {
+      supabaseUserId = createData.user.id;
+    }
+
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(supabaseUserId ? [{ supabaseId: supabaseUserId }] : []),
+          { email: emailNorm },
+          { phone: phoneNorm }
+        ]
+      }
+    });
+
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          supabaseId: supabaseUserId || user.supabaseId,
+          name: name.trim(),
+          phone: phoneNorm,
+          email: emailNorm
+        }
+      });
+    } else {
+      user = await prisma.user.create({
+        data: {
+          supabaseId: supabaseUserId,
+          name: name.trim(),
+          phone: phoneNorm,
+          email: emailNorm,
+          role: emailNorm.includes("admin") ? "admin" : "customer",
+          isActive: true
+        }
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Account registered successfully",
+      user: {
+        ...user,
+        addresses: safeJsonParse(user.addresses, [])
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/auth/confirm-user
+ * Auto-confirms a Supabase user by email so they can log in immediately
+ */
+async function confirmUser(req, res, next) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: true, message: "Email required" });
+    }
+    const emailNorm = email.toLowerCase().trim();
+    const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+    const existing = listData?.users?.find((u) => u.email?.toLowerCase() === emailNorm);
+    if (existing) {
+      await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+        email_confirm: true
+      });
+      return res.json({ success: true, message: "Email confirmed" });
+    }
+    return res.status(404).json({ error: true, message: "User not found" });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   provisionSchema,
   upgradeRoleSchema,
@@ -279,5 +396,7 @@ module.exports = {
   getMe,
   upgradeRole,
   listAdmins,
-  listAllUsers
+  listAllUsers,
+  registerUser,
+  confirmUser
 };

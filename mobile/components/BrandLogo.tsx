@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   wordmarkText: {
     fontWeight: "800",
-    color: colors.text,
+    color: "#0066CC",
     letterSpacing: -0.4,
     fontStyle: "italic"
   },

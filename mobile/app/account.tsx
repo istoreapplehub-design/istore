@@ -375,7 +375,7 @@ export default function AccountScreen() {
           <View style={styles.divider} />
           <Row
             icon="color-palette-outline"
-            label="Today at Apple Workshops"
+            label="Today at LesTrades Workshops"
             onPress={() => router.push("/today-at-apple" as never)}
           />
           <View style={styles.divider} />

@@ -46,65 +46,48 @@ const SESSIONS: WorkshopSession[] = [
     tagline: "Frame Cape Coast's coastal horizons and historic architecture with ProRAW.",
     duration: "90 min",
     level: "All Levels",
-    hub: "LesTrades Flagship Hub — UCC Cape Coast",
+    hub: "LESTRADES_UCC CAPE COAST",
     address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
     schedule: "Saturday · 3:30 PM – 5:00 PM",
-    availableSeats: 8,
+    availableSeats: 12,
     instructor: "Kofi Ansah & Campus Media Fellows",
     instructorRole: "Apple Creative Lead & Documentarian",
     description:
-      "Join us at the LesTrades UCC Cape Coast flagship hub for an interactive masterclass exploring dynamic perspectives, cinematic audio mix, and portrait depth maps across the university campus and coastal vistas.",
+      "Join us at LESTRADES_UCC CAPE COAST for an interactive masterclass exploring dynamic perspectives, cinematic audio mix, and portrait depth maps across the university campus and coastal vistas.",
     deviceProvided: true
   },
   {
-    id: "photo-walk-accra",
-    category: "Photography",
-    title: "Photo Walk: Framing Accra's Architectural Soul",
-    tagline: "Explore perspective, 48MP Fusion composition, and Golden Hour lighting.",
-    duration: "90 min",
-    level: "All Levels",
-    hub: "LesTrades Studio — Accra Mall Forum",
-    address: "Tetteh Quarshie Interchange, Accra",
-    schedule: "Saturday · 4:00 PM – 5:30 PM",
-    availableSeats: 6,
-    instructor: "Kofi Ansah",
-    instructorRole: "Apple Creative Specialist & Documentarian",
-    description:
-      "Join us for an inspiring photo walk exploring dynamic angles, macro details, and low-light portraits on iPhone 16 Pro. We will venture around the outdoor architectural courtyards and review image post-processing in Apple Photos.",
-    deviceProvided: true
-  },
-  {
-    id: "swift-coding-lab",
+    id: "swift-student-lab-ucc",
     category: "Coding",
-    title: "Swift Pro Lab: Architecture & iOS App Performance",
-    tagline: "Write idiomatic Swift, SwiftUI concurrency, and test on physical silicon.",
+    title: "Swift Lab: Building iOS Apps with SwiftUI & Apple Silicon",
+    tagline: "Hands-on app architecture on M4 Mac workstations at UCC campus.",
     duration: "75 min",
     level: "Intermediate",
-    hub: "LesTrades Tech Flagship — East Legon",
-    address: "Boundary Road, Opp. A&C Mall, East Legon",
-    schedule: "Thursday · 6:00 PM – 7:15 PM",
-    availableSeats: 8,
+    hub: "LESTRADES_UCC CAPE COAST",
+    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
+    schedule: "Thursday · 5:00 PM – 6:15 PM",
+    availableSeats: 10,
     instructor: "Esinam Dogbe",
-    instructorRole: "Senior iOS Engineer & Apple Tech Mentor",
+    instructorRole: "Senior iOS Engineer & Tech Mentor",
     description:
-      "A hands-on engineering workshop on Mac M3 / M4 workstations. Dive into modern Swift async/await, Instruments profiling, and building delightful responsive mobile experiences.",
+      "A hands-on engineering workshop at LESTRADES_UCC CAPE COAST. Dive into modern Swift async/await, Instruments profiling, and building responsive native mobile experiences.",
     deviceProvided: true
   },
   {
-    id: "digital-art-ipad",
+    id: "digital-art-ipad-ucc",
     category: "Art & Design",
-    title: "Art Lab: Digital Lettering & Ghanaian Motifs",
-    tagline: "Blend Adinkra geometry with contemporary typography on iPad Pro.",
+    title: "Art Lab: Digital Lettering & Ghanaian Motifs on iPad Pro",
+    tagline: "Blend Adinkra geometry with typography using Apple Pencil Pro.",
     duration: "60 min",
     level: "All Levels",
-    hub: "LesTrades Lounge — Kumasi City Mall",
-    address: "Asokwa, Kumasi City Mall, Shop 24",
+    hub: "LESTRADES_UCC CAPE COAST",
+    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
     schedule: "Sunday · 2:00 PM – 3:00 PM",
-    availableSeats: 10,
+    availableSeats: 8,
     instructor: "Nana Yaa",
     instructorRole: "Visual Artist & Procreate Specialist",
     description:
-      "Learn stroke dynamics, pressure curves, and vector shading with the new Apple Pencil Pro on Ultra Retina XDR displays. Create your own custom digital print ready to export.",
+      "Learn stroke dynamics, pressure curves, and vector shading with the new Apple Pencil Pro on Ultra Retina XDR displays at LESTRADES_UCC CAPE COAST.",
     deviceProvided: true
   },
   {
@@ -114,12 +97,12 @@ const SESSIONS: WorkshopSession[] = [
     tagline: "Master Heart Rate Zones, ECG, Workout Metrics & Sleep Stages.",
     duration: "45 min",
     level: "Beginner",
-    hub: "LesTrades Studio — Accra Mall Forum",
-    address: "Tetteh Quarshie Interchange, Accra",
+    hub: "LESTRADES_UCC CAPE COAST",
+    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
     schedule: "Saturday · 9:30 AM – 10:15 AM",
     availableSeats: 12,
     instructor: "Dr. Kwesi Appiah",
-    instructorRole: "Sports Physician & Apple Watch Advocate",
+    instructorRole: "Sports Physician & Health Advocate",
     description:
       "Optimize your daily wellness routine with Apple Watch Ultra and Series 10. Understand cardiovascular health metrics, recovery intervals, and staying hydrated in Ghana's climate.",
     deviceProvided: false
@@ -131,14 +114,14 @@ const SESSIONS: WorkshopSession[] = [
     tagline: "Code Byte the character through puzzle worlds with Swift Playgrounds.",
     duration: "60 min",
     level: "Beginner",
-    hub: "LesTrades Tech Flagship — East Legon",
-    address: "Boundary Road, Opp. A&C Mall, East Legon",
+    hub: "LESTRADES_UCC CAPE COAST",
+    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
     schedule: "Saturday · 11:00 AM – 12:00 PM",
-    availableSeats: 5,
+    availableSeats: 8,
     instructor: "Abena Serwaa",
     instructorRole: "Youth STEM Educator",
     description:
-      "Designed for young creators aged 8–14. Kids will learn commands, loops, and conditional logic by animating colorful worlds on iPad.",
+      "Designed for young creators aged 8–14. Kids will learn commands, loops, and conditional logic by animating colorful worlds on iPad at LESTRADES_UCC CAPE COAST.",
     deviceProvided: true
   }
 ];
@@ -208,7 +191,7 @@ export default function TodayAtAppleScreen() {
           <Ionicons name="chevron-back" size={24} color={colors.text} />
           <Text style={styles.backBtnText}>Back</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Today at Apple</Text>
+        <Text style={styles.headerTitle}>Today at LesTrades</Text>
         <Pressable
           onPress={() => router.push("/genius-bar" as any)}
           style={({ pressed }) => [styles.geniusLink, pressed && { opacity: 0.7 }]}
@@ -228,12 +211,12 @@ export default function TodayAtAppleScreen() {
         <View style={styles.heroBanner}>
           <View style={styles.heroBadge}>
             <Ionicons name="sparkles" size={14} color="#0066CC" />
-            <Text style={styles.heroBadgeText}>FREE IN-PERSON WORKSHOPS · GHANA</Text>
+            <Text style={styles.heroBadgeText}>FREE IN-PERSON WORKSHOPS · UCC CAPE COAST</Text>
           </View>
           <Text style={styles.heroHeadline}>Inspiring sessions created for everyday genius.</Text>
           <Text style={styles.heroSubtext}>
-            Join hands-on creative labs led by Apple Specialists and Ghanaian guest creators at our
-            Accra Mall, East Legon, and Kumasi City Mall hubs. Complimentary devices provided.
+            Join hands-on creative labs led by LesTrades Specialists and guest creators at
+            LESTRADES_UCC CAPE COAST. Complimentary Apple devices provided.
           </Text>
         </View>
 
@@ -248,7 +231,7 @@ export default function TodayAtAppleScreen() {
           </Pressable>
           <View style={styles.activePill}>
             <Ionicons name="color-palette-outline" size={16} color="#FFFFFF" />
-            <Text style={styles.activePillText}>Today at Apple (Sessions)</Text>
+            <Text style={styles.activePillText}>Today at LesTrades</Text>
           </View>
         </View>
 
@@ -445,7 +428,7 @@ export default function TodayAtAppleScreen() {
               {/* Wallet Card */}
               <View style={styles.walletPassCard}>
                 <View style={styles.walletTopBar}>
-                  <Text style={styles.walletBrand}>TODAY AT APPLE · WORKSHOP PASS</Text>
+                  <Text style={styles.walletBrand}>TODAY AT LESTRADES · WORKSHOP PASS</Text>
                   <Text style={styles.walletCode}>{confirmedPass.passId}</Text>
                 </View>
 

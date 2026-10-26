@@ -329,5 +329,44 @@ export async function updateAdminInstallmentSerial(
   );
 }
 
+export async function getGeniusBookings() {
+  return request<{ success: boolean; bookings: any[] }>("/api/services/genius-bar");
+}
 
+export async function updateGeniusBookingStatus(reference: string, status: string) {
+  return request<{ success: boolean; booking: any }>(`/api/services/genius-bar/${reference}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status })
+  });
+}
 
+export async function getTodayAtLesTradesEvents() {
+  return request<{ success: boolean; events: any[]; hub: any }>("/api/services/today-at-lestrades");
+}
+
+export async function createTodayAtLesTradesEvent(data: any) {
+  return request<{ success: boolean; event: any }>("/api/services/today-at-lestrades/events", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function deleteTodayAtLesTradesEvent(id: string) {
+  return request<{ success: boolean; message: string }>(`/api/services/today-at-lestrades/events/${id}`, {
+    method: "DELETE"
+  });
+}
+
+export async function getTradeInSubmissions() {
+  return request<{ success: boolean; submissions: any[] }>("/api/services/trade-in/submissions");
+}
+
+export async function updateTradeInSubmissionStatus(
+  id: string,
+  body: { status?: string; finalCreditGHS?: number; inspectionNotes?: string }
+) {
+  return request<{ success: boolean; submission: any }>(`/api/services/trade-in/submissions/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify(body)
+  });
+}

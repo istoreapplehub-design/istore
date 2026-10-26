@@ -34,49 +34,13 @@ interface StoreHub {
 
 const GHANA_HUBS: StoreHub[] = [
   {
-    id: "ucc-cape-coast",
-    name: "LesTrades Flagship Hub — UCC Cape Coast",
+    id: "lestrades-ucc-cape-coast",
+    name: "LESTRADES_UCC CAPE COAST",
     city: "Cape Coast",
-    address: "University of Cape Coast, Campus Commercial Hub, Cape Coast",
-    landmark: "Directly opposite UCC Central Library / Main Gate",
+    address: "University of Cape Coast, Cape Coast",
+    landmark: "Directly opposite UCC Science Market",
     hours: "Mon–Sat: 8:30 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM",
     slots: ["9:00 AM", "11:30 AM", "1:30 PM", "3:45 PM", "5:30 PM"]
-  },
-  {
-    id: "accra-mall",
-    name: "LesTrades Genius Bar — Accra Mall",
-    city: "Accra",
-    address: "Tetteh Quarshie Interchange, Shop G12, Accra",
-    landmark: "Ground floor near Food Court",
-    hours: "Mon–Sat: 9:00 AM – 9:00 PM · Sun: 11:00 AM – 7:00 PM",
-    slots: ["10:30 AM", "12:00 PM", "2:30 PM", "4:00 PM", "6:15 PM"]
-  },
-  {
-    id: "east-legon",
-    name: "LesTrades Tech Flagship — East Legon",
-    city: "Accra",
-    address: "Boundary Road, Opp. A&C Mall, East Legon",
-    landmark: "Directly opposite A&C Corner",
-    hours: "Mon–Sat: 8:30 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM",
-    slots: ["9:30 AM", "11:15 AM", "1:45 PM", "3:30 PM", "5:00 PM"]
-  },
-  {
-    id: "kumasi-mall",
-    name: "LesTrades Genius Lounge — Kumasi City Mall",
-    city: "Kumasi",
-    address: "Asokwa, Kumasi City Mall, Shop 24, Kumasi",
-    landmark: "Entrance 2, Level 1",
-    hours: "Mon–Sat: 9:00 AM – 8:00 PM · Sun: 12:00 PM – 6:00 PM",
-    slots: ["11:00 AM", "1:30 PM", "3:00 PM", "5:30 PM"]
-  },
-  {
-    id: "airport-res",
-    name: "LesTrades Pro Suite — Airport Residential",
-    city: "Accra",
-    address: "Senchi Street, Airport Residential Area, Accra",
-    landmark: "Near Association International School",
-    hours: "Mon–Fri: 9:00 AM – 6:00 PM (By Appointment)",
-    slots: ["10:00 AM", "1:00 PM", "3:30 PM"]
   }
 ];
 
@@ -195,7 +159,7 @@ export default function GeniusBarScreen() {
             <Text style={styles.heroHeadline}>Expert Apple support in person.</Text>
             <Text style={styles.heroSubtext}>
               Book a one-on-one diagnostic session with an Apple Certified Technician at our
-              Accra Mall, East Legon, or Kumasi lounges. Genuine Apple parts guaranteed.
+              LESTRADES_UCC CAPE COAST lounge. Genuine Apple parts guaranteed.
             </Text>
           </View>
 
@@ -210,7 +174,7 @@ export default function GeniusBarScreen() {
               style={styles.idlePill}
             >
               <Ionicons name="color-palette-outline" size={16} color={colors.textSecondary} />
-              <Text style={styles.idlePillText}>Today at Apple (Sessions)</Text>
+              <Text style={styles.idlePillText}>Today at LesTrades</Text>
             </Pressable>
           </View>
 
@@ -490,7 +454,7 @@ export default function GeniusBarScreen() {
             <View style={styles.modalActionGroup}>
               <Pressable
                 onPress={() => {
-                  Linking.openURL(SUPPORT_WHATSAPP_URL).catch(() => {});
+                  Linking.openURL(SUPPORT_WHATSAPP_URL).catch(() => { });
                 }}
                 style={styles.whatsappBtn}
               >

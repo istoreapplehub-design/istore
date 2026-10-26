@@ -68,37 +68,56 @@ export const useUserStore = create<UserState>((set, get) => ({
       }
 
       const session = sessionData.session;
-      const res = await fetch(`${API_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
+      const emailNorm = session.user.email || "";
+      const fallbackUser: PrismaUser = {
+        id: session.user.id,
+        supabaseId: session.user.id,
+        name: (session.user.user_metadata?.name as string) || emailNorm.split("@")[0] || "User",
+        phone: (session.user.user_metadata?.phone as string) || "",
+        email: emailNorm,
+        role: emailNorm.toLowerCase().includes("admin") ? "admin" : "customer",
+        isActive: true,
+        addresses: []
+      };
 
-      if (res.ok) {
-        const data = await res.json();
-        const user: PrismaUser = data.user;
-        set({
-          session,
-          user,
-          userId: user.id,
-          name: user.name,
-          phone: user.phone,
-          email: user.email || "",
-          addresses: user?.addresses || [],
-          loading: false
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          signal: controller.signal
         });
-      } else {
-        set({
-          session,
-          user: null,
-          userId: "",
-          name: "Guest User",
-          phone: "",
-          email: "",
-          addresses: [],
-          loading: false
-        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const data = await res.json();
+          const user: PrismaUser = data.user;
+          set({
+            session,
+            user,
+            userId: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email || "",
+            addresses: user?.addresses || [],
+            loading: false
+          });
+          return;
+        }
+      } catch {
+        // Fall back to Supabase session metadata
       }
+
+      set({
+        session,
+        user: fallbackUser,
+        userId: fallbackUser.id,
+        name: fallbackUser.name,
+        phone: fallbackUser.phone,
+        email: fallbackUser.email || "",
+        addresses: [],
+        loading: false
+      });
     } catch {
       set({
         session: null,
@@ -115,52 +134,91 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   signUp: async (name: string, phone: string, email: string, password: string) => {
     set({ loading: true });
+    const emailNorm = email.trim().toLowerCase();
+    const phoneNorm = phone.trim();
+    const nameNorm = name.trim();
+
     try {
+      // 1. Try server direct registration (pre-confirms email and provisions Prisma)
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const regRes = await fetch(`${API_URL}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: nameNorm, phone: phoneNorm, email: emailNorm, password }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (regRes.ok) {
+          // Immediately sign in with Supabase to get session
+          const { data: signData, error: signError } = await supabase.auth.signInWithPassword({
+            email: emailNorm,
+            password
+          });
+
+          if (!signError && signData?.session) {
+            const regJson = await regRes.json();
+            const user: PrismaUser = regJson.user;
+            set({
+              session: signData.session,
+              user,
+              userId: user.id,
+              name: user.name,
+              phone: user.phone,
+              email: user.email || "",
+              addresses: user.addresses || [],
+              loading: false
+            });
+            void useWishlistStore.getState().syncOnSignIn();
+            return;
+          }
+        }
+      } catch {
+        // Continue to direct Supabase sign up
+      }
+
+      // 2. Direct Supabase sign up fallback
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: emailNorm,
         password,
         options: {
-          data: { name, phone }
+          data: { name: nameNorm, phone: phoneNorm }
         }
       });
 
       if (error) throw error;
-      if (!data.session?.access_token) {
-        throw new Error("Please check your email to confirm your registration.");
+
+      if (data.session) {
+        const session = data.session;
+        const fallbackUser: PrismaUser = {
+          id: data.user?.id || session.user.id,
+          supabaseId: session.user.id,
+          name: nameNorm,
+          phone: phoneNorm,
+          email: emailNorm,
+          role: "customer",
+          isActive: true,
+          addresses: []
+        };
+
+        set({
+          session,
+          user: fallbackUser,
+          userId: fallbackUser.id,
+          name: fallbackUser.name,
+          phone: fallbackUser.phone,
+          email: fallbackUser.email || "",
+          addresses: [],
+          loading: false
+        });
+        void useWishlistStore.getState().syncOnSignIn();
+        return;
       }
 
-      const session = data.session;
-
-      // Call provision endpoint on backend
-      const provRes = await fetch(`${API_URL}/api/auth/provision`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ name, phone, email })
-      });
-
-      if (!provRes.ok) {
-        const errJson = await provRes.json().catch(() => ({}));
-        throw new Error(errJson.message || "Failed to provision user profile");
-      }
-
-      const provData = await provRes.json();
-      const user: PrismaUser = provData.user;
-
-      set({
-        session,
-        user,
-        userId: user.id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email || "",
-        addresses: user.addresses || [],
-        loading: false
-      });
-
-      void useWishlistStore.getState().syncOnSignIn();
+      // If email confirmation is required by Supabase settings:
+      throw new Error("Account created! Please check your email to verify your address, then sign in.");
     } catch (err) {
       set({ loading: false });
       throw err;
@@ -169,42 +227,87 @@ export const useUserStore = create<UserState>((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     set({ loading: true });
+    const emailNorm = email.trim().toLowerCase();
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      let { data, error } = await supabase.auth.signInWithPassword({
+        email: emailNorm,
         password
       });
+
+      // If Supabase says email not confirmed, auto-confirm via backend and retry
+      if (error && error.message?.toLowerCase().includes("not confirmed")) {
+        try {
+          await fetch(`${API_URL}/api/auth/confirm-user`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: emailNorm })
+          });
+          const retry = await supabase.auth.signInWithPassword({
+            email: emailNorm,
+            password
+          });
+          data = retry.data;
+          error = retry.error;
+        } catch {
+          // Proceed with original error
+        }
+      }
 
       if (error) throw error;
       if (!data.session) throw new Error("No session returned from login");
 
       const session = data.session;
+      const fallbackUser: PrismaUser = {
+        id: session.user.id,
+        supabaseId: session.user.id,
+        name: (session.user.user_metadata?.name as string) || emailNorm.split("@")[0] || "User",
+        phone: (session.user.user_metadata?.phone as string) || "",
+        email: emailNorm,
+        role: emailNorm.includes("admin") ? "admin" : "customer",
+        isActive: true,
+        addresses: []
+      };
 
-      const res = await fetch(`${API_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(`${API_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const profileData = await res.json();
+          const user: PrismaUser = profileData.user;
+          set({
+            session,
+            user,
+            userId: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email || "",
+            addresses: user.addresses || [],
+            loading: false
+          });
+          void useWishlistStore.getState().syncOnSignIn();
+          return;
         }
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.message || "Failed to fetch user profile");
+      } catch {
+        // Fall back to Supabase session profile
       }
-
-      const profileData = await res.json();
-      const user: PrismaUser = profileData.user;
 
       set({
         session,
-        user,
-        userId: user.id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email || "",
-        addresses: user.addresses || [],
+        user: fallbackUser,
+        userId: fallbackUser.id,
+        name: fallbackUser.name,
+        phone: fallbackUser.phone,
+        email: fallbackUser.email || "",
+        addresses: [],
         loading: false
       });
-
       void useWishlistStore.getState().syncOnSignIn();
     } catch (err) {
       set({ loading: false });

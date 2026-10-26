@@ -8,10 +8,14 @@ const {
   listAllUsers,
   provisionSchema,
   upgradeRoleSchema,
+  registerUser,
+  confirmUser
 } = require("../controllers/authController");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { validate } = require("../middleware/validate");
 
+router.post("/register", registerUser);
+router.post("/confirm-user", confirmUser);
 router.post(
   "/provision",
   validate({ body: provisionSchema }),

@@ -63,7 +63,7 @@ const SLIDES: OnboardingSlide[] = [
       "Check out effortlessly with Mobile Money or Card via Paystack, track your delivery in real time, and enjoy 1-Year Official Apple Warranty coverage.",
     icon: "shield-checkmark-outline",
     highlights: [
-      "Same-day express dispatch in Accra & Kumasi",
+      "Same-day express dispatch across Ghana",
       "1-Year Official Apple Warranty & 7-day returns",
       "Dedicated specialist concierge support"
     ]
