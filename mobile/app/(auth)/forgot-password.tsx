@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -62,9 +63,12 @@ export default function ForgotPasswordScreen() {
         >
           <View style={styles.header}>
             <View style={styles.logoCard}>
-              <View style={styles.logoIcon}>
-                <Ionicons name="lock-closed-outline" size={24} color={colors.brandAccent} />
-              </View>
+              <Image
+                source={require("../../assets/images/lestrades-logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+                accessibilityLabel="LesTrades — Quality for Less"
+              />
             </View>
             <Text style={styles.title}>Forgot Password?</Text>
             <Text style={styles.subtitle}>
@@ -160,30 +164,32 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl
   },
   logoCard: {
-    alignSelf: "flex-start",
-    marginBottom: spacing.md
-  },
-  logoIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.lg,
+    alignSelf: "center",
     backgroundColor: "#FFFFFF",
+    borderRadius: radius.lg,
     borderWidth: 1.5,
     borderColor: colors.brandRedBorder,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: spacing.md,
     ...shadow.card
+  },
+  logoImage: {
+    width: 88,
+    height: 65
   },
   title: {
     ...typography.largeTitle,
     color: colors.text,
     letterSpacing: -0.8,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
+    textAlign: "center"
   },
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
-    lineHeight: 22
+    lineHeight: 22,
+    textAlign: "center"
   },
   form: {
     gap: spacing.md

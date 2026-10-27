@@ -303,19 +303,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl
   },
   logoCard: {
-    alignSelf: "flex-start",
+    alignSelf: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: radius.lg,
     borderWidth: 1.5,
     borderColor: colors.brandRedBorder,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     marginBottom: spacing.md,
     ...shadow.card
   },
   logoImage: {
-    width: 116,
-    height: 86
+    width: 88,
+    height: 65
   },
   brandSubtitle: {
     ...typography.subheadline,
@@ -329,12 +329,14 @@ const styles = StyleSheet.create({
     ...typography.largeTitle,
     color: colors.text,
     letterSpacing: -0.8,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
+    textAlign: "center"
   },
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
-    lineHeight: 22
+    lineHeight: 22,
+    textAlign: "center"
   },
   form: {
     gap: spacing.md
