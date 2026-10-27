@@ -215,7 +215,7 @@ export default function ShopScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView style={styles.container} edges={[]}>
       {/* 1. Header */}
       <AppHeader
         title="Shop"
@@ -375,28 +375,6 @@ export default function ShopScreen() {
             </Text>
           </Pressable>
 
-          <Pressable
-            onPress={() => {
-              AppHaptics.selection();
-              router.push("/ar-viewer" as any);
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 5,
-              backgroundColor: "rgba(0, 0, 0, 0.04)",
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              borderRadius: radius.pill,
-              borderWidth: 1,
-              borderColor: colors.border
-            }}
-          >
-            <Ionicons name="cube-outline" size={13} color={colors.text} />
-            <Text style={{ fontSize: 12, color: colors.text, fontFamily: typography.fontFamily.semibold }}>
-              3D View
-            </Text>
-          </Pressable>
         </ScrollView>
       </View>
 
@@ -673,7 +651,7 @@ const styles = StyleSheet.create({
   listContent: {
     gap: 12,
     paddingTop: 14,
-    paddingBottom: 36
+    paddingBottom: 16
   },
   gridCard: {
     flex: 1,

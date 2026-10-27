@@ -143,14 +143,6 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
-                name="ar-viewer"
-                options={{
-                  headerShown: false,
-                  presentation: "fullScreenModal",
-                  animation: "fade"
-                }}
-              />
-              <Stack.Screen
                 name="pickup-pass"
                 options={{
                   headerShown: false,

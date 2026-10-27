@@ -5,6 +5,7 @@ const { requireAuth } = require("../middleware/auth");
 const { safeJsonParse } = require("../utils/json");
 const { uploadImage } = require("../utils/storage");
 const { uploadSingle } = require("../middleware/upload");
+const { supabaseAdmin } = require("../utils/supabase");
 
 const router = express.Router();
 
@@ -183,6 +184,38 @@ router.post("/avatar", requireAuth, uploadSingle, async (req, res, next) => {
     });
 
     res.json({ success: true, avatarUrl: image.publicUrl, path: image.path });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/user/account
+ * Permanently erases the signed-in customer: all app data rows plus the Supabase
+ * auth user. Admins must use the admin console instead.
+ */
+router.delete("/account", requireAuth, async (req, res, next) => {
+  try {
+    if (req.user.role === "admin") {
+      return res.status(403).json({ error: true, message: "Admin accounts cannot be self-deleted." });
+    }
+
+    const userId = req.user.id;
+    const deleted = await prisma.$transaction(async (tx) => {
+      await tx.installmentPlan.deleteMany({ where: { userId } });
+      await tx.kycVerification.deleteMany({ where: { userId } });
+      await tx.wishlistItem.deleteMany({ where: { userId } });
+      await tx.order.deleteMany({ where: { userId } });
+      await tx.review.deleteMany({ where: { userId } });
+      return tx.user.delete({ where: { id: userId } });
+    });
+
+    if (deleted.supabaseId) {
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(deleted.supabaseId);
+      if (error) console.warn(`Auth user ${deleted.supabaseId} removed from app DB but Supabase cleanup failed: ${error.message}`);
+    }
+
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

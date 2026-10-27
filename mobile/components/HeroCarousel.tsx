@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Carousel } from "react-native-reanimated-carousel";
@@ -120,7 +121,14 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
                 <View style={styles.rightCol}>
                   <View style={styles.pedestal}>
                     {image ? (
-                      <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+                      <Image
+                        source={{ uri: image }}
+                        style={styles.image}
+                        contentFit="contain"
+                        cachePolicy="memory-disk"
+                        transition={180}
+                        recyclingKey={item.id}
+                      />
                     ) : (
                       <ProductVisual
                         category={item.category}

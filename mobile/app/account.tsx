@@ -16,7 +16,7 @@ import { colors, radius, spacing, typography } from "../constants/theme";
 import { useUserStore } from "../store/useUserStore";
 import { useCartStore } from "../store/useCartStore";
 import { useWishlistStore } from "../store/useWishlistStore";
-import { getMyOrders } from "../services/api";
+import { deleteAccount, getMyOrders } from "../services/api";
 import { getPreferences } from "../lib/preferences";
 import { checkHasUnreadNotifications } from "../lib/notifications";
 import { AppHaptics } from "../lib/haptics";
@@ -70,7 +70,7 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export default function AccountScreen() {
+export default function AccountScreen({ inTabs = false }: { inTabs?: boolean }) {
   const router = useRouter();
   const { user, session, signOut } = useUserStore();
   const clearCart = useCartStore((state) => state.clearCart);
@@ -114,7 +114,7 @@ export default function AccountScreen() {
 
   if (!session) {
     return (
-      <SafeAreaView style={styles.container} edges={["bottom"]}>
+      <SafeAreaView style={styles.container} edges={inTabs ? [] : ["top", "bottom"]}>
         <View style={styles.gate}>
           <Animated.View entering={FadeInDown.springify().damping(16)} style={styles.gateInner}>
             <BrandLogo size={56} variant="dark" />
@@ -228,11 +228,61 @@ export default function AccountScreen() {
     ]);
   };
 
+  const [deleting, setDeleting] = React.useState(false);
+  const confirmDeleteAccount = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    Alert.alert(
+      "Delete Account",
+      "This permanently erases your profile, orders, wishlist, trade-ins and installment history. This cannot be undone.",
+      [
+        { text: "Keep My Account", style: "cancel" },
+        {
+          text: "Delete Forever",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              "Final Warning",
+              "Type your confirmation below. All data will be removed immediately.",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Yes, Delete",
+                  style: "destructive",
+                  onPress: async () => {
+                    if (deleting) return;
+                    setDeleting(true);
+                    try {
+                      await deleteAccount();
+                      await signOut();
+                      clearCart();
+                      clearWishlist();
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      router.replace("/(tabs)");
+                      Alert.alert("Account Deleted", "Your LesTrades account and all associated data have been removed.");
+                    } catch (err: unknown) {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                      Alert.alert(
+                        "Deletion Failed",
+                        err instanceof Error ? err.message : "We could not delete your account. Check your connection and try again."
+                      );
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }
+                }
+              ]
+            );
+          }
+        }
+      ]
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView style={styles.container} edges={inTabs ? ["top"] : ["top", "bottom"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, inTabs && styles.scrollContentTabs]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -399,12 +449,6 @@ export default function AccountScreen() {
           />
           <View style={styles.divider} />
           <Row
-            icon="cube-outline"
-            label="3D Studio"
-            onPress={() => router.push("/ar-viewer" as never)}
-          />
-          <View style={styles.divider} />
-          <Row
             icon="qr-code-outline"
             label="Store Pickup Passes"
             onPress={() => router.push("/pickup-pass" as never)}
@@ -496,6 +540,17 @@ export default function AccountScreen() {
         >
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.deleteAccountBtn, pressed && { opacity: 0.6 }, deleting && { opacity: 0.5 }]}
+          onPress={confirmDeleteAccount}
+          disabled={deleting}
+          accessibilityRole="button"
+          accessibilityLabel="Delete Account"
+        >
+          <Ionicons name="trash-outline" size={15} color="#D92D20" />
+          <Text style={styles.deleteAccountText}>{deleting ? "Deleting Account…" : "Delete Account"}</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -510,6 +565,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: 48
+  },
+  scrollContentTabs: {
+    // The tab bar already reserves the device bottom inset; keep sign-out flush against it
+    paddingBottom: 10
   },
   profileCard: {
     flexDirection: "row",
@@ -727,6 +786,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: "#FFFFFF"
+  },
+  deleteAccountBtn: {
+    marginTop: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: "rgba(217, 45, 32, 0.35)",
+    backgroundColor: "rgba(217, 45, 32, 0.04)"
+  },
+  deleteAccountText: {
+    fontSize: 14,
+    fontFamily: typography.fontFamily.semibold,
+    color: "#D92D20"
   },
   signOutText: {
     color: colors.text,

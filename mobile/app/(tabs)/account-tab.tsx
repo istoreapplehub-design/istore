@@ -6,7 +6,7 @@ import { colors } from "../../constants/theme";
 export default function AccountTabScreen() {
   return (
     <View style={styles.root}>
-      <AccountScreen />
+      <AccountScreen inTabs />
     </View>
   );
 }

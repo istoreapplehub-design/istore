@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCategories, getProducts } from "../services/api";
 import { Category, Product } from "../types";
+
+const CACHE_KEY = "home-data-v1";
 
 export interface HomeDataState {
   featured: Product[];
@@ -12,6 +15,13 @@ export interface HomeDataState {
   refetch: () => Promise<void>;
 }
 
+interface HomeCache {
+  featured: Product[];
+  newArrivals: Product[];
+  bestSellers: Product[];
+  categories: Category[];
+}
+
 export function useHomeData(): HomeDataState {
   const [featured, setFeatured] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
@@ -20,8 +30,8 @@ export function useHomeData(): HomeDataState {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const fetchData = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     setError(null);
     try {
       const [featuredRes, newArrivalsRes, bestSellersRes, categoriesRes] =
@@ -36,6 +46,15 @@ export function useHomeData(): HomeDataState {
       setNewArrivals(newArrivalsRes.data);
       setBestSellers(bestSellersRes.data);
       setCategories(categoriesRes);
+      AsyncStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({
+          featured: featuredRes.data,
+          newArrivals: newArrivalsRes.data,
+          bestSellers: bestSellersRes.data,
+          categories: categoriesRes
+        })
+      ).catch(() => {});
     } catch (err: unknown) {
       const parsedError =
         err instanceof Error ? err : new Error("Failed to load storefront data");
@@ -45,8 +64,26 @@ export function useHomeData(): HomeDataState {
     }
   }, []);
 
+  // Stale-while-revalidate: render the previous payload immediately, refresh after.
   useEffect(() => {
-    fetchData();
+    let active = true;
+    AsyncStorage.getItem(CACHE_KEY)
+      .then((raw) => {
+        if (!active || !raw) return;
+        const cached = JSON.parse(raw) as HomeCache;
+        if (cached.newArrivals?.length || cached.featured?.length) {
+          setFeatured(cached.featured || []);
+          setNewArrivals(cached.newArrivals || []);
+          setBestSellers(cached.bestSellers || []);
+          setCategories(cached.categories || []);
+          setLoading(false);
+        }
+      })
+      .catch(() => {});
+    fetchData({ silent: true });
+    return () => {
+      active = false;
+    };
   }, [fetchData]);
 
   return {

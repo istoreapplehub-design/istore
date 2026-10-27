@@ -528,24 +528,6 @@ export default function ProductDetailScreen() {
             </>
           )}
             </View>
-
-            {/* 3D Studio button */}
-            <Pressable
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push({
-                  pathname: "/ar-viewer",
-                  params: { model: product.slug, color: selectedColor }
-                } as any);
-              }}
-              style={({ pressed }) => [
-                styles.arQuickLookBtn,
-                pressed && { opacity: 0.8 }
-              ]}
-            >
-              <Ionicons name="cube-outline" size={17} color="#0066CC" />
-              <Text style={styles.arQuickLookBtnText}>View in 3D</Text>
-            </Pressable>
           </View>
 
           {/* Right: Product Details, Config & CTA */}
@@ -1720,30 +1702,6 @@ const styles = StyleSheet.create({
     ...typography.headline,
     color: "#FFFFFF",
     fontWeight: "700"
-  },
-  arQuickLookBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#FFFFFF",
-    borderRadius: radius.pill,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginTop: 12,
-    alignSelf: "center",
-    borderWidth: 1,
-    borderColor: "rgba(0, 102, 204, 0.25)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1
-  },
-  arQuickLookBtnText: {
-    fontSize: 13,
-    fontFamily: typography.fontFamily.semibold,
-    color: "#0066CC"
   },
   tradeInBanner: {
     flexDirection: "row",

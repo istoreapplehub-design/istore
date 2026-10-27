@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
   FlatList,
-  Image,
   Linking,
   Pressable,
   RefreshControl,
@@ -11,6 +10,7 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -240,7 +240,10 @@ export default function HomeScreen() {
                       <Image
                         source={{ uri: image }}
                         style={styles.editorialImage}
-                        resizeMode="contain"
+                        contentFit="contain"
+                        cachePolicy="memory-disk"
+                        transition={180}
+                        recyclingKey={item.id}
                       />
                     ) : (
                       <View style={styles.editorialImageFallback}>
@@ -461,26 +464,6 @@ export default function HomeScreen() {
               </Text>
               <View style={styles.assistLinkRow}>
                 <Text style={styles.assistLinkText}>Get Instant Quote</Text>
-                <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [styles.assistCard, pressed && { opacity: 0.88 }]}
-              onPress={() => {
-                Haptics.selectionAsync();
-                router.push("/ar-viewer" as never);
-              }}
-            >
-              <View style={[styles.assistIcon, { backgroundColor: "rgba(0, 102, 204, 0.08)" }]}>
-                <Ionicons name="cube-outline" size={20} color="#0066CC" />
-              </View>
-              <Text style={styles.assistCardTitle}>3D Studio</Text>
-              <Text style={styles.assistCardSub}>
-                Explore iPhones, iPads & Macs in interactive 3D at true-to-life scale.
-              </Text>
-              <View style={styles.assistLinkRow}>
-                <Text style={styles.assistLinkText}>Open 3D Studio</Text>
                 <Ionicons name="chevron-forward" size={13} color={colors.brandAccent} />
               </View>
             </Pressable>

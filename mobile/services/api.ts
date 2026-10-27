@@ -621,6 +621,10 @@ export async function uploadAvatar(file: {
   return data;
 }
 
+export async function deleteAccount(): Promise<{ success: boolean }> {
+  return request("/api/user/account", { method: "DELETE" });
+}
+
 export async function initializePayment(
   orderId: string,
   options: { userId?: string; email?: string } = {}

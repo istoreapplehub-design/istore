@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getProducts } from "../services/api";
 import { Product } from "../types";
+
+const CACHE_KEY = "flash-products-v1";
 
 /** Ghana is on GMT year-round, so the daily window closes at UTC midnight. */
 export function nextFlashWindowEnd(now: number = Date.now()): number {
@@ -43,13 +46,15 @@ export function useFlashDeals(): FlashDealsState {
   const [error, setError] = useState<Error | null>(null);
   const [endsAt, setEndsAt] = useState(() => nextFlashWindowEnd());
 
-  const refetch = useCallback(async () => {
-    setLoading(true);
+  const refetch = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     setError(null);
     try {
       const res = await getProducts({ limit: 60 });
-      setProducts(res.data || []);
+      const rows = res.data || [];
+      setProducts(rows);
       setEndsAt(nextFlashWindowEnd());
+      AsyncStorage.setItem(CACHE_KEY, JSON.stringify(rows)).catch(() => {});
     } catch (err: unknown) {
       setError(err instanceof Error ? err : new Error("Failed to load flash deals"));
     } finally {
@@ -57,8 +62,23 @@ export function useFlashDeals(): FlashDealsState {
     }
   }, []);
 
+  // Stale-while-revalidate: paint the last payload instantly, refresh after.
   useEffect(() => {
-    refetch();
+    let active = true;
+    AsyncStorage.getItem(CACHE_KEY)
+      .then((raw) => {
+        if (!active || !raw) return;
+        const rows = JSON.parse(raw) as Product[];
+        if (Array.isArray(rows) && rows.length > 0) {
+          setProducts(rows);
+          setLoading(false);
+        }
+      })
+      .catch(() => {});
+    refetch({ silent: true });
+    return () => {
+      active = false;
+    };
   }, [refetch]);
 
   const deals = useMemo(() => selectFlashDeals(products), [products]);

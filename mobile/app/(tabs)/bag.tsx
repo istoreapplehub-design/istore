@@ -18,7 +18,7 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -34,7 +34,6 @@ import { Product } from "../../types";
 
 export default function BagScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isTabletOrPc = width >= 860;
   const [editMode, setEditMode] = useState(false);
@@ -723,7 +722,7 @@ export default function BagScreen() {
             <View
               style={[
                 styles.stickyBar,
-                { paddingBottom: Math.max(insets.bottom, 16) }
+                { paddingBottom: 10 }
               ]}
             >
               <View style={styles.stickyBarTop}>
