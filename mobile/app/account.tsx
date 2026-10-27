@@ -12,7 +12,7 @@ import * as Haptics from "expo-haptics";
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { colors, radius, spacing, typography } from "../constants/theme";
+import { colors, radius, shadow, spacing, typography } from "../constants/theme";
 import { useUserStore } from "../store/useUserStore";
 import { useCartStore } from "../store/useCartStore";
 import { useWishlistStore } from "../store/useWishlistStore";
@@ -20,7 +20,6 @@ import { deleteAccount, getMyOrders } from "../services/api";
 import { getPreferences } from "../lib/preferences";
 import { checkHasUnreadNotifications } from "../lib/notifications";
 import { AppHaptics } from "../lib/haptics";
-import { BrandLogo } from "../components/BrandLogo";
 
 function Row({
   icon,
@@ -118,7 +117,14 @@ export default function AccountScreen({ inTabs = false }: { inTabs?: boolean }) 
       <SafeAreaView style={styles.container} edges={inTabs ? [] : ["top", "bottom"]}>
         <View style={styles.gate}>
           <Animated.View entering={FadeInDown.springify().damping(16)} style={styles.gateInner}>
-            <BrandLogo size={56} variant="dark" />
+            <View style={styles.gateLogoCard}>
+              <Image
+                source={require("../assets/images/lestrades-logo.png")}
+                style={styles.gateLogoImage}
+                resizeMode="contain"
+                accessibilityLabel="LesTrades — Quality for Less"
+              />
+            </View>
             <Text style={styles.gateTitle}>Sign in to LesTrades</Text>
             <Text style={styles.gateBody}>
               Your bag stays with you either way. Signing in unlocks your orders, saved addresses, and personalized benefits on LesTrades.
@@ -816,6 +822,19 @@ const styles = StyleSheet.create({
   },
   gateInner: {
     alignItems: "center"
+  },
+  gateLogoCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.brandRedBorder,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    ...shadow.card
+  },
+  gateLogoImage: {
+    width: 88,
+    height: 65
   },
   gateTitle: {
     ...typography.h1,
