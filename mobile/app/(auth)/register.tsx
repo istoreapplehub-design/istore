@@ -125,7 +125,7 @@ export default function RegisterScreen() {
             </View>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>
-              Sign up with LesTrades to track purchases, save your delivery addresses, and receive official Apple warranty support.
+              Sign up with LesTrades to track purchases, save your delivery addresses, and get manufacturer-backed warranty support on every device.
             </Text>
           </View>
 

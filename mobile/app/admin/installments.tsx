@@ -122,7 +122,7 @@ export default function AdminInstallmentsScreen() {
       return null;
     }
     if (!Number.isInteger(score) || score < 300 || score > 850) {
-      Alert.alert("Invalid Credit Score", "Enter the credit score to grant (300–850).");
+      Alert.alert("Invalid Trust Rating", "Enter the trust rating to grant (300–850).");
       return null;
     }
     return { count, pct, score };
@@ -135,7 +135,7 @@ export default function AdminInstallmentsScreen() {
 
     Alert.alert(
       "Approve Application",
-      `Grant ${formatGHS(Math.round((selected.totalAmountGHS * (100 - form.pct)) / 100 / form.count))} ${frequency} payments × ${form.count} and credit score ${form.score}?`,
+      `Grant ${formatGHS(Math.round((selected.totalAmountGHS * (100 - form.pct)) / 100 / form.count))} ${frequency} payments × ${form.count} and trust rating ${form.score}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -207,7 +207,7 @@ export default function AdminInstallmentsScreen() {
 
   return (
     <View style={styles.container}>
-      <AdminHeader title="Installments & Credit" subtitle="Review applications, set schedules, assign hardware IDs" />
+      <AdminHeader title="Installments & Trust Ratings" subtitle="Review applications, set schedules, assign hardware IDs" />
 
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 32 }]}
@@ -369,7 +369,7 @@ export default function AdminInstallmentsScreen() {
                     </View>
                   </View>
 
-                  <Text style={styles.fieldLabel}>Credit score to grant (300–850)</Text>
+                  <Text style={styles.fieldLabel}>Trust rating to grant (300–850)</Text>
                   <TextInput
                     value={creditScore}
                     onChangeText={setCreditScore}
@@ -389,7 +389,7 @@ export default function AdminInstallmentsScreen() {
 
                   <View style={styles.btnRow}>
                     <Pressable onPress={handleApprove} disabled={saving} style={({ pressed }) => [styles.approveBtn, pressed && { opacity: 0.85 }, saving && { opacity: 0.5 }]}>
-                      {saving ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.approveBtnText}>Approve & Grant Credit</Text>}
+                      {saving ? <ActivityIndicator color="#FFFFFF" size="small" /> : <Text style={styles.approveBtnText}>Approve & Grant Rating</Text>}
                     </Pressable>
                     <Pressable onPress={handleReject} disabled={saving} style={({ pressed }) => [styles.rejectBtn, pressed && { opacity: 0.85 }, saving && { opacity: 0.5 }]}>
                       <Text style={styles.rejectBtnText}>Reject</Text>

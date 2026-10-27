@@ -1,0 +1,29 @@
+# LesTrades API — fly.io app
+# After `fly launch` renames this app, update `app` here and in admin-web/fly.toml.
+app = "lestrades-api"
+primary_region = "fra"  # eu-central-1, closest Supabase region aws-0-eu-west-1
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 250
+    soft_limit = 200
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

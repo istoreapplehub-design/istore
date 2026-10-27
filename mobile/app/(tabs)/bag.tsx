@@ -240,7 +240,7 @@ export default function BagScreen() {
             </View>
             <Text style={styles.emptyTitle}>Your Bag is empty.</Text>
             <Text style={styles.emptySubtitle}>
-              Explore our latest 2026 flagship lineup, authenticated accessories, and limited flash deals with 1-Year Apple warranty coverage.
+              Explore our latest 2026 flagship lineup, authenticated accessories, and limited flash deals with 1-year warranty coverage on every device.
             </Text>
 
             <View style={styles.emptyButtonRow}>

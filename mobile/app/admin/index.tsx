@@ -443,7 +443,7 @@ export default function AdminDashboardScreen() {
               />
               <OpsTile
                 icon="stats-chart-outline"
-                label="Installments & Credit"
+                label="Installments & Ratings"
                 hint="Review applications, set schedules"
                 count={pendingInstallments}
                 countLabel="to review"

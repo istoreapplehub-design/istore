@@ -177,7 +177,7 @@ export default function FlashDealsScreen() {
               <View style={styles.bannerFooter}>
                 <Ionicons name="shield-checkmark" size={14} color="#0066CC" />
                 <Text style={styles.bannerFooterText}>
-                  Genuine Apple warranty · Free delivery across Greater Accra
+                  Genuine warranty covered · Free delivery across Greater Accra
                 </Text>
               </View>
             </View>

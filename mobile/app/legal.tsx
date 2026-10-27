@@ -19,7 +19,7 @@ const TERMS: Section[] = [
   {
     heading: "1. About LesTrades",
     paras: [
-      "LesTrades is an online retailer of genuine Apple devices and accessories serving customers in Ghana. By placing an order through this app you agree to these Terms of Service.",
+      "LesTrades is an online retailer of genuine Apple-branded devices and accessories serving customers in Ghana. We are an independent retailer and are not affiliated with, endorsed by, or an authorized reseller of Apple Inc. \"Apple\", \"iPhone\" and other Apple marks belong to Apple Inc. By placing an order through this app you agree to these Terms of Service.",
       "Product images, specifications and prices shown in the app are for identification purposes. Colour, storage and bundle availability may change without notice."
     ]
   },
@@ -54,7 +54,16 @@ const TERMS: Section[] = [
     ]
   },
   {
-    heading: "6. Changes to these Terms",
+    heading: "6. Installment Plans",
+    paras: [
+      "Installment plans are applied for in-app and reviewed by LesTrades staff before approval. Submitting an application is not confirmation of a plan.",
+      "Approved plans require a down payment (set at approval, typically 60% of the device price) and the balance in scheduled weekly or monthly instalments. Devices on installment plans must be collected in store; we do not deliver them until the plan is fully paid.",
+      "LesTrades may approve or decline any application at its discretion. Missed instalments may suspend future plans and, where applicable, a previously granted trust rating may be reduced.",
+      "This is a merchant payment arrangement between you and LesTrades. It is not a loan, and no interest is charged on scheduled instalments."
+    ]
+  },
+  {
+    heading: "7. Changes to these Terms",
     paras: [
       "We may update these Terms from time to time. The version shown in the app is the one in effect when you order. Continued use of the app after changes constitutes acceptance."
     ]
@@ -66,8 +75,11 @@ const PRIVACY: Section[] = [
     heading: "1. What we collect",
     paras: [
       "Account information: your name, phone number and email address.",
-      "Order information: delivery addresses, order contents, payment references and notes.",
-      "Usage information: basic app diagnostics needed to keep LesTrades running reliably."
+      "Order information: delivery addresses (including the GPS address text you type at checkout), order contents, payment references and notes.",
+      "Identity information for installment applications: your Ghana Card number, full name as printed on the ID, and a photo of the ID you submit for verification. This is used only to verify the application and is stored with your plan record.",
+      "Photos and device identifiers: pictures you take for trade-in inspections or your profile avatar, and serial/IMEI numbers of devices you verify or purchase.",
+      "Usage information: basic app diagnostics needed to keep LesTrades running reliably.",
+      "We do not use continuous location services and never read your contacts, messages or call logs."
     ]
   },
   {
@@ -92,7 +104,7 @@ const PRIVACY: Section[] = [
   {
     heading: "5. Your rights",
     paras: [
-      "Under Ghana's Data Protection Act, 2012 (Act 843) you may access, correct or request deletion of your personal data. You can update your name, phone and addresses directly in the app; for anything else, email " + SUPPORT_EMAIL + ".",
+      "Under Ghana's Data Protection Act, 2012 (Act 843) you may access, correct or request deletion of your personal data. You can update your name, phone and addresses directly in the app, and permanently delete your account from Account → Delete Account; deletion removes your profile, addresses and order history from our systems, except records we must retain by law or for active installment obligations. For anything else, email " + SUPPORT_EMAIL + ".",
       "We keep order records for as long as required for tax and warranty purposes."
     ]
   },

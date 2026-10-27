@@ -1,0 +1,23 @@
+# LesTrades Admin Portal — fly.io app (static nginx)
+# `app` must match the name you create with `fly launch`/`fly apps create`.
+app = "lestrades-admin"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+  # Rebuild with these set so the bundle points at the deployed API.
+  [build.args]
+    VITE_API_URL = "https://lestrades-api.fly.dev"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

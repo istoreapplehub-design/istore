@@ -132,7 +132,7 @@ export default function AccountScreen({ inTabs = false }: { inTabs?: boolean }) 
 
             <View style={styles.gatePerks}>
               {[
-                { icon: "gift-outline" as const, text: "Refer friends & earn GHS 300 bonus credit" },
+                { icon: "calendar-outline" as const, text: "Book in-store Genius Bar sessions" },
                 { icon: "cube-outline" as const, text: "Track orders in real time" },
                 { icon: "heart-outline" as const, text: "Wishlist synced across devices" },
                 { icon: "location-outline" as const, text: "Saved delivery addresses" },
@@ -185,6 +185,10 @@ export default function AccountScreen({ inTabs = false }: { inTabs?: boolean }) 
               <Text style={styles.gateSupportDot}>·</Text>
               <Pressable onPress={() => router.push("/help")}>
                 <Text style={styles.gateSupportLink}>Support</Text>
+              </Pressable>
+              <Text style={styles.gateSupportDot}>·</Text>
+              <Pressable onPress={() => router.push("/legal?type=privacy" as never)}>
+                <Text style={styles.gateSupportLink}>Privacy</Text>
               </Pressable>
             </View>
           </Animated.View>

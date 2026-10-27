@@ -25,8 +25,24 @@ const app = express();
 // ─── 1. GLOBAL MIDDLEWARE ───────────────────────────────────────────────────
 app.use(morgan("dev"));
 
-// TODO: Restrict origin to your app domain before production
-app.use(cors());
+// Empty allowlist (local dev) = any origin. In production set
+// CORS_ALLOWED_ORIGINS to the comma-separated deployed web origins.
+// Native RN sends no Origin header, so the mobile app is unaffected either way.
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (allowedOrigins.length === 0 || !origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    }
+  })
+);
 
 // ─── 2. BODY PARSERS (APPROACH B) ───────────────────────────────────────────
 app.use(

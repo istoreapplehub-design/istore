@@ -36,7 +36,25 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "LesTrades uses the camera to photograph your trade-in device and to update your profile picture.",
+          "photosPermission": "LesTrades lets you pick photos from your library for trade-in inspections and your profile picture.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "infoPlist": {
+              "ITSAppUsesNonExemptEncryption": false
+            }
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -328,7 +328,7 @@ export default function InstallmentsScreen() {
       {loading ? (
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.brandAccent} />
-          <Text style={styles.loadingText}>Loading installment balance & credit score...</Text>
+          <Text style={styles.loadingText}>Loading installment balance & trust rating...</Text>
         </View>
       ) : plans.length === 0 ? (
         <FlatList
