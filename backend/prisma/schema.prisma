@@ -136,8 +136,8 @@ model User {
   avatarUrl        String?
   role             String            @default("customer") // "customer" | "admin"
   isActive         Boolean           @default(true)
-  creditScore      Int               @default(650) // 300 - 850
-  creditTier       String            @default("Silver") // Bronze | Silver | Gold | Platinum
+  creditScore      Int?                // null until earned via an admin-approved installment; 300 - 850 once set
+  creditTier       String              @default("Unrated") // Unrated | Bronze | Silver | Gold | Platinum
   addresses        String            @default("[]") // JSON string: [{ fullName, phone, region, city, gpsAddress, landmark, isDefault }]
   orders           Order[]
   installmentPlans InstallmentPlan[]
@@ -216,10 +216,12 @@ model InstallmentPlan {
   // Status, serial tracking and payments
   downPaymentPaid       Boolean               @default(false)
   downPaymentRef        String?               // Paystack reference for 60%
-  status                String                @default("pending_downpayment") // pending_downpayment | active | completed | defaulted | cancelled
+  status                String                @default("pending_review") // pending_review | pending_downpayment | active | completed | defaulted | cancelled | rejected
   serialNumber          String?               // Assigned Apple Serial Number
   imei                  String?               // Assigned IMEI
-  creditScoreAtApproval Int?                  @default(650)
+  creditScoreAtApproval Int?                  // Credit score granted by admin on approval
+  reviewNotes           String?               // Admin approval notes or rejection reason
+  reviewedAt            DateTime?             // When admin reviewed the application
   milestones            InstallmentMilestone[]
   
   createdAt          DateTime              @default(now())

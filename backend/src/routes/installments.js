@@ -12,9 +12,13 @@ const {
   confirmMilestone,
   getAdminInstallmentPlans,
   updateAdminInstallmentSerial,
+  approveInstallmentPlan,
+  rejectInstallmentPlan,
   verifyNiaSchema,
   calculateInstallmentSchema,
-  applyInstallmentSchema
+  applyInstallmentSchema,
+  approveInstallmentSchema,
+  rejectInstallmentSchema
 } = require("../controllers/installmentController");
 const { validate } = require("../middleware/validate");
 const { optionalAuth, requireAuth, requireAdmin } = require("../middleware/auth");
@@ -46,6 +50,18 @@ router.post("/confirm-milestone", confirmMilestone);
 
 // Admin installment management
 router.get("/admin/all", requireAdmin, getAdminInstallmentPlans);
+router.patch(
+  "/admin/:id/approve",
+  requireAdmin,
+  validate({ body: approveInstallmentSchema }),
+  approveInstallmentPlan
+);
+router.patch(
+  "/admin/:id/reject",
+  requireAdmin,
+  validate({ body: rejectInstallmentSchema }),
+  rejectInstallmentPlan
+);
 router.patch(
   "/admin/:id/serial",
   requireAdmin,

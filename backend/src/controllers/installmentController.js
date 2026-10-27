@@ -1,5 +1,6 @@
 const { z } = require("zod");
 const prisma = require("../utils/prisma");
+const { safeJsonParse } = require("../utils/json");
 const { verifyGhanaCard } = require("../services/niaService");
 const { adjustUserCreditScore, getCreditTier } = require("../utils/creditScore");
 const axios = require("axios");
@@ -40,13 +41,24 @@ const applyInstallmentSchema = z.object({
   nextOfKinPhone: z.string().trim().optional()
 });
 
+const approveInstallmentSchema = z.object({
+  frequency: z.enum(["weekly", "monthly"]),
+  totalInstallments: z.number().int().min(2).max(12),
+  downPaymentPercent: z.number().min(10).max(80).optional().default(60),
+  creditScore: z.number().int().min(300).max(850),
+  notes: z.string().trim().max(500).optional()
+});
+
+const rejectInstallmentSchema = z.object({
+  reason: z.string().trim().min(3).max(500)
+});
+
 /**
  * Helper to compute installment breakdown:
  * Exactly 60% initial down-payment, 40% balance split over frequency
  */
-function computeBreakdown(totalAmountGHS, frequency = "weekly", totalInstallments) {
-  const downPaymentPercent = 60.0;
-  const downPaymentGHS = Math.round((totalAmountGHS * 0.6) * 100) / 100;
+function computeBreakdown(totalAmountGHS, frequency = "weekly", totalInstallments, downPaymentPercent = 60.0) {
+  const downPaymentGHS = Math.round((totalAmountGHS * (downPaymentPercent / 100)) * 100) / 100;
   const remainingGHS = Math.round((totalAmountGHS - downPaymentGHS) * 100) / 100;
 
   let installmentsCount = totalInstallments;
@@ -124,11 +136,6 @@ async function verifyNia(req, res, next) {
       }
     });
 
-    if (userId) {
-      // Reward Ghana Card identity verification with +30 credit score
-      await adjustUserCreditScore(userId, 30, "Ghana Card verified with NIA");
-    }
-
     res.json({
       success: true,
       message: "Ghana Card verified successfully with National Identification Authority",
@@ -193,6 +200,32 @@ async function applyInstallmentPlan(req, res, next) {
       return res.status(404).json({ success: false, error: "Order not found" });
     }
 
+    // All installment orders are store-pickup only for now
+    const ship = safeJsonParse(order.shippingAddress, {});
+    const isPickupOrder =
+      typeof ship.landmark === "string" && ship.landmark.startsWith("Store Pickup");
+    if (!isPickupOrder) {
+      return res.status(400).json({
+        success: false,
+        error: "Installment orders must be collected from the store. Please place the order again with Store Pickup selected."
+      });
+    }
+
+    // Block re-applying while a plan is in progress; rejected/paid-out history is allowed
+    const existingPlan = await prisma.installmentPlan.findUnique({
+      where: { orderId },
+      select: { id: true, status: true }
+    });
+    if (existingPlan && ["pending_review", "pending_downpayment", "active"].includes(existingPlan.status)) {
+      return res.status(409).json({
+        success: false,
+        error:
+          existingPlan.status === "pending_review"
+            ? "Your application is already under review by our credit team."
+            : "This order already has an approved installment plan."
+      });
+    }
+
     // Verify KYC verification exists or verify on the fly
     let kyc = await prisma.kycVerification.findFirst({
       where: { nationalId: nationalId.trim().toUpperCase(), status: "verified" },
@@ -231,9 +264,9 @@ async function applyInstallmentPlan(req, res, next) {
         data: { isInstallment: true }
       });
 
-      // Remove existing pending plan if any
+      // Clear a previously rejected application for this order before re-applying
       await tx.installmentPlan.deleteMany({
-        where: { orderId }
+        where: { orderId, status: "rejected" }
       });
 
       const newPlan = await tx.installmentPlan.create({
@@ -257,20 +290,9 @@ async function applyInstallmentPlan(req, res, next) {
           employer: employer || null,
           nextOfKinName: nextOfKinName || null,
           nextOfKinPhone: nextOfKinPhone || null,
-          status: "pending_downpayment",
-          milestones: {
-            create: breakdown.schedule.map((s) => ({
-              milestoneIndex: s.milestoneIndex,
-              dueDate: new Date(s.dueDate),
-              amountGHS: s.amountGHS,
-              status: "pending"
-            }))
-          }
+          status: "pending_review"
         },
         include: {
-          milestones: {
-            orderBy: { milestoneIndex: "asc" }
-          },
           kyc: true
         }
       });
@@ -280,8 +302,11 @@ async function applyInstallmentPlan(req, res, next) {
 
     res.json({
       success: true,
-      message: "Installment plan created. Please proceed to pay the 60% down payment.",
-      data: plan
+      message: "Application submitted. Our credit team will review it and set your approved payment schedule. You will collect the device in-store once approved.",
+      data: {
+        ...plan,
+        estimatedSchedule: breakdown.schedule
+      }
     });
   } catch (err) {
     next(err);
@@ -303,6 +328,16 @@ async function initializeDownPayment(req, res, next) {
 
     if (!plan) {
       return res.status(404).json({ success: false, error: "Installment plan not found" });
+    }
+
+    if (plan.status === "pending_review") {
+      return res.status(400).json({ success: false, error: "Your application is still under review. The down payment can be paid once an admin approves your plan." });
+    }
+    if (plan.status === "rejected") {
+      return res.status(400).json({ success: false, error: "This application was rejected. Please submit a new application." });
+    }
+    if (plan.status !== "pending_downpayment") {
+      return res.status(400).json({ success: false, error: "This plan is not awaiting a down payment." });
     }
 
     if (plan.downPaymentPaid) {
@@ -399,6 +434,20 @@ async function verifyDownPayment(req, res, next) {
       return res.status(400).json({ success: false, error: "Down payment verification failed or is incomplete." });
     }
 
+    const currentPlan = await prisma.installmentPlan.findUnique({
+      where: { id: planId },
+      select: { status: true }
+    });
+    if (!currentPlan) {
+      return res.status(404).json({ success: false, error: "Installment plan not found" });
+    }
+    if (currentPlan.status === "pending_review") {
+      return res.status(400).json({ success: false, error: "Your application is still under review. Pay the down payment once it is approved." });
+    }
+    if (currentPlan.status !== "pending_downpayment") {
+      return res.status(400).json({ success: false, error: "This plan is not awaiting a down payment." });
+    }
+
     const updatedPlan = await prisma.$transaction(async (tx) => {
       const plan = await tx.installmentPlan.update({
         where: { id: planId },
@@ -476,8 +525,8 @@ async function getMyPlans(req, res, next) {
       orderBy: { createdAt: "desc" }
     });
 
-    const creditScore = userRecord?.creditScore || 650;
-    const creditTier = userRecord?.creditTier || getCreditTier(creditScore);
+    const creditScore = userRecord?.creditScore ?? null;
+    const creditTier = creditScore === null ? "Unrated" : userRecord?.creditTier || getCreditTier(creditScore);
 
     // Calculate aggregate balances
     let totalRemainingBalanceGHS = 0;
@@ -582,6 +631,10 @@ async function payMilestone(req, res, next) {
 
     if (milestone.status === "paid") {
       return res.status(400).json({ success: false, error: "This milestone is already paid." });
+    }
+
+    if (milestone.plan.status !== "active") {
+      return res.status(400).json({ success: false, error: "Milestones can only be paid while the installment plan is active." });
     }
 
     const reference = `INST-MS-${milestone.id.slice(0, 8)}-${Date.now()}`;
@@ -823,6 +876,121 @@ async function getAdminInstallmentPlans(req, res, next) {
   }
 }
 
+/**
+ * PATCH /api/installments/admin/:id/approve
+ * Admin reviews a pending application: sets the payment schedule, generates
+ * milestones, grants the credit rating, and unlocks the down-payment step.
+ */
+async function approveInstallmentPlan(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { frequency, totalInstallments, downPaymentPercent, creditScore, notes } = req.body;
+
+    const plan = await prisma.installmentPlan.findUnique({ where: { id } });
+    if (!plan) {
+      return res.status(404).json({ success: false, error: "Installment plan not found" });
+    }
+    if (plan.status !== "pending_review") {
+      return res.status(400).json({ success: false, error: `Only applications pending review can be approved (current status: ${plan.status}).` });
+    }
+
+    const breakdown = computeBreakdown(plan.totalAmountGHS, frequency, totalInstallments, downPaymentPercent);
+
+    const approved = await prisma.$transaction(async (tx) => {
+      const updated = await tx.installmentPlan.update({
+        where: { id },
+        data: {
+          downPaymentPercent: breakdown.downPaymentPercent,
+          downPaymentGHS: breakdown.downPaymentGHS,
+          remainingGHS: breakdown.remainingGHS,
+          frequency: breakdown.frequency,
+          totalInstallments: breakdown.totalInstallments,
+          installmentAmountGHS: breakdown.installmentAmountGHS,
+          status: "pending_downpayment",
+          creditScoreAtApproval: creditScore,
+          reviewNotes: notes || null,
+          reviewedAt: new Date(),
+          milestones: {
+            create: breakdown.schedule.map((s) => ({
+              milestoneIndex: s.milestoneIndex,
+              dueDate: new Date(s.dueDate),
+              amountGHS: s.amountGHS,
+              status: "pending"
+            }))
+          }
+        },
+        include: {
+          milestones: { orderBy: { milestoneIndex: "asc" } },
+          order: { include: { items: true } },
+          kyc: true
+        }
+      });
+
+      if (plan.userId) {
+        await tx.user.update({
+          where: { id: plan.userId },
+          data: { creditScore, creditTier: getCreditTier(creditScore) }
+        });
+      }
+
+      return updated;
+    });
+
+    res.json({
+      success: true,
+      message: "Application approved. Payment schedule generated and credit rating granted.",
+      data: approved
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * PATCH /api/installments/admin/:id/reject
+ * Admin rejects a pending application with a reason the applicant can see.
+ */
+async function rejectInstallmentPlan(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const plan = await prisma.installmentPlan.findUnique({ where: { id } });
+    if (!plan) {
+      return res.status(404).json({ success: false, error: "Installment plan not found" });
+    }
+    if (plan.status !== "pending_review") {
+      return res.status(400).json({ success: false, error: `Only applications pending review can be rejected (current status: ${plan.status}).` });
+    }
+
+    const rejected = await prisma.$transaction(async (tx) => {
+      const updated = await tx.installmentPlan.update({
+        where: { id },
+        data: {
+          status: "rejected",
+          reviewNotes: reason,
+          reviewedAt: new Date()
+        }
+      });
+
+      await tx.order.update({
+        where: { id: plan.orderId },
+        data: { isInstallment: false }
+      });
+
+      return updated;
+    });
+
+    res.json({
+      success: true,
+      message: "Application rejected.",
+      data: rejected
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   verifyNiaSchema,
   calculateInstallmentSchema,
@@ -837,5 +1005,9 @@ module.exports = {
   payMilestone,
   confirmMilestone,
   getAdminInstallmentPlans,
-  updateAdminInstallmentSerial
+  updateAdminInstallmentSerial,
+  approveInstallmentPlan,
+  rejectInstallmentPlan,
+  approveInstallmentSchema,
+  rejectInstallmentSchema
 };

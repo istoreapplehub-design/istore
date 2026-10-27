@@ -81,6 +81,7 @@ export default function AccountScreen({ inTabs = false }: { inTabs?: boolean }) 
   const [defaultRegion, setDefaultRegion] = useState("");
   const [hasUnread, setHasUnread] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const appVersion = Constants.expoConfig?.version || "1.0.0";
 
@@ -228,7 +229,6 @@ export default function AccountScreen({ inTabs = false }: { inTabs?: boolean }) 
     ]);
   };
 
-  const [deleting, setDeleting] = React.useState(false);
   const confirmDeleteAccount = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     Alert.alert(

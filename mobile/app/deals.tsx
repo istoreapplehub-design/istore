@@ -232,7 +232,7 @@ export default function FlashDealsScreen() {
           loading ? (
             <View style={styles.centerContainer}>
               <ActivityIndicator size="large" color={colors.accent} />
-              <Text style={styles.loadingText}>Fetching today's flash deals...</Text>
+              <Text style={styles.loadingText}>{"Fetching today's flash deals..."}</Text>
             </View>
           ) : error ? (
             <ErrorState error={error} onRetry={loadDeals} />

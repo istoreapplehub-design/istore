@@ -414,9 +414,9 @@ export default function TodayAtAppleScreen() {
               <View style={styles.successIconCircle}>
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </View>
-              <Text style={styles.passSuccessTitle}>You're Registered!</Text>
+              <Text style={styles.passSuccessTitle}>{"You're Registered!"}</Text>
               <Text style={styles.passSuccessSub}>
-                We've reserved a workstation and seat for you.
+                {"We've reserved a workstation and seat for you."}
               </Text>
 
               {/* Wallet Card */}

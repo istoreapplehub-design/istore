@@ -40,7 +40,6 @@ import { AppHaptics } from "../lib/haptics";
 import PaystackCheckoutModal from "../components/PaystackCheckoutModal";
 import { ProductVisual, getStoredImage } from "../components/ProductVisual";
 import { InstallmentApplicationModal } from "../components/InstallmentApplicationModal";
-import { initializeDownPayment, verifyDownPayment } from "../services/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -147,6 +146,13 @@ export default function CheckoutScreen() {
 
   // Paystack state
   const [showPaystack, setShowPaystack] = useState(false);
+
+  // Installment plans are store-pickup only
+  useEffect(() => {
+    if (paymentPlanType === "installment") {
+      setFulfillmentType("pickup");
+    }
+  }, [paymentPlanType]);
   const [paystackData, setPaystackData] = useState<{
     authorization_url: string;
     reference: string;
@@ -292,31 +298,15 @@ export default function CheckoutScreen() {
         return;
       }
 
-      // If user is paying 60% down payment for an approved plan
+      // Application submitted for admin review; down payment comes after approval
       if (paymentPlanType === "installment" && installmentPlan) {
-        const downInit = await initializeDownPayment({
-          planId: installmentPlan.id,
-          email: cleanEmail
-        });
-
-        if (downInit.data?.isSimulation) {
-          await verifyDownPayment({
-            reference: downInit.data.reference,
-            planId: installmentPlan.id
-          });
-          clearCart();
-          router.replace(
-            `/order-success?orderId=${order.id}&installment=1${needsGuestEmail ? `&guest=1&email=${encodeURIComponent(cleanEmail)}` : ""}`
-          );
-          return;
-        } else {
-          setPaystackData({
-            authorization_url: downInit.data.authorization_url,
-            reference: downInit.data.reference
-          });
-          setShowPaystack(true);
-          return;
-        }
+        clearCart();
+        Alert.alert(
+          "Application Under Review",
+          "Our credit team will review your application. Once approved, pay your down payment from Installments & Credit, then collect the device in store."
+        );
+        router.replace("/installments");
+        return;
       }
 
       const paymentInit = needsGuestEmail
@@ -517,6 +507,13 @@ export default function CheckoutScreen() {
                 fulfillmentType === "delivery" && styles.fulfillmentTabActive
               ]}
               onPress={() => {
+                if (paymentPlanType === "installment") {
+                  Alert.alert(
+                    "Store Pickup Only",
+                    "Installment orders are collected in store after approval. Switch to full payment to use doorstep delivery."
+                  );
+                  return;
+                }
                 AppHaptics.selection();
                 setFulfillmentType("delivery");
               }}
@@ -924,21 +921,21 @@ export default function CheckoutScreen() {
                 </View>
               </View>
               <Text style={styles.planOptionSub}>
-                Pay {formatGHS(downPaymentAmountGHS)} today, then choose weekly or monthly for remaining {formatGHS(remainingInstallmentGHS)}
+                Applied on {formatGHS(downPaymentAmountGHS)} down ({Math.round((downPaymentAmountGHS / totalGHS) * 100)}%), remaining {formatGHS(remainingInstallmentGHS)} weekly or monthly. Admin reviews your application; collect the device in store.
               </Text>
 
               {installmentPlan && (
                 <View style={styles.planReadyBox}>
-                  <Ionicons name="checkmark-circle" size={15} color="#059669" />
+                  <Ionicons name="time-outline" size={15} color="#D97706" />
                   <Text style={styles.planReadyText}>
-                    Verified with NIA ({installmentPlan.ghanaCardNumber}) · {installmentPlan.frequency.toUpperCase()} schedule ready
+                    Application under review ({installmentPlan.ghanaCardNumber})
                   </Text>
                 </View>
               )}
             </Pressable>
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 22 }]}>Payment Method (For Today's Amount)</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 22 }]}>{"Payment Method (For Today's Amount)"}</Text>
           <View style={styles.pickupLocationsList}>
             {PAYMENT_METHODS.map((pm) => {
               const selected = paymentMethod === pm.id;
@@ -1083,10 +1080,12 @@ export default function CheckoutScreen() {
                 <View style={[styles.breakdownRow, { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderColor: colors.border }]}>
                   <View>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: colors.brandAccent }}>
-                      Due Today (60% Down Payment)
+                      Down Payment (After Approval)
                     </Text>
                     <Text style={{ fontSize: 11, color: colors.textSecondary }}>
-                      {installmentPlan ? `${installmentPlan.frequency.toUpperCase()} plan chosen` : "Application required"}
+                      {installmentPlan
+                        ? "Application under review · pay once approved"
+                        : "Reviewed by our credit team · in-store collection"}
                     </Text>
                   </View>
                   <Text style={{ fontSize: 18, fontWeight: "800", color: colors.brandAccent }}>
@@ -1133,9 +1132,9 @@ export default function CheckoutScreen() {
             ) : (
               <Text style={styles.payBtnText}>
                 {paymentPlanType === "installment" && !installmentPlan
-                  ? "Apply for 60% Installments (NIA Verification)"
+                  ? "Apply for Installments (NIA Verification)"
                   : paymentPlanType === "installment"
-                  ? `Pay 60% Down (${formatGHS(downPaymentAmountGHS)})`
+                  ? "Application submitted — view status"
                   : `Pay ${formatGHS(totalGHS)} with Paystack`}
               </Text>
             )}
@@ -1289,7 +1288,6 @@ export default function CheckoutScreen() {
         onApplicationCompleted={(plan) => {
           setInstallmentPlan(plan);
           setShowInstallmentModal(false);
-          // Automatically trigger the 60% down payment
           handleCheckout();
         }}
       />

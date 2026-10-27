@@ -103,7 +103,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
         </Animated.View>
 
         <Animated.Text entering={FadeIn.delay(280).duration(420)} style={styles.brandSubtitle}>
-          UCC Cape Coast · Ghana's Apple Destination
+          {"UCC Cape Coast · Ghana's Apple Destination"}
         </Animated.Text>
 
         {/* Minimal Progress Bar */}

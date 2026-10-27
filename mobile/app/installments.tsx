@@ -18,7 +18,9 @@ import { AppHaptics } from "../lib/haptics";
 import {
   getMyInstallmentPlans,
   payInstallmentMilestone,
-  confirmInstallmentMilestone
+  confirmInstallmentMilestone,
+  initializeDownPayment,
+  verifyDownPayment
 } from "../services/api";
 import PaystackCheckoutModal from "../components/PaystackCheckoutModal";
 
@@ -27,15 +29,16 @@ export default function InstallmentsScreen() {
   const insets = useSafeAreaInsets();
 
   const [plans, setPlans] = useState<any[]>([]);
-  const [creditScore, setCreditScore] = useState<number>(650);
-  const [creditTier, setCreditTier] = useState<string>("Silver");
+  const [creditScore, setCreditScore] = useState<number | null>(null);
+  const [creditTier, setCreditTier] = useState<string>("Unrated");
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Paystack milestone payment state
+  // Paystack payment state (milestone or approved-plan down payment)
   const [showPaystack, setShowPaystack] = useState(false);
   const [activeMilestone, setActiveMilestone] = useState<any>(null);
+  const [downPaymentPlan, setDownPaymentPlan] = useState<any>(null);
   const [paystackData, setPaystackData] = useState<{
     authorization_url: string;
     reference: string;
@@ -46,8 +49,8 @@ export default function InstallmentsScreen() {
       const res = await getMyInstallmentPlans();
       if (res.success) {
         setPlans(res.data || []);
-        if (res.creditScore) setCreditScore(res.creditScore);
-        if (res.creditTier) setCreditTier(res.creditTier);
+        setCreditScore(res.creditScore ?? null);
+        setCreditTier(res.creditScore == null ? "Unrated" : res.creditTier || "Unrated");
         if (res.summary) setSummary(res.summary);
       }
     } catch {
@@ -98,8 +101,55 @@ export default function InstallmentsScreen() {
     }
   };
 
+  const handlePayDownPayment = async (plan: any) => {
+    AppHaptics.selection();
+    setDownPaymentPlan(plan);
+
+    try {
+      const res = await initializeDownPayment({
+        planId: plan.id,
+        email: plan.applicantEmail || undefined
+      });
+
+      if (res.data?.isSimulation) {
+        await verifyDownPayment({ reference: res.data.reference, planId: plan.id });
+        AppHaptics.success();
+        Alert.alert("Down Payment Received", "Your installment plan is now active. Collect the device in store.");
+        fetchPlans();
+        setDownPaymentPlan(null);
+      } else {
+        setPaystackData({
+          authorization_url: res.data.authorization_url,
+          reference: res.data.reference
+        });
+        setShowPaystack(true);
+      }
+    } catch (err: any) {
+      setDownPaymentPlan(null);
+      Alert.alert("Payment Error", err.message || "Failed to initialize the down payment.");
+    }
+  };
+
   const handlePaystackSuccess = async () => {
     setShowPaystack(false);
+
+    if (downPaymentPlan && paystackData) {
+      try {
+        await verifyDownPayment({
+          reference: paystackData.reference,
+          planId: downPaymentPlan.id
+        });
+        AppHaptics.success();
+        Alert.alert("Down Payment Received", "Your installment plan is now active. Collect the device in store.");
+      } catch {
+        // Webhook will reconcile server-side
+      }
+      setDownPaymentPlan(null);
+      setPaystackData(null);
+      fetchPlans();
+      return;
+    }
+
     if (activeMilestone && paystackData) {
       try {
         await confirmInstallmentMilestone({
@@ -123,12 +173,16 @@ export default function InstallmentsScreen() {
         return "#D97706";
       case "bronze":
         return "#B45309";
+      case "unrated":
+        return "#8E8E93";
       default:
         return "#0071E3";
     }
   };
 
   const tierColor = getTierColor(creditTier);
+  const isUnrated = creditScore === null;
+  const hasGhanaCard = plans.some((p) => p.ghanaCardNumber);
   const totalRemaining = summary?.totalRemainingBalanceGHS ?? plans
     .filter((p) => p.status === "active")
     .reduce((sum, p) => sum + (p.remainingGHS || 0), 0);
@@ -147,18 +201,20 @@ export default function InstallmentsScreen() {
                 {creditTier.toUpperCase()} TIER
               </Text>
             </View>
-            <View style={styles.niaVerifiedPill}>
-              <Ionicons name="checkmark-done" size={12} color="#059669" />
-              <Text style={styles.niaVerifiedText}>NIA VERIFIED</Text>
-            </View>
+            {hasGhanaCard && (
+              <View style={styles.niaVerifiedPill}>
+                <Ionicons name="checkmark-done" size={12} color="#059669" />
+                <Text style={styles.niaVerifiedText}>NIA VERIFIED</Text>
+              </View>
+            )}
           </View>
           <Text style={styles.creditTitle}>LesTrades Trust Rating</Text>
         </View>
 
         <View style={styles.scoreRow}>
           <View style={styles.scoreNumberBlock}>
-            <Text style={styles.scoreBig}>{creditScore}</Text>
-            <Text style={styles.scoreScale}>/ 850</Text>
+            <Text style={styles.scoreBig}>{isUnrated ? "—" : creditScore}</Text>
+            {!isUnrated && <Text style={styles.scoreScale}>/ 850</Text>}
           </View>
           <View style={styles.scoreGaugeContainer}>
             <View style={styles.scoreGaugeTrack}>
@@ -166,26 +222,30 @@ export default function InstallmentsScreen() {
                 style={[
                   styles.scoreGaugeFill,
                   {
-                    width: `${Math.round(((creditScore - 300) / (850 - 300)) * 100)}%`,
+                    width: isUnrated
+                      ? "0%"
+                      : `${Math.max(2, Math.round(((creditScore! - 300) / (850 - 300)) * 100))}%`,
                     backgroundColor: tierColor
                   }
                 ]}
               />
             </View>
             <Text style={styles.scoreDescription}>
-              {creditScore >= 740
-                ? "Exceptional · VIP fast-track approval"
-                : creditScore >= 670
-                ? "Good standing · Eligible for 50% down-payment"
-                : "Standard tier · 60% down-payment eligible"}
+              {isUnrated
+                ? "No rating yet · a rating is granted when an installment application is approved"
+                : creditScore! >= 740
+                ? "Exceptional · priority approval on future applications"
+                : creditScore! >= 670
+                ? "Good standing · flexible terms on future applications"
+                : "Standard tier · keep paying on time to climb"}
             </Text>
           </View>
         </View>
 
         <View style={styles.creditPerksStrip}>
           <View style={styles.perkItem}>
-            <Ionicons name="flash" size={14} color={colors.brandAccent} />
-            <Text style={styles.perkText}>Instant Approval</Text>
+            <Ionicons name="document-text" size={14} color={colors.brandAccent} />
+            <Text style={styles.perkText}>Admin-reviewed apps</Text>
           </View>
           <View style={styles.perkDivider} />
           <View style={styles.perkItem}>
@@ -194,8 +254,8 @@ export default function InstallmentsScreen() {
           </View>
           <View style={styles.perkDivider} />
           <View style={styles.perkItem}>
-            <Ionicons name="ribbon" size={14} color="#D97706" />
-            <Text style={styles.perkText}>Apple Warranty</Text>
+            <Ionicons name="business" size={14} color="#D97706" />
+            <Text style={styles.perkText}>In-store collection</Text>
           </View>
         </View>
       </View>
@@ -285,7 +345,7 @@ export default function InstallmentsScreen() {
               </View>
               <Text style={styles.emptyTitle}>No Active Installment Plans</Text>
               <Text style={styles.emptySubtitle}>
-                When you purchase Apple hardware with 60% down payment and live Ghana Card verification, your scheduled payments and device serial numbers appear here.
+                Apply for installments at checkout with your Ghana Card (NIA verification). Our team reviews every application, sets your approved schedule, and you collect the device in store once you&apos;ve paid the down payment.
               </Text>
               <Pressable style={styles.shopBtn} onPress={() => router.push("/(tabs)/shop")}>
                 <Text style={styles.shopBtnText}>Explore Apple Catalog</Text>
@@ -322,10 +382,14 @@ export default function InstallmentsScreen() {
                             ? styles.statusActive
                             : plan.status === "completed"
                             ? styles.statusCompleted
+                            : plan.status === "rejected"
+                            ? styles.statusRejected
                             : styles.statusPending
                         ]}
                       >
-                        <Text style={styles.statusBadgeText}>{plan.status.toUpperCase()}</Text>
+                        <Text style={[styles.statusBadgeText, plan.status === "rejected" && { color: "#DC2626" }]}>
+                          {plan.status.toUpperCase()}
+                        </Text>
                       </View>
                       <Text style={styles.frequencyTag}>{plan.frequency.toUpperCase()} SCHEDULE</Text>
                     </View>
@@ -361,22 +425,59 @@ export default function InstallmentsScreen() {
                   </View>
                 </View>
 
-                {/* Progress bar */}
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressLabels}>
-                    <Text style={styles.progressLabel}>60% Down Paid ({formatGHS(plan.downPaymentGHS)})</Text>
-                    <Text style={styles.progressVal}>
-                      {paidCount} of {totalCount} installments cleared
+                {plan.status === "pending_review" ? (
+                  <View style={styles.reviewBox}>
+                    <Ionicons name="hourglass-outline" size={16} color="#B45309" />
+                    <Text style={styles.reviewText}>
+                      Application under review. Once our team approves it, your payment schedule and down-payment step unlock here. The device is collected in store.
                     </Text>
                   </View>
-                  <View style={styles.progressBarTrack}>
-                    <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%` }]} />
+                ) : plan.status === "rejected" ? (
+                  <View style={styles.reviewBox}>
+                    <Ionicons name="close-circle" size={16} color="#DC2626" />
+                    <Text style={styles.reviewText}>
+                      Rejected: {plan.reviewNotes || "No reason provided."} You can place a new order and apply again.
+                    </Text>
                   </View>
-                </View>
+                ) : plan.status === "pending_downpayment" ? (
+                  <View style={styles.downPayBox}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.downPayLabel}>
+                        Approved · {Math.round(plan.downPaymentPercent)}% down payment due
+                      </Text>
+                      <Text style={styles.downPaySub}>
+                        {formatGHS(plan.downPaymentGHS)} now, then {plan.totalInstallments} × {formatGHS(plan.installmentAmountGHS)} {plan.frequency}
+                      </Text>
+                    </View>
+                    <Pressable
+                      style={({ pressed }) => [styles.payNowBtn, pressed && { opacity: 0.85 }]}
+                      onPress={() => handlePayDownPayment(plan)}
+                    >
+                      <Text style={styles.payNowBtnText}>Pay Down</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
+                    {/* Progress bar */}
+                    <View style={styles.progressContainer}>
+                      <View style={styles.progressLabels}>
+                        <Text style={styles.progressLabel}>
+                          {Math.round(plan.downPaymentPercent)}% Down Paid ({formatGHS(plan.downPaymentGHS)})
+                        </Text>
+                        <Text style={styles.progressVal}>
+                          {paidCount} of {totalCount} installments cleared
+                        </Text>
+                      </View>
+                      <View style={styles.progressBarTrack}>
+                        <View style={[styles.progressBarFill, { width: `${Math.round(progress * 100)}%` }]} />
+                      </View>
+                    </View>
 
-                {/* Milestones list */}
-                <Text style={styles.milestonesSectionTitle}>Scheduled Repayments</Text>
-                <View style={styles.milestonesList}>
+                    {/* Milestones list */}
+                    {(plan.milestones?.length ?? 0) > 0 && (
+                      <>
+                        <Text style={styles.milestonesSectionTitle}>Scheduled Repayments</Text>
+                        <View style={styles.milestonesList}>
                   {plan.milestones?.map((m: any) => {
                     const isPaid = m.status === "paid";
                     return (
@@ -422,7 +523,11 @@ export default function InstallmentsScreen() {
                       </View>
                     );
                   })}
-                </View>
+                        </View>
+                      </>
+                    )}
+                  </>
+                )}
               </View>
             );
           }}
@@ -436,7 +541,10 @@ export default function InstallmentsScreen() {
           authorizationUrl={paystackData.authorization_url}
           reference={paystackData.reference}
           onSuccess={handlePaystackSuccess}
-          onCancel={() => setShowPaystack(false)}
+          onCancel={() => {
+            setShowPaystack(false);
+            setDownPaymentPlan(null);
+          }}
         />
       )}
     </SafeAreaView>
@@ -780,6 +888,44 @@ const styles = StyleSheet.create({
   },
   statusPending: {
     backgroundColor: "rgba(234,179,8,0.1)"
+  },
+  statusRejected: {
+    backgroundColor: "rgba(220,38,38,0.1)"
+  },
+  reviewBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#F9F9FB",
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 4
+  },
+  reviewText: {
+    flex: 1,
+    fontSize: 12,
+    color: colors.textSecondary,
+    lineHeight: 17
+  },
+  downPayBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#F0F7FF",
+    borderWidth: 1,
+    borderColor: "#CCE4FF",
+    borderRadius: 12,
+    padding: 12
+  },
+  downPayLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#0071E3"
+  },
+  downPaySub: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 2
   },
   statusBadgeText: {
     fontSize: 10,

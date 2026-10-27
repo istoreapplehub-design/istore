@@ -23,7 +23,8 @@ import {
   getRevenueStats,
   getAdminProductStats,
   getAdminPendingCount,
-  getOrdersExportUrl
+  getOrdersExportUrl,
+  getAdminInstallments
 } from "../../services/adminApi";
 import {
   getFlashDealProducts,
@@ -89,18 +90,20 @@ export default function AdminDashboardScreen() {
   const [flashDealCount, setFlashDealCount] = useState<number | null>(null);
   const [openBookings, setOpenBookings] = useState<number | null>(null);
   const [pendingTradeIns, setPendingTradeIns] = useState<number | null>(null);
+  const [pendingInstallments, setPendingInstallments] = useState<number | null>(null);
   const [todayEventsCount, setTodayEventsCount] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
-      const [rev, prod, pend, deals, bookings, tradeIns, events] = await Promise.all([
+      const [rev, prod, pend, deals, bookings, tradeIns, events, installments] = await Promise.all([
         getRevenueStats("30d").catch(() => null),
         getAdminProductStats().catch(() => null),
         getAdminPendingCount().catch(() => null),
         getFlashDealProducts().catch(() => null),
         getGeniusBookings().catch(() => null),
         getTradeInSubmissions().catch(() => null),
-        getTodayEvents().catch(() => null)
+        getTodayEvents().catch(() => null),
+        getAdminInstallments({ status: "pending_review", limit: 1 }).catch(() => null)
       ]);
 
       if (rev) setRevenueStats(rev);
@@ -110,6 +113,7 @@ export default function AdminDashboardScreen() {
       if (bookings) setOpenBookings(bookings.filter((b) => b.status === "confirmed" || b.status === "in_repair").length);
       if (tradeIns) setPendingTradeIns(tradeIns.filter((t) => t.status === "pending_inspection").length);
       if (events) setTodayEventsCount(events.length);
+      if (installments) setPendingInstallments(installments.meta?.total ?? 0);
     } catch {
       // Handled silently
     } finally {
@@ -436,6 +440,14 @@ export default function AdminDashboardScreen() {
                 count={pendingTradeIns}
                 countLabel="pending"
                 onPress={() => router.push("/admin/trade-in")}
+              />
+              <OpsTile
+                icon="stats-chart-outline"
+                label="Installments & Credit"
+                hint="Review applications, set schedules"
+                count={pendingInstallments}
+                countLabel="to review"
+                onPress={() => router.push("/admin/installments")}
               />
             </View>
           </>

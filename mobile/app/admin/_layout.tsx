@@ -24,6 +24,7 @@ export default function AdminLayout() {
         <Stack.Screen name="events" />
         <Stack.Screen name="genius-bar" />
         <Stack.Screen name="trade-in" />
+        <Stack.Screen name="installments" />
       </Stack>
     </AdminGuard>
   );

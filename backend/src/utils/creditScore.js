@@ -24,7 +24,13 @@ async function adjustUserCreditScore(userId, deltaPoints, reason = "") {
 
     if (!user) return null;
 
-    const currentScore = user.creditScore || 650;
+    // Unrated users (no admin-approved credit yet) stay unrated — never fabricate a score
+    if (user.creditScore === null || user.creditScore === undefined) {
+      console.log(`[CreditScore] User ${userId} is Unrated; skipped adjustment (${reason})`);
+      return user;
+    }
+
+    const currentScore = user.creditScore;
     const newScore = Math.max(300, Math.min(850, currentScore + deltaPoints));
     const newTier = getCreditTier(newScore);
 
