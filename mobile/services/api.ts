@@ -8,6 +8,7 @@ import {
   Review
 } from "../types";
 import { supabase } from "../lib/supabase";
+import { uploadFile } from "./uploadFile";
 
 export interface InitializePaymentResponse {
   simulation: boolean;
@@ -601,24 +602,12 @@ export async function uploadAvatar(file: {
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData?.session?.access_token;
 
-  const formData = new FormData();
-  formData.append("file", {
-    uri: file.uri,
-    name: file.name,
-    type: file.type
-  } as any);
-
-  const res = await fetch(`${API_URL}/api/user/avatar`, {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(data?.message || `Avatar upload failed (${res.status})`);
-  }
-  return data;
+  return uploadFile(
+    `${API_URL}/api/user/avatar`,
+    file,
+    "file",
+    token ? { Authorization: `Bearer ${token}` } : {}
+  );
 }
 
 export async function deleteAccount(): Promise<{ success: boolean }> {

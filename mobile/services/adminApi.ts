@@ -2,6 +2,7 @@ import { API_URL } from "../constants/config";
 import { supabase } from "../lib/supabase";
 import { Order, PaginatedResponse, Product } from "../types";
 import { getProducts } from "./api";
+import { uploadFile } from "./uploadFile";
 
 export interface AdminStats {
   totalProducts: number;
@@ -272,72 +273,120 @@ export interface FilePayload {
 }
 
 export async function uploadAdminImage(file: FilePayload): Promise<{ url: string; path: string }> {
-  const url = `${API_URL}/api/admin/uploads/image`;
   const authHeader = await getAuthHeader();
-
-  const formData = new FormData();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  formData.append("file", {
-    uri: file.uri,
-    name: file.name,
-    type: file.type
-  } as any);
-
-  const headers: Record<string, string> = {};
-  if (authHeader) {
-    headers["Authorization"] = authHeader;
-  }
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers,
-    body: formData
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(data?.message || data?.error || `Upload failed with status ${res.status}`);
-  }
-
-  return data;
-}
-
-export async function uploadAdminImages(files: FilePayload[]): Promise<Array<{ url: string; path: string }>> {
-  const url = `${API_URL}/api/admin/uploads/images`;
-  const authHeader = await getAuthHeader();
-
-  const formData = new FormData();
-  files.forEach((file) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formData.append("files", {
-      uri: file.uri,
-      name: file.name,
-      type: file.type
-    } as any);
-  });
-
-  const headers: Record<string, string> = {};
-  if (authHeader) {
-    headers["Authorization"] = authHeader;
-  }
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers,
-    body: formData
-  });
-
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    throw new Error(data?.message || data?.error || `Upload failed with status ${res.status}`);
-  }
-
-  return data.images || [];
+  const data = await uploadFile(
+    `${API_URL}/api/admin/uploads/image`,
+    file,
+    "file",
+    authHeader ? { Authorization: authHeader } : {}
+  );
+  const image = data?.image || data || {};
+  return { url: image.publicUrl || image.url, path: image.path };
 }
 
 export async function deleteAdminImage(path: string): Promise<{ success: boolean; message: string }> {
   return request<{ success: boolean; message: string }>("/api/admin/uploads", {
     method: "DELETE",
     body: JSON.stringify({ path })
+  });
+}
+
+// ─────────────────────────────────────────
+// Installments (credit review console)
+// ─────────────────────────────────────────
+
+export interface AdminInstallmentPlan {
+  id: string;
+  orderId: string;
+  status: string;
+  applicantName: string;
+  applicantPhone: string;
+  applicantEmail?: string | null;
+  ghanaCardNumber: string;
+  gpsAddress?: string | null;
+  occupation?: string | null;
+  employer?: string | null;
+  nextOfKinName?: string | null;
+  nextOfKinPhone?: string | null;
+  totalAmountGHS: number;
+  downPaymentPercent: number;
+  downPaymentGHS: number;
+  remainingGHS: number;
+  frequency: "weekly" | "monthly";
+  totalInstallments: number;
+  installmentAmountGHS: number;
+  downPaymentPaid: boolean;
+  serialNumber?: string | null;
+  imei?: string | null;
+  creditScoreAtApproval?: number | null;
+  reviewNotes?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  milestones?: any[];
+  order?: any;
+  kyc?: any;
+  user?: {
+    id: string;
+    name: string;
+    phone: string;
+    email?: string | null;
+    creditScore: number | null;
+    creditTier: string;
+  } | null;
+}
+
+export interface AdminInstallmentsResponse {
+  success: boolean;
+  data: AdminInstallmentPlan[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+  stats: Array<{ status: string; _count: { id: number } }>;
+}
+
+export async function getAdminInstallments(
+  filters: { page?: number; limit?: number; status?: string; search?: string } = {}
+): Promise<AdminInstallmentsResponse> {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, String(value));
+    }
+  });
+  const qs = query.toString();
+  return request<AdminInstallmentsResponse>(`/api/installments/admin/all${qs ? `?${qs}` : ""}`);
+}
+
+export async function approveAdminInstallment(
+  id: string,
+  payload: {
+    frequency: "weekly" | "monthly";
+    totalInstallments: number;
+    downPaymentPercent?: number;
+    creditScore: number;
+    notes?: string;
+  }
+): Promise<{ success: boolean; message: string; data: AdminInstallmentPlan }> {
+  return request(`/api/installments/admin/${id}/approve`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function rejectAdminInstallment(
+  id: string,
+  reason: string
+): Promise<{ success: boolean; message: string; data: AdminInstallmentPlan }> {
+  return request(`/api/installments/admin/${id}/reject`, {
+    method: "PATCH",
+    body: JSON.stringify({ reason })
+  });
+}
+
+export async function updateAdminInstallmentSerial(
+  id: string,
+  payload: { serialNumber?: string | null; imei?: string | null }
+): Promise<{ success: boolean; message: string; data: AdminInstallmentPlan }> {
+  return request(`/api/installments/admin/${id}/serial`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
   });
 }
